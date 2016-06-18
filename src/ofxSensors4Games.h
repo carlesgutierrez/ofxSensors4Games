@@ -1,8 +1,8 @@
 #pragma once
 
 #include "ofMain.h"
-#include "ControllerReconition.h"
 #include "SensorManager.h"
+#include "ControllerReconition.h"
 #include "ofxImGui.h"
 
 
@@ -15,11 +15,11 @@ public:
 	void exit();
 	void keyPressed(int key);
 
-	//Computer Visition
-	ControllerReconition myControllerRecognition;
-	
 	//Type of Sensor used in the ComputerVision input
 	SensorManager mySensor;
+	
+	//Computer Visition
+	ControllerReconition myControllerRecognition;
 	
 	//Gui interaction
 	ofxImGui gui;

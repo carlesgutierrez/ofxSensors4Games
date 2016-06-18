@@ -25,9 +25,8 @@ void ofxSensors4Games::setup(sensorType myType) {
 //--------------------------------------------------------------
 void ofxSensors4Games::update() {
 	
-	myControllerRecognition.update();
 	mySensor.update();
-
+	myControllerRecognition.update(mySensor.contourFinder.blobs);
 }
 
 //--------------------------------------------------------------
@@ -47,8 +46,8 @@ void ofxSensors4Games::draw() {
 	//Check here values to send and change tags if its necesary
 	
 	//General Draws with possibles Guis windows
-	myControllerRecognition.draw();
 	mySensor.draw();
+	myControllerRecognition.draw();
 	
 	//required to call this at end
 	gui.end();

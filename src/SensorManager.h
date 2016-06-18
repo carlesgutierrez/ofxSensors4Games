@@ -17,6 +17,7 @@
 enum sensorType { kinectSensor, cameraSensor };
 
 class SensorManager {
+	
 public:
 
 	void setup(sensorType _sensorType);
@@ -46,6 +47,11 @@ public:
 	ofxCvGrayscaleImage grayThreshFar; // the far thresholded image
 	ofxCvContourFinder contourFinder;
 	
+	//Blobs
+	int minSizeBlob = 10;
+	int maxSizeBlob = 640*480*0.5;
+	int numBlobs = 20;
+	
 	
 	//-----------------------
 	//WebCam or similar video camera
@@ -54,7 +60,11 @@ public:
 
 	
 	//Control Vars
+	int sensorWidth = 640;//TODO check this is always modif
+	int sensorHeight = 480;
 	sensorType sensorModel;
+	
+	
 
 
 

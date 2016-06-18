@@ -53,6 +53,11 @@ void SensorManager::setup(sensorType _sensorType){
 		grayThreshNear.allocate(kinect.width, kinect.height);//kinect uses
 		grayThreshFar.allocate(kinect.width, kinect.height);//kinect uses
 		
+		///////////////////////////////////
+		//General SensorData for others
+		sensorWidth = kinect.width;
+		sensorHeight = kinect.height;
+		
 	}
 	
 }
@@ -96,7 +101,7 @@ void SensorManager::update(){
 			
 			// find contours which are between the size of 20 pixels and 1/3 the w*h pixels.
 			// also, find holes is set to true so we will get interior contours as well....
-			contourFinder.findContours(grayImage, 10, (kinect.width*kinect.height)/2, 20, false);
+			contourFinder.findContours(grayImage, minSizeBlob, maxSizeBlob, numBlobs, false);
 		}
 		
 
@@ -112,11 +117,11 @@ void SensorManager::draw(){
 		
 
 		// draw from the live kinect
-		kinect.drawDepth(10, 10, 400, 300);
-		kinect.draw(420, 10, 400, 300);
+		kinect.drawDepth(10, 10, kinect.width*0.5, kinect.height*0.5);
+		kinect.draw(420, 10, kinect.width*0.5, kinect.height*0.5);
 			
-		grayImage.draw(10, 320, 400, 300);
-		contourFinder.draw(10, 320, 400, 300);
+		grayImage.draw(10, 320, kinect.width*0.5, kinect.height*0.5);
+		contourFinder.draw(10, 320, kinect.width*0.5, kinect.height*0.5);
 
 		
 		// draw instructions
@@ -159,7 +164,7 @@ void SensorManager::draw(){
 	
 }
 
-
+//-----------------------------------------
 void SensorManager::drawGuiSensorOptions(bool* opened){
 	
 	
@@ -167,7 +172,9 @@ void SensorManager::drawGuiSensorOptions(bool* opened){
 	
 	if (ImGui::Begin("Sensor Gui Window", opened, ImGuiWindowFlags_MenuBar)) {
 		
-		//ImGui::PushItemWidth(100);
+		string textBlobsFound = "#blobs = "+ofToString(contourFinder.nBlobs, 0);
+		ImGui::Text(textBlobsFound.c_str());
+		
 		
 		string sensorTextType = "Not configured Yet";
 		if(sensorModel == kinectSensor){
@@ -180,7 +187,10 @@ void SensorManager::drawGuiSensorOptions(bool* opened){
 		ImGui::Checkbox("bThreshWithOpenCV", &bThreshWithOpenCV);
 		ImGui::SliderInt("nearThreshold", &nearThreshold, 0, 255);
 		ImGui::SliderInt("farThreshold", &farThreshold, 0, 255);
-		
+		ImGui::Separator();
+		ImGui::SliderInt("numBlobs ", &numBlobs, 1, 20);
+		ImGui::SliderInt("minBlobs ", &minSizeBlob, 10, 640*480*0.5);
+		ImGui::SliderInt("maxBlobs ", &maxSizeBlob, 10, 640*480*0.5);
 		
 		//ImGui::PopItemWidth();
 		
