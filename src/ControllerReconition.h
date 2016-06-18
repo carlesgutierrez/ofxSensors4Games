@@ -12,7 +12,7 @@
 #include "ofxImGui.h"
 #include "ofxOsc.h"
 
-#define HOST "localhost"
+#define HOST "192.168.1.107"//"localhost"
 #define PORT 12345
 
 

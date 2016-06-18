@@ -6,8 +6,6 @@
 	<false/>
 	<key>IDESourceControlProjectIdentifier</key>
 	<string>86EFBFD5-A2C0-4A1E-8E44-3AFB6E1FDFCC</string>
-	<key>IDESourceControlProjectName</key>
-	<string>myControllerOscServer</string>
 	<key>IDESourceControlProjectOriginsDictionary</key>
 	<dict>
 		<key>55505DE6675E1AEB4CF72AD63A972936EC984D97</key>
@@ -15,21 +13,19 @@
 		<key>69BD244B3D1586E85486F5F6B215BD8A5BFD2438</key>
 		<string>https://github.com/carlesgutierrez/ofxSensors4Games.git</string>
 	</dict>
-	<key>IDESourceControlProjectPath</key>
-	<string>myControllerOscServer/myControllerOscServer.xcodeproj</string>
 	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
 	<dict>
 		<key>55505DE6675E1AEB4CF72AD63A972936EC984D97</key>
-		<string>../../../../ofxImGui</string>
+		<string>ofxImGui/</string>
 		<key>69BD244B3D1586E85486F5F6B215BD8A5BFD2438</key>
-		<string>../../..</string>
+		<string>ofxSensors4Games/</string>
 	</dict>
 	<key>IDESourceControlProjectURL</key>
-	<string>https://github.com/carlesgutierrez/ofxSensors4Games.git</string>
+	<string>https://github.com/jvcleave/ofxImGui</string>
 	<key>IDESourceControlProjectVersion</key>
 	<integer>111</integer>
 	<key>IDESourceControlProjectWCCIdentifier</key>
-	<string>69BD244B3D1586E85486F5F6B215BD8A5BFD2438</string>
+	<string>55505DE6675E1AEB4CF72AD63A972936EC984D97</string>
 	<key>IDESourceControlProjectWCConfigurations</key>
 	<array>
 		<dict>

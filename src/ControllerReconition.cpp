@@ -45,11 +45,11 @@ void ControllerReconition::calcMainBlobLocation(){
 	
 	//OP2 Used max min calculated
 	xPosBlob = xMin.x + xDiff*0.5;
-	yPosBlob = sensorWidth - yMin.y;
+	yPosBlob = yMin.y;
 	
 	//Filtered for OSC and Gui Controller
-	xPosBlobFloatOsc = (float)xPosBlob / (float)sensorWidth;
-	yPosBlobFloatOsc = (float)yPosBlob / (float)sensorHeight;
+	xPosBlobFloatOsc = (float)(sensorWidth - xPosBlob) / (float)sensorWidth;
+	yPosBlobFloatOsc = (float)(yPosBlob) / (float)sensorHeight;
 }
 
 //-----------------------------------------
