@@ -27,12 +27,18 @@ Examples
 
 Dependencies
 ------------
-None for the addon.
-ofxGui for the examples.
+Externals:
+ofxImgui (https://github.com/jvcleave/ofxImGui)
+
+Internals:
+ofxOsc
+ofxOpencv
+ofxKinect
+
 
 Compatibility
 ------------
-This addon uses oF v0.9.3 (still in development) 
+This addon uses oF v0.9.3 (still in development in OSX) 
 
 
 <!-- TODO 
