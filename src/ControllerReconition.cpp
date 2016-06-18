@@ -16,6 +16,8 @@ void ControllerReconition::setup(int w, int h){
 	sensorWidth = w;
 	sensorHeight = h;
 	
+	// open an outgoing connection to HOST:PORT
+	sender.setup(HOST, PORT);
 }
 
 //-----------------------------------------
@@ -24,12 +26,18 @@ void ControllerReconition::update(vector<ofxCvBlob>  _myUpdatedBlobs){
 	//What at copy
 	myUpdatedBlobs = _myUpdatedBlobs;
 	
+	calcMainBlobLocation();
+	
+	sendOSCBlobData();
+}
+
+void ControllerReconition::calcMainBlobLocation(){
 	//Udpate here desired values
 	numBlobsDetected = myUpdatedBlobs.size();
 	
 	calculateMaxMin();
 	
-	//OP1 using just the biggger blob. 
+	//OP1 using just the biggger blob.
 	//if(numBlobsDetected > 0){
 	//	xPosBlob = SensorManager::getInstance()->contourFinder.blobs[0].centroid.x;
 	//	yPosBlob = SensorManager::getInstance()->contourFinder.blobs[0].centroid.y;
@@ -40,8 +48,17 @@ void ControllerReconition::update(vector<ofxCvBlob>  _myUpdatedBlobs){
 	yPosBlob = yMin.y;
 	
 	//Filtered for OSC and Gui Controller
-	xPosBlobFloatOsc = xPosBlob / sensorWidth;
-	yPosBlobFloatOsc = yPosBlob / sensorHeight;
+	xPosBlobFloatOsc = (float)xPosBlob / (float)sensorWidth;
+	yPosBlobFloatOsc = (float)yPosBlob / (float)sensorHeight;
+}
+
+//-----------------------------------------
+void ControllerReconition::sendOSCBlobData(){
+	ofxOscMessage m;
+	m.setAddress("/PangBlob");
+	m.addFloatArg(xPosBlobFloatOsc);
+	m.addFloatArg(yPosBlobFloatOsc);
+	sender.sendMessage(m, false);
 }
 
 //-----------------------------------------

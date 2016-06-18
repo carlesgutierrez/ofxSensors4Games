@@ -10,6 +10,11 @@
 #include "ofMain.h"
 #include "ofxCvBlob.h"
 #include "ofxImGui.h"
+#include "ofxOsc.h"
+
+#define HOST "localhost"
+#define PORT 12345
+
 
 class ControllerReconition {
 public:
@@ -20,6 +25,8 @@ public:
 	void exit();
 	void keyPressed(int key);
 	void drawGuiControllerOptions(bool* opened);
+	void calcMainBlobLocation();
+	void sendOSCBlobData();
 	
 	//TODO make a class of this
 	//Controller vars
@@ -45,8 +52,11 @@ public:
 	void calculateMaxMin();
 	
 	//OSC filterd data
+	ofxOscSender sender;
 	float xPosBlobFloatOsc;
 	float yPosBlobFloatOsc;
+	
+	
 	
 	
 };
