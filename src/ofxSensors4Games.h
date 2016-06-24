@@ -9,7 +9,7 @@
 class ofxSensors4Games {
 public:
 	
-	void setup(sensorType myType);
+	void setup(sensorType myType, RecognitionMethod _myComputeBlobType);
 	void update();
 	void draw();
 	void exit();

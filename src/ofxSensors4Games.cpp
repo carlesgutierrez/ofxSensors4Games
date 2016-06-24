@@ -6,19 +6,21 @@
 */
 
 //--------------------------------------------------------------
-void ofxSensors4Games::setup(sensorType myType) {
+void ofxSensors4Games::setup(sensorType _myType, RecognitionMethod _myComputeBlobType) {
 	ofSetLogLevel(OF_LOG_VERBOSE);
 	
 	//required calls
-	mySensor.sensorModel = myType;
+	mySensor.sensorModel = _myType;
 	gui.setup();
 	
 	//setups managers with selected SensorType
 	if(mySensor.sensorModel == kinectSensor){
 		mySensor.setup(mySensor.sensorModel);
-		myControllerRecognition.setup(mySensor.getWidth(), mySensor.getHeight());
+		myControllerRecognition.setup(mySensor.getWidth(), mySensor.getHeight(), _myComputeBlobType);
 	}
 	
+	
+
 
 }
 

@@ -5,7 +5,7 @@ void ofApp::setup(){
 	
 	ofSetFrameRate(60);
 	
-	mySensorController.setup(kinectSensor);  // hardcoding wich sensor use here !
+	mySensorController.setup(kinectSensor, MaxMinsAllBlob);  // hardcoding wich sensor use here !
 	
 }
 

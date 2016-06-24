@@ -24,6 +24,12 @@ Usage
 Examples
 --------
 
+myControllerOscServer // sends OSC commands as: 
+* PangBlob
+	- (float) that represents (x pos) 	[0..1]
+	- (float) that represents (y pos) 	[0..1]
+	- (float) that represents (UP mov) 	[0..1]
+	- (float) that represents (DOWN mov)	[0..1]
 
 Dependencies
 ------------

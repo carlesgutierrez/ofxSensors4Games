@@ -12,12 +12,16 @@
 // Set borders
 
 //-----------------------------------------
-void ControllerReconition::setup(int w, int h){
+void ControllerReconition::setup(int w, int h, RecognitionMethod _myComputeBlobType){
 	sensorWidth = w;
 	sensorHeight = h;
 	
+	medianBlobHeightValue.setup(numAverageFrammes, 0, sensorHeight);
+	
 	// open an outgoing connection to HOST:PORT
 	sender.setup(HOST, PORT);
+	
+	myComputeBlobType = _myComputeBlobType;
 }
 
 //-----------------------------------------
@@ -26,22 +30,61 @@ void ControllerReconition::update(vector<ofxCvBlob>  _myUpdatedBlobs){
 	//What at copy
 	myUpdatedBlobs = _myUpdatedBlobs;
 	
-	calcMainBlobLocation();
+	updateRecognitionSystem();
 	
 	sendOSCBlobData();
 }
 
+//-----------------------------------------
+void ControllerReconition::updateRecognitionSystem(){
+	if(myComputeBlobType == MaxMinsAllBlob){
+		calcMainBlobLocation();
+		//Recognize Blob Action
+		udpateRecognitionBlobAction();
+		
+	}else {
+		//by default get just bigger blob and update cacl values to send OSC too
+		if(myUpdatedBlobs.size() > 0){
+			xPosBlob = myUpdatedBlobs[0].centroid.x;
+			yPosBlob = myUpdatedBlobs[0].centroid.y;
+		}
+		
+		//No Up & down Detections
+	}
+
+}
+
+//-----------------------------------------
+void ControllerReconition::udpateRecognitionBlobAction(){
+	
+	//Udpate stats
+	medianBlobHeightValue.update(yPosBlob);
+	
+	//Check yPosBlob is > medianBlobHeightValue
+	medianHeightBlob = medianBlobHeightValue.getAverage(numAverageFrammes);
+	
+	
+	//Means Last Values are smaller than the average, so , This is DOWN DIR
+	if(medianBlobHeightValue.getLastValueNormal() - medianHeightBlob < 0){
+		fUpActionBlob = medianHeightBlob - medianBlobHeightValue.getLastValueNormal();
+		fUpActionBlob_OSC = ofMap(fUpActionBlob, 0, 1, 0, 1);
+	}
+	else {
+		fDownActionBlob = medianBlobHeightValue.getLastValueNormal() - medianHeightBlob;
+		fDownActionBlob_OSC = ofMap(fDownActionBlob, 0, 1, 0, 1);
+	}
+	
+	
+	
+	//Check yPosBlob is < medianBlobHeightValue
+}
+
+//-----------------------------------------
 void ControllerReconition::calcMainBlobLocation(){
 	//Udpate here desired values
 	numBlobsDetected = myUpdatedBlobs.size();
 	
 	calculateMaxMin();
-	
-	//OP1 using just the biggger blob.
-	//if(numBlobsDetected > 0){
-	//	xPosBlob = SensorManager::getInstance()->contourFinder.blobs[0].centroid.x;
-	//	yPosBlob = SensorManager::getInstance()->contourFinder.blobs[0].centroid.y;
-	//}
 	
 	//OP2 Used max min calculated
 	xPosBlob = xMin.x + xDiff*0.5;
@@ -58,6 +101,12 @@ void ControllerReconition::sendOSCBlobData(){
 	m.setAddress("/PangBlob");
 	m.addFloatArg(xPosBlobFloatOsc);
 	m.addFloatArg(yPosBlobFloatOsc);
+	
+	// sending float to be able to make more actions filtering in the client.
+	//Like Intenisty of the action
+	m.addFloatArg(fUpActionBlob_OSC);
+	m.addFloatArg(fDownActionBlob_OSC);
+	
 	sender.sendMessage(m, false);
 }
 
@@ -150,18 +199,39 @@ void ControllerReconition::drawGuiControllerOptions(bool* opened){
 		string recognitionTextType = "Using Max Min Blob Data";
 		
 		ImGui::Text(recognitionTextType.c_str());
-		ImGui::Text(("xRawPos = "+ofToString(xPosBlob)).c_str());
-		ImGui::Text(("yRawPos = "+ofToString(yPosBlob)).c_str());
-
+		
+		ImGui::Separator();
+		
+		if(ImGui::Button("Reset Averega", ImVec2(120,20))){
+			medianBlobHeightValue.reset();
+			medianBlobHeightValue.setup(numAverageFrammes, 0, sensorHeight);
+		}
+		
+		ImGui::Separator();
+		string myMedianValueText = "Last Value medianBlobHeightValue"+ ofToString(medianBlobHeightValue.getLastValueNormal(), 2);
+		ImGui::Text(myMedianValueText.c_str());
+		string medianHeightBlobText = "Average medianBlobHeightValue ="+ ofToString(medianHeightBlob, 2);
+		ImGui::Text(medianHeightBlobText.c_str());
+		
+		
+		ImGui::SliderInt("average num frames used", &numAverageFrammes, 0, 100);
+		ImGui::SliderInt("yRawPos = ", &yPosBlob, 0, sensorHeight);
+		ImGui::SliderFloat("medianHeightBlob", &medianHeightBlob, 0, 1);
+		
+		ImGui::Separator();
 		
 		ImGui::SliderFloat("xOSCBlob", &xPosBlobFloatOsc, 0, 1);
 		ImGui::SliderFloat("yOSCBlob", &yPosBlobFloatOsc, 0, 1);
+		ImGui::SliderFloat("fUpActionBlobOSC", &fUpActionBlob_OSC, 0, 1);
+		ImGui::SliderFloat("fDownActionBlobOSC", &fDownActionBlob_OSC, 0, 1);
 		
 		
 		//ImGui::PopItemWidth();
 		
 		
 		ImGui::End();
+		
+		medianBlobHeightValue.draw(500 , 500, 320, 100, 100, "medianBlobHeightValue", true, 150);
 	}
 }
 

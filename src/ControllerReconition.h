@@ -11,15 +11,19 @@
 #include "ofxCvBlob.h"
 #include "ofxImGui.h"
 #include "ofxOsc.h"
+#include "statsRecorder.h"
 
-#define HOST "192.168.1.107"//"localhost"
-#define PORT 12345
+#define HOST "localhost" //TODO{c} Convert this to dinamic variable modificable from Gui
+#define PORT 12346
 
+
+enum RecognitionMethod { MaxMinsAllBlob, GigestBlob, RadarBlob, LaserBlob }; //TODO Add all this methods
+enum ActionRecognitionType { GoUpAction, GoDownAction }; //Up and Down from median height blob player.
 
 class ControllerReconition {
 public:
 	
-	void setup(int w, int h);
+	void setup(int w, int h, RecognitionMethod _myComputeBlobType);
 	void update(vector<ofxCvBlob>  _myUpdatedBlobs);
 	void draw();
 	void exit();
@@ -28,8 +32,9 @@ public:
 	void calcMainBlobLocation();
 	void sendOSCBlobData();
 	
-	//TODO make a class of this
-	//Controller vars
+	//////////////////////////////
+	//TODO make a class of this? //Depends if laserBlob may be a different blobType then separate by types
+	//Main Controller vars
 	int sensorWidth, sensorHeight;
 	vector<ofxCvBlob>  myUpdatedBlobs;
 	int numBlobsDetected = -1;
@@ -38,8 +43,8 @@ public:
 	int yPosBlob = -1;
 	int wBlob = -1;
 	int hBlob = -1;
-	
-	bool bJump = false;
+	////////////////////////////////
+
 	//TODO other movements detection
 	//bool bMoveLeft = false;
 	//bool bMoveRight
@@ -50,6 +55,23 @@ public:
 	float xDiff;
 	float yDiff;
 	void calculateMaxMin();
+	
+	//Advanced Filtered Blob Data
+	//median stat value
+	RecognitionMethod myComputeBlobType;
+	void updateRecognitionSystem();
+	void udpateRecognitionBlobAction();
+	
+	//int numFramesStates = 100; //TODO Addd to gui
+	int numAverageFrammes = 100;
+	statsRecorder medianBlobHeightValue;
+	float medianHeightBlob;
+	
+	float fUpActionBlob = 0;
+	float fDownActionBlob = 0;
+	
+	float fUpActionBlob_OSC = 0;
+	float fDownActionBlob_OSC = 0;
 	
 	//OSC filterd data
 	ofxOscSender sender;
