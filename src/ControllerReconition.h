@@ -1,6 +1,7 @@
 //
 //  ControllerReconition.h
-//  ofxControlArkadeGames
+//  a Class that use already recognized data sensor and implement over some high level user recognition to be used in an App
+//  
 //
 //  Created by carles on 17/06/16.
 //
@@ -13,10 +14,10 @@
 #include "ofxOsc.h"
 #include "statsRecorder.h"
 
-#define HOST "localhost" //TODO{c} Convert this to dinamic variable modificable from Gui
-#define PORT 12346
+//OSC DATA
+#define IM_ARRAYSIZE(_ARR)  ((int)(sizeof(_ARR)/sizeof(*_ARR)))
 
-
+//Status Regonition Controller Type
 enum RecognitionMethod { MaxMinsAllBlob, GigestBlob, RadarBlob, LaserBlob }; //TODO Add all this methods
 enum ActionRecognitionType { GoUpAction, GoDownAction }; //Up and Down from median height blob player.
 
@@ -78,7 +79,9 @@ public:
 	float xPosBlobFloatOsc;
 	float yPosBlobFloatOsc;
 	
-	
+	//OSC CONFIG
+	int PORT = 12345;
+	string HOST = "127.0.0.1";
 	
 	
 };

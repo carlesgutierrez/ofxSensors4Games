@@ -98,7 +98,8 @@ void ControllerReconition::calcMainBlobLocation(){
 //-----------------------------------------
 void ControllerReconition::sendOSCBlobData(){
 	ofxOscMessage m;
-	m.setAddress("/PangBlob");
+	m.clear();
+	m.setAddress("/GameBlob");
 	m.addFloatArg(xPosBlobFloatOsc);
 	m.addFloatArg(yPosBlobFloatOsc);
 	
@@ -192,38 +193,39 @@ void ControllerReconition::drawGuiControllerOptions(bool* opened){
 	
 	ImGui::SetNextWindowSize(ImVec2(300, 200), ImGuiSetCond_FirstUseEver);
 	
-	if (ImGui::Begin("Controller Gui Window", opened, ImGuiWindowFlags_MenuBar)) {
+	if (ImGui::Begin("Controller Options Gui", opened, ImGuiWindowFlags_MenuBar)) {
 		
 		//ImGui::PushItemWidth(100);
-		
-		string recognitionTextType = "Using Max Min Blob Data";
+		string recognitionTextType = "Using Kinect & MaxMin Recognition";
 		
 		ImGui::Text(recognitionTextType.c_str());
 		
 		ImGui::Separator();
+		ImGui::Text("Up&Down Detection config:");
 		
 		if(ImGui::Button("Reset Averega", ImVec2(120,20))){
 			medianBlobHeightValue.reset();
 			medianBlobHeightValue.setup(numAverageFrammes, 0, sensorHeight);
 		}
-		
-		ImGui::Separator();
-		string myMedianValueText = "Last Value medianBlobHeightValue"+ ofToString(medianBlobHeightValue.getLastValueNormal(), 2);
-		ImGui::Text(myMedianValueText.c_str());
-		string medianHeightBlobText = "Average medianBlobHeightValue ="+ ofToString(medianHeightBlob, 2);
-		ImGui::Text(medianHeightBlobText.c_str());
-		
-		
-		ImGui::SliderInt("average num frames used", &numAverageFrammes, 0, 100);
-		ImGui::SliderInt("yRawPos = ", &yPosBlob, 0, sensorHeight);
+
+		ImGui::SliderInt("Frames used", &numAverageFrammes, 0, 100);
 		ImGui::SliderFloat("medianHeightBlob", &medianHeightBlob, 0, 1);
 		
 		ImGui::Separator();
 		
-		ImGui::SliderFloat("xOSCBlob", &xPosBlobFloatOsc, 0, 1);
-		ImGui::SliderFloat("yOSCBlob", &yPosBlobFloatOsc, 0, 1);
-		ImGui::SliderFloat("fUpActionBlobOSC", &fUpActionBlob_OSC, 0, 1);
-		ImGui::SliderFloat("fDownActionBlobOSC", &fDownActionBlob_OSC, 0, 1);
+		string textOscInfo0 = "Sending OSC data:";
+		string textOscInfo1 = "Port:";
+		string textOscInfo2 = "Ip:";
+		
+		ImGui::Text("Sending OSC data to ");
+		ImGui::Text(ofToString(PORT,0).c_str());
+		ImGui::Text(HOST.c_str());
+		//ImGui::InputText("Host IP", HOST, IM_ARRAYSIZE(HOST));
+		//ImGui::InputText("Port Num", PORTText, IM_ARRAYSIZE(PORTText));
+		ImGui::SliderFloat("(OSC f 0) xOSCBlob", &xPosBlobFloatOsc, 0, 1);
+		ImGui::SliderFloat("(OSC f 1) yOSCBlob", &yPosBlobFloatOsc, 0, 1);
+		ImGui::SliderFloat("(OSC f 2) fUpActionBlobOSC", &fUpActionBlob_OSC, 0, 1);
+		ImGui::SliderFloat("(OSC f 3) fDownActionBlobOSC", &fDownActionBlob_OSC, 0, 1);
 		
 		
 		//ImGui::PopItemWidth();

@@ -1,4 +1,23 @@
+//
+//  ofxSensors4Games
+//
+//	ofxSensors4Games is a tool that help to use some sensors and use detected action into a pad Controller or others
+//  This addon use a SensorManager for sensor uses
+//	and ControllerRecognition to read sensor data and implement some other high level operation over this data
+//  For internal comunication between this 2 classes, there is a third class. WIP (sensorblobs)
+//    - vector<gameblobs>
+//		sensorBlobs
+//			- For cameras ( normal or kinect ): Opencv Blob.
+//			- For tracking Cameras : ( Kyle ofxCv blobs)
+//			- For LaserSensor: LaserBlob
+//
+//
+//  Created by carles on 17/06/16.
+//
+//
+
 #pragma once
+
 
 #include "ofMain.h"
 #include "SensorManager.h"
