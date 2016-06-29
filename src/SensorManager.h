@@ -10,7 +10,7 @@
 #pragma once
 
 #include "ofMain.h"
-#include "ofxOpenCv.h"
+#include "ofxCv.h"
 #include "ofxKinect.h"
 #include "ofxImGui.h"
 
@@ -18,7 +18,18 @@ enum sensorType { kinectSensor, cameraSensor };
 
 class SensorManager {
 	
+// variables & methods for singleton
+private:
+	static bool	instanceFlag;
+	static SensorManager *single;
 public:
+	static SensorManager* getInstance();
+// end singleton
+	
+public:
+
+	SensorManager();
+	~SensorManager();
 
 	void setup(sensorType _sensorType);
 	void update();
@@ -30,22 +41,26 @@ public:
 	int getHeight();
 	
 	void drawGuiSensorOptions(bool* opened);
-		
+	
+	bool isNewSensorFrame();
+	
 	//----------------------
 	//Kinect
 	ofxKinect kinect;
-	bool bThreshWithOpenCV;
-	
+	//bool bThreshWithOpenCV;
 	int nearThreshold;
 	int farThreshold;
 	int angle;
+	
+private:
+	bool bNewSensorFrame = false;
 
-	//Raw ComputerVision
-	ofxCvColorImage colorImg;
-	ofxCvGrayscaleImage grayImage; // grayscale depth image
-	ofxCvGrayscaleImage grayThreshNear; // the near thresholded image
-	ofxCvGrayscaleImage grayThreshFar; // the far thresholded image
-	ofxCvContourFinder contourFinder;
+public:
+	//Related to ComputerVision
+	
+	
+	ofImage computerVisionImage;
+	ofxCv::ContourFinder contourFinder;
 	
 	//Blobs
 	int minSizeBlob = 10;
@@ -64,8 +79,6 @@ public:
 	int sensorHeight = 480;
 	sensorType sensorModel;
 	
-	
-
 
 
 };

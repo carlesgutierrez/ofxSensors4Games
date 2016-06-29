@@ -35,7 +35,7 @@ public:
 	void keyPressed(int key);
 
 	//Type of Sensor used in the ComputerVision input
-	SensorManager mySensor;
+	//SensorManager mySensor;
 	
 	//Computer Visition
 	ControllerReconition myControllerRecognition;

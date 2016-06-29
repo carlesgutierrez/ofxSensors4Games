@@ -9,10 +9,11 @@
 #pragma once
 
 #include "ofMain.h"
-#include "ofxCvBlob.h"
+//#include "ofxCvBlob.h"
 #include "ofxImGui.h"
 #include "ofxOsc.h"
 #include "statsRecorder.h"
+#include "SensorManager.h"
 
 //OSC DATA
 #define IM_ARRAYSIZE(_ARR)  ((int)(sizeof(_ARR)/sizeof(*_ARR)))
@@ -25,7 +26,7 @@ class ControllerReconition {
 public:
 	
 	void setup(int w, int h, RecognitionMethod _myComputeBlobType);
-	void update(vector<ofxCvBlob>  _myUpdatedBlobs);
+	void update();
 	void draw();
 	void exit();
 	void keyPressed(int key);
@@ -37,7 +38,7 @@ public:
 	//TODO make a class of this? //Depends if laserBlob may be a different blobType then separate by types
 	//Main Controller vars
 	int sensorWidth, sensorHeight;
-	vector<ofxCvBlob>  myUpdatedBlobs;
+	//std::vector<ofPolyline>  myUpdatedBlobs;
 	int numBlobsDetected = -1;
 	
 	int xPosBlob = -1;
@@ -64,7 +65,7 @@ public:
 	void udpateRecognitionBlobAction();
 	
 	//int numFramesStates = 100; //TODO Addd to gui
-	int numAverageFrammes = 100;
+	int numAverageFrammes;
 	statsRecorder medianBlobHeightValue;
 	float medianHeightBlob;
 	

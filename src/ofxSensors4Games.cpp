@@ -10,13 +10,13 @@ void ofxSensors4Games::setup(sensorType _myType, RecognitionMethod _myComputeBlo
 	ofSetLogLevel(OF_LOG_VERBOSE);
 	
 	//required calls
-	mySensor.sensorModel = _myType;
+	SensorManager::getInstance()->sensorModel = _myType;
 	gui.setup();
 	
 	//setups managers with selected SensorType
-	if(mySensor.sensorModel == kinectSensor){
-		mySensor.setup(mySensor.sensorModel);
-		myControllerRecognition.setup(mySensor.getWidth(), mySensor.getHeight(), _myComputeBlobType);
+	if(SensorManager::getInstance()->sensorModel == kinectSensor){
+		SensorManager::getInstance()->setup(SensorManager::getInstance()->sensorModel);
+		myControllerRecognition.setup(SensorManager::getInstance()->getWidth(), SensorManager::getInstance()->getHeight(), _myComputeBlobType);
 	}
 	
 	
@@ -27,8 +27,8 @@ void ofxSensors4Games::setup(sensorType _myType, RecognitionMethod _myComputeBlo
 //--------------------------------------------------------------
 void ofxSensors4Games::update() {
 	
-	mySensor.update();
-	myControllerRecognition.update(mySensor.contourFinder.blobs);
+	SensorManager::getInstance()->update();
+	myControllerRecognition.update();
 }
 
 //--------------------------------------------------------------
@@ -39,7 +39,10 @@ void ofxSensors4Games::draw() {
 	
 	//required to call this at beginning
 	gui.begin();
+	string frameRateAvailable = "Fps: " + ofToString(ofGetFrameRate(), 0);
 	ImGui::Text("Sensors For Games!");
+	
+	ImGui::Text(frameRateAvailable.c_str());
 	
 	//TODO
 	//Set here Sensor Selections
@@ -48,7 +51,7 @@ void ofxSensors4Games::draw() {
 	//Check here values to send and change tags if its necesary
 	
 	//General Draws with possibles Guis windows
-	mySensor.draw();
+	SensorManager::getInstance()->draw();
 	myControllerRecognition.draw();
 	
 	//required to call this at end
@@ -61,11 +64,11 @@ void ofxSensors4Games::draw() {
 //--------------------------------------------------------------
 void ofxSensors4Games::exit() {
 	myControllerRecognition.exit();
-	mySensor.exit();
+	SensorManager::getInstance()->exit();
 }
 
 //--------------------------------------------------------------
 void ofxSensors4Games::keyPressed (int key) {
 	myControllerRecognition.keyPressed(key);
-	mySensor.keyPressed(key);
+	SensorManager::getInstance()->keyPressed(key);
 }

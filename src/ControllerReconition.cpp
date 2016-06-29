@@ -16,6 +16,7 @@ void ControllerReconition::setup(int w, int h, RecognitionMethod _myComputeBlobT
 	sensorWidth = w;
 	sensorHeight = h;
 	
+	numAverageFrammes = 100;
 	medianBlobHeightValue.setup(numAverageFrammes, 0, sensorHeight);
 	
 	// open an outgoing connection to HOST:PORT
@@ -25,10 +26,10 @@ void ControllerReconition::setup(int w, int h, RecognitionMethod _myComputeBlobT
 }
 
 //-----------------------------------------
-void ControllerReconition::update(vector<ofxCvBlob>  _myUpdatedBlobs){
+void ControllerReconition::update(){
 	
 	//What at copy
-	myUpdatedBlobs = _myUpdatedBlobs;
+	//myUpdatedBlobs = _myUpdatedBlobs;
 	
 	updateRecognitionSystem();
 	
@@ -37,21 +38,98 @@ void ControllerReconition::update(vector<ofxCvBlob>  _myUpdatedBlobs){
 
 //-----------------------------------------
 void ControllerReconition::updateRecognitionSystem(){
-	if(myComputeBlobType == MaxMinsAllBlob){
-		calcMainBlobLocation();
-		//Recognize Blob Action
-		udpateRecognitionBlobAction();
-		
-	}else {
-		//by default get just bigger blob and update cacl values to send OSC too
-		if(myUpdatedBlobs.size() > 0){
-			xPosBlob = myUpdatedBlobs[0].centroid.x;
-			yPosBlob = myUpdatedBlobs[0].centroid.y;
-		}
+	
+	//If new SensorFrame
+	if (SensorManager::getInstance()->isNewSensorFrame()) {
+	//	cout << "Singletoon Working !!! !!! !!! ! !!! !!! !" << endl;
+	
+		if(myComputeBlobType == MaxMinsAllBlob){
+			calcMainBlobLocation();
+			//Recognize Blob Action
+			//TODO recover wierd error here...
+			udpateRecognitionBlobAction();
+
+		}else {
+			//by default get just bigger blob and update cacl values to send OSC too
+			if(SensorManager::getInstance()->contourFinder.getContours().size() > 0){
+				//TODO
+				//xPosBlob = myUpdatedBlobs[0].centroid.x;
+				//yPosBlob = myUpdatedBlobs[0].centroid.y;
+			}
 		
 		//No Up & down Detections
 	}
+	}
 
+}
+
+//-----------------------------------------
+void ControllerReconition::calcMainBlobLocation(){
+	//Udpate here desired values
+	numBlobsDetected = SensorManager::getInstance()->contourFinder.getContours().size();
+	
+	calculateMaxMin();
+	
+	//OP2 Used max min calculated
+	xPosBlob = xMin.x + xDiff*0.5;
+	yPosBlob = yMin.y;
+	
+	//Filtered for OSC and Gui Controller
+	xPosBlobFloatOsc = (float)(sensorWidth - xPosBlob) / (float)sensorWidth;
+	yPosBlobFloatOsc = (float)(yPosBlob) / (float)sensorHeight;
+}
+//----------------------------------------------------------------
+void ControllerReconition::calculateMaxMin(){
+	
+	if( SensorManager::getInstance()->contourFinder.getPolylines().size() > 0 ){
+		xMin.x=sensorWidth,
+		xMax.x=0.0,
+		yMin.y=sensorHeight,
+		yMax.y=0.0;
+	
+	
+		for (int i = 0; i < SensorManager::getInstance()->contourFinder.getPolylines().size(); i++)
+		{
+		
+			int length_of_contour = SensorManager::getInstance()->contourFinder.getPolylines()[i].getVertices().size();
+		
+			//for Each blob seach Max Mins
+			for(int j = 0; j < length_of_contour; j++){
+			
+				ofVec2f tmpPos = SensorManager::getInstance()->contourFinder.getPolylines()[i].getVertices()[j];
+			
+				if( tmpPos.x > xMax.x){
+					xMax.x=tmpPos.x;
+					xMax.y=tmpPos.y;
+				}
+			
+				if( tmpPos.x < xMin.x){
+					xMin.x=tmpPos.x;
+					xMin.y=tmpPos.y;
+				}
+			
+				if( tmpPos.y > yMax.y){
+					yMax.y=tmpPos.y;
+					yMax.x=tmpPos.x;
+				}
+			
+				if( tmpPos.y < yMin.y){
+					yMin.y=tmpPos.y;
+					yMin.x=tmpPos.x;
+				}
+			
+			}
+			
+		}
+	
+		xDiff=xMax.x-xMin.x;
+		yDiff=yMax.y-yMin.y;
+	
+		wBlob	= xDiff;
+		hBlob	= yDiff;
+		
+	}
+	
 }
 
 //-----------------------------------------
@@ -74,26 +152,10 @@ void ControllerReconition::udpateRecognitionBlobAction(){
 		fDownActionBlob_OSC = ofMap(fDownActionBlob, 0, 1, 0, 1);
 	}
 	
-	
-	
 	//Check yPosBlob is < medianBlobHeightValue
 }
 
-//-----------------------------------------
-void ControllerReconition::calcMainBlobLocation(){
-	//Udpate here desired values
-	numBlobsDetected = myUpdatedBlobs.size();
-	
-	calculateMaxMin();
-	
-	//OP2 Used max min calculated
-	xPosBlob = xMin.x + xDiff*0.5;
-	yPosBlob = yMin.y;
-	
-	//Filtered for OSC and Gui Controller
-	xPosBlobFloatOsc = (float)(sensorWidth - xPosBlob) / (float)sensorWidth;
-	yPosBlobFloatOsc = (float)(yPosBlob) / (float)sensorHeight;
-}
+
 
 //-----------------------------------------
 void ControllerReconition::sendOSCBlobData(){
@@ -116,7 +178,7 @@ void ControllerReconition::draw(){
 	
 	//Draw Detected Point
 	ofSetColor(ofColor::red);
-	ofCircle(10 + xPosBlob*0.5, 320 + yPosBlob*0.5, 10);//Painting blob result over the Kinect Blob Drawer
+	ofDrawCircle(10 + xPosBlob*0.5, 320 + yPosBlob*0.5, 10);//Painting blob result over the Kinect Blob Drawer
 	
 	//Draw some Sensor Option
 	ofSetColor(ofColor::white);
@@ -136,55 +198,7 @@ void ControllerReconition::keyPressed(int key){
 	
 }
 
-//----------------------------------------------------------------
-void ControllerReconition::calculateMaxMin(){
-	
-	if( myUpdatedBlobs.size() > 0 ){
-		xMin.x=sensorWidth,
-		xMax.x=0.0,
-		yMin.y=sensorHeight,
-		yMax.y=0.0;
-	}
-	
-	for (int i = 0; i < myUpdatedBlobs.size(); i++)
-	{
-		
-		int length_of_contour = myUpdatedBlobs[i].pts.size();
-		
-		for(int j = 0; j < length_of_contour; j++){
-			
-			ofVec2f tmpPos = myUpdatedBlobs[i].pts[j];
-			
-			if( tmpPos.x > xMax.x){
-				xMax.x=tmpPos.x;
-				xMax.y=tmpPos.y;
-			}
-			
-			if( tmpPos.x < xMin.x){
-				xMin.x=tmpPos.x;
-				xMin.y=tmpPos.y;
-			}
-			
-			if( tmpPos.y > yMax.y){
-				yMax.y=tmpPos.y;
-				yMax.x=tmpPos.x;
-			}
-			
-			if( tmpPos.y < yMin.y){
-				yMin.y=tmpPos.y;
-				yMin.x=tmpPos.x;
-			}
-			
-		}
-	}
-	
-	xDiff=xMax.x-xMin.x;
-	yDiff=yMax.y-yMin.y;
-	
-	wBlob	= xDiff;
-	hBlob	= yDiff;
-	
-}
+
 
 
 //-------------------------------------------------

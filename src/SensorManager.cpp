@@ -8,6 +8,30 @@
 
 #include "SensorManager.h"
 
+// SINGLETON initalizations
+bool SensorManager::instanceFlag = false;
+SensorManager* SensorManager::single = NULL;
+
+//----------------------------------------------
+
+SensorManager* SensorManager::getInstance()
+{
+	if(! instanceFlag)
+	{
+		single = new SensorManager();
+		instanceFlag = true;
+		return single;
+	}else{
+		return single;
+	}
+}
+
+//----------------------------------------------
+SensorManager::SensorManager()
+{}
+//----------------------------------------------
+SensorManager::~SensorManager()
+{}
 
 //-----------------------------------------
 void SensorManager::setup(sensorType _sensorType){
@@ -45,13 +69,15 @@ void SensorManager::setup(sensorType _sensorType){
 		//Related to ComputerVision
 		nearThreshold = 230;
 		farThreshold = 70;
-		bThreshWithOpenCV = true;
+
 		
 		//Computer Vision Stuff
-		colorImg.allocate(kinect.width, kinect.height);//general
-		grayImage.allocate(kinect.width, kinect.height);//general
-		grayThreshNear.allocate(kinect.width, kinect.height);//kinect uses
-		grayThreshFar.allocate(kinect.width, kinect.height);//kinect uses
+		//Main Image used to Cv
+		computerVisionImage.allocate(kinect.width, kinect.height, OF_IMAGE_GRAYSCALE);
+		//filter minSizeBlob, maxSizeBlob, numBlobs
+		contourFinder.setMinAreaRadius(minSizeBlob);
+		contourFinder.setMaxAreaRadius(maxSizeBlob);
+		contourFinder.setThreshold(numBlobs);
 		
 		///////////////////////////////////
 		//General SensorData for others
@@ -64,6 +90,9 @@ void SensorManager::setup(sensorType _sensorType){
 
 //-----------------------------------------
 void SensorManager::update(){
+	
+	bNewSensorFrame = false;
+	
 	if(sensorModel == kinectSensor){
 		
 		kinect.update();
@@ -72,40 +101,45 @@ void SensorManager::update(){
 		if(kinect.isFrameNew()) {
 			
 			// load grayscale depth image from the kinect source
-			grayImage.setFromPixels(kinect.getDepthPixels());
+			computerVisionImage.setFromPixels(kinect.getDepthPixels());
 			
-			// we do two thresholds - one for the far plane and one for the near plane
-			// we then do a cvAnd to get the pixels which are a union of the two thresholds
-			if(bThreshWithOpenCV) {
-				grayThreshNear = grayImage;
-				grayThreshFar = grayImage;
-				grayThreshNear.threshold(nearThreshold, true);
-				grayThreshFar.threshold(farThreshold);
-				cvAnd(grayThreshNear.getCvImage(), grayThreshFar.getCvImage(), grayImage.getCvImage(), NULL);
-			} else {
-				
-				// or we do it ourselves - show people how they can work with the pixels
-				ofPixels & pix = grayImage.getPixels();
-				int numPixels = pix.size();
-				for(int i = 0; i < numPixels; i++) {
-					if(pix[i] < nearThreshold && pix[i] > farThreshold) {
-						pix[i] = 255;
-					} else {
-						pix[i] = 0;
-					}
+			//we do two thresholds - one for the far plane and one for the near plane
+			//we do it ourselves - show people how they can work with the pixels
+			ofPixels & pix = computerVisionImage.getPixels();
+			int numPixels = pix.size();
+			for(int i = 0; i < numPixels; i++) {
+				if(pix[i] < nearThreshold && pix[i] > farThreshold) {
+					pix[i] = 255;
+				} else {
+					pix[i] = 0;
 				}
 			}
 			
-			// update the cv images
-			grayImage.flagImageChanged();
-			
-			// find contours which are between the size of 20 pixels and 1/3 the w*h pixels.
-			// also, find holes is set to true so we will get interior contours as well....
-			contourFinder.findContours(grayImage, minSizeBlob, maxSizeBlob, numBlobs, false);
+			//Set pixels back to main cv image
+			computerVisionImage.setFromPixels(pix);
 		}
-		
 
+		
+		// find contours which are between the size of 20 pixels and 1/3 the w*h pixels.
+		// also, find holes is set to true so we will get interior contours as well....
+		//contourFinder.findContours(grayImage, minSizeBlob, maxSizeBlob, numBlobs, false);
+		contourFinder.findContours(computerVisionImage);
+		bNewSensorFrame = true;
+		
 	}
+	
+	
+	
+	//Some extra Operation at the end of sensor Dection ?
+	//use  isNewSensorFrame for Lattely actions in other parts of code
+	if(bNewSensorFrame){
+		
+	}
+
+}
+//-----------------------------------------
+bool SensorManager::isNewSensorFrame(){
+	return bNewSensorFrame;
 }
 
 //-----------------------------------------
@@ -120,8 +154,12 @@ void SensorManager::draw(){
 		kinect.drawDepth(10, 10, kinect.width*0.5, kinect.height*0.5);
 		kinect.draw(420, 10, kinect.width*0.5, kinect.height*0.5);
 			
-		grayImage.draw(10, 320, kinect.width*0.5, kinect.height*0.5);
-		contourFinder.draw(10, 320, kinect.width*0.5, kinect.height*0.5);
+		computerVisionImage.draw(10, 320, kinect.width*0.5, kinect.height*0.5);
+		ofPushMatrix();
+		ofTranslate(10, 320);
+		ofScale(0.5, 0.5);
+		contourFinder.draw();
+		ofPopMatrix();
 
 		
 		// draw instructions
@@ -138,10 +176,11 @@ void SensorManager::draw(){
 		}
 		
 		reportStream << "press p to switch between images and point cloud, rotate the point cloud with the mouse" << endl
-		<< "using opencv threshold = " << bThreshWithOpenCV <<" (press spacebar)" << endl
+		//<< "using opencv threshold = " << bThreshWithOpenCV <<" (press spacebar)" << endl
 		<< "set near threshold " << nearThreshold << " (press: + -)" << endl
-		<< "set far threshold " << farThreshold << " (press: < >) num blobs found " << contourFinder.nBlobs
-		<< ", fps: " << ofGetFrameRate() << endl
+		<< "set far threshold " << farThreshold
+		//<< " (press: < >) num blobs found " << contourFinder.nBlobs
+		//<< ", fps: " << ofGetFrameRate() << endl
 		<< "press c to close the connection and o to open it again, connection is: " << kinect.isConnected() << endl;
 		
 		if(kinect.hasCamTiltControl()) {
@@ -172,7 +211,7 @@ void SensorManager::drawGuiSensorOptions(bool* opened){
 	
 	//if (ImGui::Begin("Sensor Gui Window", opened, ImGuiWindowFlags_MenuBar)) {
 		
-		string textBlobsFound = "#blobs = "+ofToString(contourFinder.nBlobs, 0);
+		string textBlobsFound = "#blobs = "+ofToString(contourFinder.size(), 0);
 		ImGui::Text(textBlobsFound.c_str());
 		
 		
@@ -181,13 +220,18 @@ void SensorManager::drawGuiSensorOptions(bool* opened){
 			sensorTextType = "Kinect 1";
 			
 			ImGui::Text(sensorTextType.c_str());
-			ImGui::Checkbox("bThreshWithOpenCV", &bThreshWithOpenCV);
+			//ImGui::Checkbox("bThreshWithOpenCV", &bThreshWithOpenCV);
 			ImGui::SliderInt("nearThreshold", &nearThreshold, 0, 255);
 			ImGui::SliderInt("farThreshold", &farThreshold, 0, 255);
 			ImGui::Separator();
-			ImGui::SliderInt("numBlobs ", &numBlobs, 1, 20);
-			ImGui::SliderInt("minBlobs ", &minSizeBlob, 10, 640*480*0.5);
-			ImGui::SliderInt("maxBlobs ", &maxSizeBlob, 10, 640*480*0.5);
+			//ImGui::SliderInt("numBlobs ", &numBlobs, 1, 20);
+			if(ImGui::SliderInt("minBlobs ", &minSizeBlob, 10, kinect.width*kinect.height*0.5)){
+				contourFinder.setMinAreaRadius(minSizeBlob);
+				//contourFinder.setThreshold(numBlobs);
+			}
+			if(ImGui::SliderInt("maxBlobs ", &maxSizeBlob, 10, kinect.width*kinect.height*0.5)){
+				contourFinder.setMaxAreaRadius(maxSizeBlob);
+			}
 			
 			//ImGui::PopItemWidth();
 		}else if (sensorModel == cameraSensor){
@@ -241,7 +285,7 @@ void SensorManager::keyPressed(int key){
 	if(sensorModel == kinectSensor){
 		switch (key) {
 			case ' ':
-				bThreshWithOpenCV = !bThreshWithOpenCV;
+				//bThreshWithOpenCV = !bThreshWithOpenCV;
 				break;
 				
 			case '>':
