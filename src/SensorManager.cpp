@@ -40,53 +40,24 @@ void SensorManager::setup(sensorType _sensorType){
 	
 	///////////////////////
 	//Sensor Configurations
+	bool bSensorReady = false;
 	
 	if (sensorModel == kinectSensor) {
+		bSensorReady = setupKinectSensor();
+	}
 	
-		// enable depth->video image calibration
-		kinect.setRegistration(true);
-		
-		kinect.init();
-		//kinect.init(true); // shows infrared instead of RGB video image
-		//kinect.init(false, false); // disable video image (faster fps)
-		
-		kinect.open();		// opens first available kinect
-		//kinect.open(1);	// open a kinect by id, starting with 0 (sorted by serial # lexicographically))
-		//kinect.open("A00362A08602047A");	// open a kinect using it's unique serial #
-		
-		// print the intrinsic IR sensor values
-		if(kinect.isConnected()) {
-			ofLogNotice() << "sensor-emitter dist: " << kinect.getSensorEmitterDistance() << "cm";
-			ofLogNotice() << "sensor-camera dist:  " << kinect.getSensorCameraDistance() << "cm";
-			ofLogNotice() << "zero plane pixel size: " << kinect.getZeroPlanePixelSize() << "mm";
-			ofLogNotice() << "zero plane dist: " << kinect.getZeroPlaneDistance() << "mm";
-		}
-		
-		// zero the tilt on startup
-		angle = 0;
-		kinect.setCameraTiltAngle(angle);
-		
-		//Related to ComputerVision
-		nearThreshold = 230;
-		farThreshold = 70;
-
-		
-		//Computer Vision Stuff
-		//Main Image used to Cv
-		computerVisionImage.allocate(kinect.width, kinect.height, OF_IMAGE_GRAYSCALE);
-		//filter minSizeBlob, maxSizeBlob, numBlobs
-		contourFinder.setMinAreaRadius(minSizeBlob);
-		contourFinder.setMaxAreaRadius(maxSizeBlob);
-		contourFinder.setThreshold(numBlobs);
-		
-		///////////////////////////////////
-		//General SensorData for others
-		sensorWidth = kinect.width;
-		sensorHeight = kinect.height;
+	else if (sensorModel == cameraSensor){
+		bSensorReady = setupCameraSensor();
 		
 	}
 	
+	if(bSensorReady == false){
+		cout << "//*///*/*/*/*/*/*/* Error sensor setup **/*/*/*////**///" << endl;
+		ofExit(0);
+	}
+	
 }
+
 
 //-----------------------------------------
 void SensorManager::update(){
@@ -127,6 +98,31 @@ void SensorManager::update(){
 		bNewSensorFrame = true;
 		
 	}
+	else if (sensorModel == cameraSensor){
+		cam.update();
+		
+		if(bLearnBackground){
+			if(bresetBackground) {
+				background.reset();
+				bresetBackground = false;
+			}
+		}
+		if(cam.isFrameNew()) {
+			if(bLearnBackground){
+				background.setLearningTime(learningTime);
+			}
+			background.setThresholdValue(thresholdValue);
+			background.update(cam, computerVisionImage);
+			computerVisionImage.update();
+			
+			if(computerVisionImage.isAllocated()){
+				contourFinder.findContours(computerVisionImage);
+			}
+			
+			bNewSensorFrame = true;
+		}
+		
+	}
 	
 	
 	
@@ -155,6 +151,8 @@ void SensorManager::draw(){
 		kinect.draw(420, 10, kinect.width*0.5, kinect.height*0.5);
 			
 		computerVisionImage.draw(10, 320, kinect.width*0.5, kinect.height*0.5);
+		
+		ofSetColor(255, 0, 0);
 		ofPushMatrix();
 		ofTranslate(10, 320);
 		ofScale(0.5, 0.5);
@@ -190,9 +188,26 @@ void SensorManager::draw(){
 		
 		ofDrawBitmapString(reportStream.str(), 20, 652);
 	}
-	
+	else if (sensorModel == cameraSensor){
+		
+		ofSetColor(255, 255, 255);
+		cam.draw(10, 0, cam.getWidth()*0.5, cam.getHeight()*0.5);
+		if(computerVisionImage.isAllocated()) {
+			computerVisionImage.draw(cam.getWidth()*0.5, 0, cam.getWidth()*0.5, cam.getHeight()*0.5);
+		}
+		
+		ofSetColor(255, 0, 0);
+		
+		ofPushMatrix();
+		ofTranslate(cam.getWidth()*0.5, 10);
+		ofScale(0.5, 0.5);
+		contourFinder.draw();
+		ofPopMatrix();
 
 	
+	}
+
+	ofSetColor(255, 255, 255);
 	//Draw some Sensor Option
 	bool isSensorWindow = true;
 	if (isSensorWindow) {
@@ -206,45 +221,60 @@ void SensorManager::draw(){
 //-----------------------------------------
 void SensorManager::drawGuiSensorOptions(bool* opened){
 	
+	string textBlobsFound = "#blobs = "+ofToString(contourFinder.size(), 0);
+	ImGui::Text(textBlobsFound.c_str());
 	
-	//ImGui::Text(sensorTextType.c_str());ImGui::SetNextWindowSize(ImVec2(300, 200), ImGuiSetCond_FirstUseEver);
 	
-	//if (ImGui::Begin("Sensor Gui Window", opened, ImGuiWindowFlags_MenuBar)) {
+	string sensorTextType = "Not configured Yet";
+	if(sensorModel == kinectSensor){
+		sensorTextType = "Kinect 1";
 		
-		string textBlobsFound = "#blobs = "+ofToString(contourFinder.size(), 0);
-		ImGui::Text(textBlobsFound.c_str());
-		
-		
-		string sensorTextType = "Not configured Yet";
-		if(sensorModel == kinectSensor){
-			sensorTextType = "Kinect 1";
-			
-			ImGui::Text(sensorTextType.c_str());
-			//ImGui::Checkbox("bThreshWithOpenCV", &bThreshWithOpenCV);
-			ImGui::SliderInt("nearThreshold", &nearThreshold, 0, 255);
-			ImGui::SliderInt("farThreshold", &farThreshold, 0, 255);
-			ImGui::Separator();
-			//ImGui::SliderInt("numBlobs ", &numBlobs, 1, 20);
-			if(ImGui::SliderInt("minBlobs ", &minSizeBlob, 10, kinect.width*kinect.height*0.5)){
-				contourFinder.setMinAreaRadius(minSizeBlob);
-				//contourFinder.setThreshold(numBlobs);
-			}
-			if(ImGui::SliderInt("maxBlobs ", &maxSizeBlob, 10, kinect.width*kinect.height*0.5)){
-				contourFinder.setMaxAreaRadius(maxSizeBlob);
-			}
-			
-			//ImGui::PopItemWidth();
-		}else if (sensorModel == cameraSensor){
-			sensorTextType = "Camera ... TODO Set here the USC device used";
-			
-			ImGui::Text(sensorTextType.c_str());
+		ImGui::Text(sensorTextType.c_str());
+		//ImGui::Checkbox("bThreshWithOpenCV", &bThreshWithOpenCV);
+		ImGui::SliderInt("nearThreshold", &nearThreshold, 0, 255);
+		ImGui::SliderInt("farThreshold", &farThreshold, 0, 255);
+		ImGui::Separator();
+		//TODO missing this property in ofxCv
+		//ImGui::SliderInt("numBlobs ", &numBlobs, 1, 20);
+		if(ImGui::SliderInt("minBlobs ", &minSizeBlob, 10, kinect.width*kinect.height*0.5)){
+			contourFinder.setMinAreaRadius(minSizeBlob);
+		}
+		if(ImGui::SliderInt("maxBlobs ", &maxSizeBlob, 10, kinect.width*kinect.height*0.5)){
+			contourFinder.setMaxAreaRadius(maxSizeBlob);
 		}
 		
 		//ImGui::PopItemWidth();
+	}else if (sensorModel == cameraSensor){
+		sensorTextType = "OF Camera";
+		ImGui::Text(sensorTextType.c_str());
+		
+		ImGui::Checkbox("Learn Background", &bLearnBackground);
+		if(bLearnBackground){
+			if(ImGui::Button("bresetBackground##drawGuiSensorOptions")){
+				bresetBackground = true;
+			}
+			ImGui::SliderFloat("learningTime##drawGuiSensorOptions", &learningTime, 0, 255);
+		}
+
+
+		ImGui::SliderFloat("thresholdValue##drawGuiSensorOptions", &thresholdValue, 0, 255);
+		
+		if(ImGui::SliderInt("minBlobs ", &minSizeBlob, 10, kinect.width*kinect.height*0.5)){
+			contourFinder.setMinAreaRadius(minSizeBlob);
+		}
+		if(ImGui::SliderInt("maxBlobs ", &maxSizeBlob, 10, kinect.width*kinect.height*0.5)){
+			contourFinder.setMaxAreaRadius(maxSizeBlob);
+		}
+		
+		ImGui::Separator();
+
 		
 		
-		//ImGui::End();
-	//}
+	}
+	else{
+		cout << "SensorManager::Error Set Sensor Mode Type" << endl;
+	}
+
 }
 
 
@@ -362,6 +392,86 @@ void SensorManager::keyPressed(int key){
 				break;
 		}
 	}
+}
+
+
+//-----------------------------------------
+bool SensorManager::setupCameraSensor(){
+	cam.setup(640, 480);
+	
+	bool bConnected = false;
+	
+	//Computer Vision Stuff
+	computerVisionImage.allocate(cam.getWidth(), cam.getHeight(), OF_IMAGE_GRAYSCALE);
+	
+	//filter minSizeBlob, maxSizeBlob, numBlobs
+	contourFinder.setMinAreaRadius(minSizeBlob);
+	contourFinder.setMaxAreaRadius(maxSizeBlob);
+	contourFinder.setThreshold(numBlobs);
+	
+	///////////////////////////////////
+	//General SensorData for others
+	sensorWidth = cam.getWidth();
+	sensorHeight = cam.getHeight();
+	
+	if(cam.isInitialized()){
+		bConnected = true;
+	}
+	
+	return bConnected;
+}
+
+
+//-----------------------------------------
+bool SensorManager::setupKinectSensor(){
+	
+	bool bConnected = false;
+	
+	// enable depth->video image calibration
+	kinect.setRegistration(true);
+	
+	kinect.init();
+	//kinect.init(true); // shows infrared instead of RGB video image
+	//kinect.init(false, false); // disable video image (faster fps)
+	
+	kinect.open();		// opens first available kinect
+	//kinect.open(1);	// open a kinect by id, starting with 0 (sorted by serial # lexicographically))
+	//kinect.open("A00362A08602047A");	// open a kinect using it's unique serial #
+	
+	// print the intrinsic IR sensor values
+	if(kinect.isConnected()) {
+		ofLogNotice() << "sensor-emitter dist: " << kinect.getSensorEmitterDistance() << "cm";
+		ofLogNotice() << "sensor-camera dist:  " << kinect.getSensorCameraDistance() << "cm";
+		ofLogNotice() << "zero plane pixel size: " << kinect.getZeroPlanePixelSize() << "mm";
+		ofLogNotice() << "zero plane dist: " << kinect.getZeroPlaneDistance() << "mm";
+		
+		bConnected = true;
+	}
+	
+	// zero the tilt on startup
+	angle = 0;
+	kinect.setCameraTiltAngle(angle);
+	
+	//Related to ComputerVision
+	nearThreshold = 230;
+	farThreshold = 70;
+	
+	
+	//Computer Vision Stuff
+	//Main Image used to Cv
+	computerVisionImage.allocate(kinect.width, kinect.height, OF_IMAGE_GRAYSCALE);
+	//filter minSizeBlob, maxSizeBlob, numBlobs
+	contourFinder.setMinAreaRadius(minSizeBlob);
+	contourFinder.setMaxAreaRadius(maxSizeBlob);
+	contourFinder.setThreshold(numBlobs);
+	
+	///////////////////////////////////
+	//General SensorData for others
+	sensorWidth = kinect.width;
+	sensorHeight = kinect.height;
+	
+	return bConnected;
+	
 }
 
 

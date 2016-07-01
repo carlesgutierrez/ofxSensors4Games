@@ -14,14 +14,13 @@ void ofxSensors4Games::setup(sensorType _myType, RecognitionMethod _myComputeBlo
 	gui.setup();
 	
 	//setups managers with selected SensorType
-	if(SensorManager::getInstance()->sensorModel == kinectSensor){
-		SensorManager::getInstance()->setup(SensorManager::getInstance()->sensorModel);
-		myControllerRecognition.setup(SensorManager::getInstance()->getWidth(), SensorManager::getInstance()->getHeight(), _myComputeBlobType);
-	}
+	
+	SensorManager::getInstance()->setup(SensorManager::getInstance()->sensorModel);
+	myControllerRecognition.setup(SensorManager::getInstance()->getWidth(),
+								  SensorManager::getInstance()->getHeight(),
+								  _myComputeBlobType);
 	
 	
-
-
 }
 
 //--------------------------------------------------------------

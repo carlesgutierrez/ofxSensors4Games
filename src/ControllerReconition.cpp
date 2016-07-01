@@ -37,6 +37,21 @@ void ControllerReconition::update(){
 }
 
 //-----------------------------------------
+void ControllerReconition::draw(){
+	
+	//Draw Detected Point
+	ofSetColor(ofColor::red);
+	ofDrawCircle(10 + xPosBlob*0.5, 320 + yPosBlob*0.5, 10);//Painting blob result over the Kinect Blob Drawer
+	
+	//Draw some Sensor Option
+	ofSetColor(ofColor::white);
+	bool isControllerWindow = true;
+	if (isControllerWindow) {
+		drawGuiControllerOptions(&isControllerWindow);
+	}
+}
+
+//-----------------------------------------
 void ControllerReconition::updateRecognitionSystem(){
 	
 	//If new SensorFrame
@@ -78,6 +93,7 @@ void ControllerReconition::calcMainBlobLocation(){
 	xPosBlobFloatOsc = (float)(sensorWidth - xPosBlob) / (float)sensorWidth;
 	yPosBlobFloatOsc = (float)(yPosBlob) / (float)sensorHeight;
 }
+
 //----------------------------------------------------------------
 void ControllerReconition::calculateMaxMin(){
 	
@@ -173,20 +189,7 @@ void ControllerReconition::sendOSCBlobData(){
 	sender.sendMessage(m, false);
 }
 
-//-----------------------------------------
-void ControllerReconition::draw(){
-	
-	//Draw Detected Point
-	ofSetColor(ofColor::red);
-	ofDrawCircle(10 + xPosBlob*0.5, 320 + yPosBlob*0.5, 10);//Painting blob result over the Kinect Blob Drawer
-	
-	//Draw some Sensor Option
-	ofSetColor(ofColor::white);
-	bool isControllerWindow = true;
-	if (isControllerWindow) {
-		drawGuiControllerOptions(&isControllerWindow);
-	}
-}
+
 
 //-----------------------------------------
 void ControllerReconition::exit(){

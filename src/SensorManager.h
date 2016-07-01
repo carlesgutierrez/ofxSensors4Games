@@ -46,11 +46,25 @@ public:
 	
 	//----------------------
 	//Kinect
+	bool setupKinectSensor();
 	ofxKinect kinect;
 	//bool bThreshWithOpenCV;
 	int nearThreshold;
 	int farThreshold;
 	int angle;
+	
+	//-----------------------
+	//Webcam or similar
+	
+	bool setupCameraSensor();
+	ofVideoGrabber cam;
+	
+	ofxCv::RunningBackground background;
+	float learningTime = 30;
+	float thresholdValue = 10;
+	bool bresetBackground = true;
+	bool bLearnBackground = true; //TODO by default False
+	//ofImage thresholded;
 	
 private:
 	bool bNewSensorFrame = false;
