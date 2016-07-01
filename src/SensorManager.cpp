@@ -193,7 +193,7 @@ void SensorManager::draw(){
 		ofSetColor(255, 255, 255);
 		cam.draw(10, 0, cam.getWidth()*0.5, cam.getHeight()*0.5);
 		if(computerVisionImage.isAllocated()) {
-			computerVisionImage.draw(cam.getWidth()*0.5, 0, cam.getWidth()*0.5, cam.getHeight()*0.5);
+			computerVisionImage.draw(cam.getWidth()*0.5, 10, cam.getWidth()*0.5, cam.getHeight()*0.5);
 		}
 		
 		ofSetColor(255, 0, 0);
@@ -283,6 +283,8 @@ int SensorManager::getWidth(){
 	int auxWidth = -1;
 	if(sensorModel == kinectSensor){
 		auxWidth = kinect.getWidth();
+	}else if(sensorModel == cameraSensor){
+		auxWidth = cam.getWidth();
 	}
 	
 	return auxWidth;
@@ -293,6 +295,8 @@ int SensorManager::getHeight(){
 	int auxHeight = -1;
 	if(sensorModel == kinectSensor){
 		auxHeight = kinect.getHeight();
+	}else if(sensorModel == cameraSensor){
+		auxHeight = cam.getHeight();
 	}
 	
 	return auxHeight;

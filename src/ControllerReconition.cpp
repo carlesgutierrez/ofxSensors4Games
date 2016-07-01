@@ -41,7 +41,12 @@ void ControllerReconition::draw(){
 	
 	//Draw Detected Point
 	ofSetColor(ofColor::red);
-	ofDrawCircle(10 + xPosBlob*0.5, 320 + yPosBlob*0.5, 10);//Painting blob result over the Kinect Blob Drawer
+	if(SensorManager::getInstance()->sensorModel == kinectSensor){
+		ofDrawCircle(10 + xPosBlob*0.5, 320 + yPosBlob*0.5, 10);//Painting blob result over the Kinect Blob Drawer
+	}
+	else if(SensorManager::getInstance()->sensorModel == cameraSensor){
+		ofDrawCircle(320 + xPosBlob*0.5, 10 + yPosBlob*0.5, 10);//Painting blob result over the Kinect Blob Drawer
+	}
 	
 	//Draw some Sensor Option
 	ofSetColor(ofColor::white);
