@@ -64,6 +64,7 @@ public:
 	bool bresetBackground = true;
 	bool bSimpleBackgroundSubstraction = true;
 	bool bLearnBackground = false;
+	bool bBlackWhiteCv = true;
 	
 	ofImage diffCam;
 	ofImage backGroundCam;

@@ -121,16 +121,23 @@ void SensorManager::update(){
 				contourFinder.findContours(computerVisionImage);
 			}
 			else if(bSimpleBackgroundSubstraction){
+				
+				//Save Background Frame
 				if(bresetBackground){
-					backGroundCam.setFromPixels(cam.getPixels(), cam.getWidth(), cam.getHeight(), OF_IMAGE_COLOR);
+					ofxCv::convertColor(cam, backGroundCam, CV_RGB2GRAY);
+					backGroundCam.update();
 					bresetBackground = false;
 				}
-				computerVisionImage.setFromPixels(cam.getPixels(), cam.getWidth(), cam.getHeight(), OF_IMAGE_COLOR);
+				
+				//Update grey pixels to our cv image
+				ofxCv::convertColor(cam, computerVisionImage, CV_RGB2GRAY);
 				computerVisionImage.update();
 				
-				ofxCv::absdiff(cam, backGroundCam, diffCam);
+				//then background substraction //TODO check diferent methods
+				ofxCv::absdiff(computerVisionImage, backGroundCam, diffCam);
 				diffCam.update();
 				
+				//Apply Threshold and find contours
 				contourFinder.setThreshold(thresholdValue);
 				contourFinder.findContours(diffCam);
 				
@@ -220,85 +227,97 @@ void SensorManager::draw(){
 		if(computerVisionImage.isAllocated()) {
 			
 			ofSetColor(255);
+			
+			//--------------------------------------
+			//Draw CV images
+			
 			//movie.draw(0, 0); //TODO VIDEO OPTION
 			cam.draw(10, 10, cam.getWidth()*0.5, cam.getHeight()*0.5);
 			
-			if(bSimpleBackgroundSubstraction){
-				backGroundCam.draw(cam.getWidth()*0.5, 10, cam.getWidth()*0.5, cam.getHeight()*0.5);
-				diffCam.draw(2*cam.getWidth()*0.5, 10, cam.getWidth()*0.5, cam.getHeight()*0.5);
+			if(bLearnBackground){
+				computerVisionImage.draw(cam.getWidth()*0.5, 10, cam.getWidth()*0.5, cam.getHeight()*0.5);
+				ofxCv::toOf(background.getBackground(), backGroundCam);
+				backGroundCam.draw(2*cam.getWidth()*0.5, 10, cam.getWidth()*0.5, cam.getHeight()*0.5);
+				
+			}
+			else if(bSimpleBackgroundSubstraction){
+				diffCam.draw(cam.getWidth()*0.5, 10, cam.getWidth()*0.5, cam.getHeight()*0.5);
+				backGroundCam.draw(2*cam.getWidth()*0.5, 10, cam.getWidth()*0.5, cam.getHeight()*0.5);
 			}
 			else{
 				computerVisionImage.draw(cam.getWidth()*0.5, 10, cam.getWidth()*0.5, cam.getHeight()*0.5);
 			}
-				//---------------------------------------
-				//Kyle Blob Tracker Visualization
-				if(bTrackgingActive){
+			
+			
+			//---------------------------------------
+			//Kyle Blob Tracker Visualization
+			if(bTrackgingActive){
+				
+				ofxCv::RectTracker& tracker = contourFinder.getTracker(); //TODO To acces this from outside may be neceseary to clean
+				
+				if(showLabels) {
 					
-					ofxCv::RectTracker& tracker = contourFinder.getTracker(); //TODO To acces this from outside may be neceseary to clean
+					for(int i = 0; i < contourFinder.size(); i++) {
+						ofPoint center = ofxCv::toOf(contourFinder.getCentroid(i));
+						ofPushMatrix();
+						ofTranslate(center.x, center.y);
+						int label = contourFinder.getLabel(i);
+						string msg = ofToString(label) + ":" + ofToString(tracker.getAge(label));
+						ofDrawBitmapString(msg, 0, 0);
+						ofVec2f velocity = ofxCv::toOf(contourFinder.getVelocity(i));
+						ofScale(5, 5);
+						ofDrawLine(0, 0, velocity.x, velocity.y);
+						ofPopMatrix();
+					}
 					
-					if(showLabels) {
-						
-						for(int i = 0; i < contourFinder.size(); i++) {
-							ofPoint center = ofxCv::toOf(contourFinder.getCentroid(i));
-							ofPushMatrix();
-							ofTranslate(center.x, center.y);
-							int label = contourFinder.getLabel(i);
-							string msg = ofToString(label) + ":" + ofToString(tracker.getAge(label));
-							ofDrawBitmapString(msg, 0, 0);
-							ofVec2f velocity = ofxCv::toOf(contourFinder.getVelocity(i));
-							ofScale(5, 5);
-							ofDrawLine(0, 0, velocity.x, velocity.y);
-							ofPopMatrix();
+				}
+				else {
+					for(int i = 0; i < contourFinder.size(); i++) {
+						unsigned int label = contourFinder.getLabel(i);
+						// only draw a line if this is not a new label
+						if(tracker.existsPrevious(label)) {
+							// use the label to pick a random color
+							ofSeedRandom(label << 24);
+							ofSetColor(ofColor::fromHsb(ofRandom(255), 255, 255));
+							// get the tracked object (cv::Rect) at current and previous position
+							const cv::Rect& previous = tracker.getPrevious(label);
+							const cv::Rect& current = tracker.getCurrent(label);
+							// get the centers of the rectangles
+							ofVec2f previousPosition(previous.x + previous.width / 2, previous.y + previous.height / 2);
+							ofVec2f currentPosition(current.x + current.width / 2, current.y + current.height / 2);
+							ofDrawLine(previousPosition, currentPosition);
 						}
-						
-					}
-					else {
-						for(int i = 0; i < contourFinder.size(); i++) {
-							unsigned int label = contourFinder.getLabel(i);
-							// only draw a line if this is not a new label
-							if(tracker.existsPrevious(label)) {
-								// use the label to pick a random color
-								ofSeedRandom(label << 24);
-								ofSetColor(ofColor::fromHsb(ofRandom(255), 255, 255));
-								// get the tracked object (cv::Rect) at current and previous position
-								const cv::Rect& previous = tracker.getPrevious(label);
-								const cv::Rect& current = tracker.getCurrent(label);
-								// get the centers of the rectangles
-								ofVec2f previousPosition(previous.x + previous.width / 2, previous.y + previous.height / 2);
-								ofVec2f currentPosition(current.x + current.width / 2, current.y + current.height / 2);
-								ofDrawLine(previousPosition, currentPosition);
-							}
-						}
-					}
-					
-					
-					// this chunk of code visualizes the creation and destruction of labels
-					const vector<unsigned int>& currentLabels = tracker.getCurrentLabels();
-					const vector<unsigned int>& previousLabels = tracker.getPreviousLabels();
-					const vector<unsigned int>& newLabels = tracker.getNewLabels();
-					const vector<unsigned int>& deadLabels = tracker.getDeadLabels();
-					
-					ofSetColor(ofxCv::cyanPrint);
-					for(int i = 0; i < currentLabels.size(); i++) {
-						int j = currentLabels[i];
-						ofDrawLine(j, 0, j, 4);
-					}
-					ofSetColor(ofxCv::magentaPrint);
-					for(int i = 0; i < previousLabels.size(); i++) {
-						int j = previousLabels[i];
-						ofDrawLine(j, 4, j, 8);
-					}
-					ofSetColor(ofxCv::yellowPrint);
-					for(int i = 0; i < newLabels.size(); i++) {
-						int j = newLabels[i];
-						ofDrawLine(j, 8, j, 12);
-					}
-					ofSetColor(ofColor::white);
-					for(int i = 0; i < deadLabels.size(); i++) {
-						int j = deadLabels[i];
-						ofDrawLine(j, 12, j, 16);
 					}
 				}
+				
+				
+				// this chunk of code visualizes the creation and destruction of labels
+				const vector<unsigned int>& currentLabels = tracker.getCurrentLabels();
+				const vector<unsigned int>& previousLabels = tracker.getPreviousLabels();
+				const vector<unsigned int>& newLabels = tracker.getNewLabels();
+				const vector<unsigned int>& deadLabels = tracker.getDeadLabels();
+				
+				ofSetColor(ofxCv::cyanPrint);
+				for(int i = 0; i < currentLabels.size(); i++) {
+					int j = currentLabels[i];
+					ofDrawLine(j, 0, j, 4);
+				}
+				ofSetColor(ofxCv::magentaPrint);
+				for(int i = 0; i < previousLabels.size(); i++) {
+					int j = previousLabels[i];
+					ofDrawLine(j, 4, j, 8);
+				}
+				ofSetColor(ofxCv::yellowPrint);
+				for(int i = 0; i < newLabels.size(); i++) {
+					int j = newLabels[i];
+					ofDrawLine(j, 8, j, 12);
+				}
+				ofSetColor(ofColor::white);
+				for(int i = 0; i < deadLabels.size(); i++) {
+					int j = deadLabels[i];
+					ofDrawLine(j, 12, j, 16);
+				}
+			}
 
 		}
 		
@@ -354,16 +373,21 @@ void SensorManager::drawGuiSensorOptions(bool* opened){
 		sensorTextType = "OF Camera";
 		ImGui::Text(sensorTextType.c_str());
 		
-		ImGui::Checkbox("Learn BK", &bLearnBackground);
-		if(bLearnBackground){
-			ImGui::SliderFloat("Learning Time", &learningTime, 0, 255);
-		}
-
-		if(ImGui::Button("Reset BK")){
+		ImGui::Checkbox("Do Learning Background", &bLearnBackground);
+		
+		if(ImGui::Button("Reset Background")){
 			bresetBackground = true;
 		}
 		
-		ImGui::Checkbox("Simple BK Substraction", &bSimpleBackgroundSubstraction);
+		if(bLearnBackground){
+			ImGui::SameLine();
+			ImGui::PushItemWidth(100);
+			ImGui::SliderFloat("Learning Time", &learningTime, 0, 255);
+			ImGui::PopItemWidth();
+		}
+		
+		
+		ImGui::Checkbox("Background Substraction", &bSimpleBackgroundSubstraction);
 
 
 		ImGui::SliderFloat("Threshold Value", &thresholdValue, 0, 255);
