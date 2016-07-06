@@ -226,7 +226,7 @@ void SensorManager::draw(){
 		
 		if(computerVisionImage.isAllocated()) {
 			
-			ofSetColor(255);
+			ofSetColor(255, 255, 255);
 			
 			//--------------------------------------
 			//Draw CV images
@@ -253,25 +253,33 @@ void SensorManager::draw(){
 			//Kyle Blob Tracker Visualization
 			if(bTrackgingActive){
 				
-				ofxCv::RectTracker& tracker = contourFinder.getTracker(); //TODO To acces this from outside may be neceseary to clean
-				
+				//TODO To acces this from outside may be neceseary to clean
+				ofxCv::RectTracker& tracker = contourFinder.getTracker();
+			
+			
 				if(showLabels) {
 					
 					for(int i = 0; i < contourFinder.size(); i++) {
 						ofPoint center = ofxCv::toOf(contourFinder.getCentroid(i));
 						ofPushMatrix();
-						ofTranslate(center.x, center.y);
+						ofTranslate(320, 10);
+						ofTranslate(center.x*0.5, center.y*0.5);
 						int label = contourFinder.getLabel(i);
 						string msg = ofToString(label) + ":" + ofToString(tracker.getAge(label));
 						ofDrawBitmapString(msg, 0, 0);
 						ofVec2f velocity = ofxCv::toOf(contourFinder.getVelocity(i));
-						ofScale(5, 5);
-						ofDrawLine(0, 0, velocity.x, velocity.y);
+						ofDrawLine(0, 0, velocity.x*0.5, velocity.y*0.5);
 						ofPopMatrix();
+						
 					}
 					
 				}
 				else {
+					
+					ofPushMatrix();
+					ofTranslate(320, 10);
+					ofScale(0.5, 0.5);
+					
 					for(int i = 0; i < contourFinder.size(); i++) {
 						unsigned int label = contourFinder.getLabel(i);
 						// only draw a line if this is not a new label
@@ -288,8 +296,11 @@ void SensorManager::draw(){
 							ofDrawLine(previousPosition, currentPosition);
 						}
 					}
+					
+					ofPopMatrix();
 				}
 				
+			
 				
 				// this chunk of code visualizes the creation and destruction of labels
 				const vector<unsigned int>& currentLabels = tracker.getCurrentLabels();
@@ -317,6 +328,8 @@ void SensorManager::draw(){
 					int j = deadLabels[i];
 					ofDrawLine(j, 12, j, 16);
 				}
+			
+				
 			}
 
 		}
@@ -400,6 +413,17 @@ void SensorManager::drawGuiSensorOptions(bool* opened){
 		}
 		
 		ImGui::Separator();
+		
+		ImGui::Checkbox("Activate Tracking", &bTrackgingActive);
+		
+		if(bTrackgingActive){
+			ImGui::SliderInt("Max Persistance", &maxPersistenceTracking, 5, 100);
+			ImGui::SliderInt("Max Distance", &maxDistanceTracking, 10, 100);
+			ImGui::Checkbox("Show Labels", &showLabels);
+		}
+		
+		
+		
 
 		
 		
@@ -554,9 +578,9 @@ bool SensorManager::setupCameraSensor(){
 	///Tracker
 	if(bTrackgingActive){
 		// wait for half a frame before forgetting something
-		contourFinder.getTracker().setPersistence(15);
+		contourFinder.getTracker().setPersistence(maxPersistenceTracking);
 		// an object can move up to 32 pixels per frame
-		contourFinder.getTracker().setMaximumDistance(32);
+		contourFinder.getTracker().setMaximumDistance(maxDistanceTracking);
 		showLabels = true;
 	}
 	

@@ -83,7 +83,9 @@ private:
 	//-----------------------
 	//Tracking mode
 	bool bTrackgingActive = false;
-	bool showLabels = false;
+	bool showLabels = true;
+	int maxPersistenceTracking = 15;
+	int maxDistanceTracking = 32;
 
 public:
 	//Related to ComputerVision
