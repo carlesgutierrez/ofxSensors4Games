@@ -55,7 +55,6 @@ public:
 	
 	//-----------------------
 	//Webcam or similar
-	
 	bool setupCameraSensor();
 	ofVideoGrabber cam;
 	
@@ -63,11 +62,27 @@ public:
 	float learningTime = 30;
 	float thresholdValue = 10;
 	bool bresetBackground = true;
-	bool bLearnBackground = true; //TODO by default False
-	//ofImage thresholded;
+	bool bSimpleBackgroundSubstraction = true;
+	bool bLearnBackground = false;
+	
+	ofImage diffCam;
+	ofImage backGroundCam;
+	
+	//-----------------------
+	//Tracking mode
+	void setTrackingMode(bool _status);
 	
 private:
+	
+	//----------------------
+	//General Sensor frame available
 	bool bNewSensorFrame = false;
+
+	
+	//-----------------------
+	//Tracking mode
+	bool bTrackgingActive = false;
+	bool showLabels = false;
 
 public:
 	//Related to ComputerVision
