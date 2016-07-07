@@ -65,6 +65,11 @@ public:
 	bool bSimpleBackgroundSubstraction = true;
 	bool bLearnBackground = false;
 	bool bBlackWhiteCv = true;
+	bool bInvertContourFinderThreshold = false;
+	bool bAutoThreshold = true;
+	bool bContourFinderThreshold = false;
+	bool bContourFinderColorThreshold = false;
+	ofColor colorTargetContourFinder = ofColor(0, 0, 255); //Default Blue Color
 	
 	ofImage diffCam;
 	ofImage backGroundCam;

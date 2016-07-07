@@ -122,31 +122,93 @@ void SensorManager::update(){
 			}
 			else if(bSimpleBackgroundSubstraction){
 				
+				//Camera Image to Gray
+				ofxCv::convertColor(cam, computerVisionImage, CV_RGB2GRAY);
+				computerVisionImage.update();
+				
 				//Save Background Frame
 				if(bresetBackground){
-					ofxCv::convertColor(cam, backGroundCam, CV_RGB2GRAY);
+					backGroundCam = computerVisionImage;
 					backGroundCam.update();
 					bresetBackground = false;
 				}
 				
-				//Update grey pixels to our cv image
-				ofxCv::convertColor(cam, computerVisionImage, CV_RGB2GRAY);
-				computerVisionImage.update();
 				
 				//then background substraction //TODO check diferent methods
 				ofxCv::absdiff(computerVisionImage, backGroundCam, diffCam);
+				
+				//Apply invert Threshold
+				if(bInvertContourFinderThreshold)contourFinder.setInvert(true);
+				else contourFinder.setInvert(false);
+				
+				if(bContourFinderThreshold){
+					//FindContours Threshold
+					contourFinder.setThreshold(thresholdValue);
+					contourFinder.findContours(diffCam);
+				}else if(bAutoThreshold){
+					//Automatic Thresholding
+					ofxCv::autothreshold(diffCam);
+					contourFinder.findContours(diffCam);
+				}
+				else{
+					//Regular Threshold
+					ofxCv::threshold(diffCam, thresholdValue);
+					contourFinder.findContours(diffCam);
+				}
+				
 				diffCam.update();
 				
-				//Apply Threshold and find contours
-				contourFinder.setThreshold(thresholdValue);
-				contourFinder.findContours(diffCam);
-				
 			}
-			else{
+			else{ //ContourFinder Methods
+				
+				//Update Camera colors
 				computerVisionImage.setFromPixels(cam.getPixels(), cam.getWidth(), cam.getHeight(), OF_IMAGE_COLOR);
 				computerVisionImage.update();
 				
+				//Threshold
+				
+				if(bContourFinderThreshold){
+					
+					contourFinder.setAutoThreshold(true);
+					
+					if(bContourFinderColorThreshold){
+						//FindContours Threshold
+						contourFinder.setUseTargetColor(true);
+						contourFinder.setTargetColor(colorTargetContourFinder);
+						//TODO ADD Color Picker From Camera.
+					}
+				
+				}else{
+					//Default Threshold Method
+					/*
+					 ContourFinder::ContourFinder()
+					 :autoThreshold(true)
+					 ,invert(false)
+					 ,simplify(true)
+					 ,thresholdValue(128.)
+					 ,useTargetColor(false)
+					 ,contourFindingMode(CV_RETR_EXTERNAL)
+					 ,sortBySize(false) {
+						resetMinArea();
+						resetMaxArea();
+					 }*/
+					
+					contourFinder.setAutoThreshold(true);
+					contourFinder.setInvert(false);
+					contourFinder.setUseTargetColor(false);
+					contourFinder.setThreshold(thresholdValue);
+				}
+				
+				
+				//Apply invert Threshold
+				if(bInvertContourFinderThreshold)contourFinder.setInvert(true);
+				else contourFinder.setInvert(false);
+				
+				
+				//Apply Configured Thresdhold
 				contourFinder.setThreshold(thresholdValue);
+				
+				//Find Countours
 				contourFinder.findContours(computerVisionImage);
 
 			}
@@ -167,6 +229,9 @@ void SensorManager::update(){
 	}
 
 }
+
+
+
 //-----------------------------------------
 bool SensorManager::isNewSensorFrame(){
 	return bNewSensorFrame;
@@ -399,9 +464,34 @@ void SensorManager::drawGuiSensorOptions(bool* opened){
 			ImGui::PopItemWidth();
 		}
 		
-		
 		ImGui::Checkbox("Background Substraction", &bSimpleBackgroundSubstraction);
+		
+		if(bSimpleBackgroundSubstraction){
+			ImGui::SameLine();
+			ImGui::Checkbox("Auto Threshold", &bAutoThreshold);
+		}
+		
+		ImGui::Checkbox("ContoursFinder Options", &bContourFinderThreshold);
+		ImGui::Checkbox("Invert Threshold ContoursFinder", &bInvertContourFinderThreshold);
+	
+		if(bContourFinderThreshold){
+			
+			ImGui::Checkbox("ContoursFinder Color Target", &bContourFinderColorThreshold);
+			if(bContourFinderColorThreshold){
+				ImVec4 colorTargetVec = colorTargetContourFinder;
+				ImGui::ColorEdit3("Color Target ContourFinder##ContourFinder", (float*)& colorTargetVec);
+				
+				if(bContourFinderColorThreshold){
+					colorTargetContourFinder.r = colorTargetVec.x*255;
+					colorTargetContourFinder.g = colorTargetVec.y*255;
+					colorTargetContourFinder.b = colorTargetVec.z*255;
+				}
+			}
+				
+		}
+		
 
+		
 
 		ImGui::SliderFloat("Threshold Value", &thresholdValue, 0, 255);
 		
@@ -421,6 +511,7 @@ void SensorManager::drawGuiSensorOptions(bool* opened){
 			ImGui::SliderInt("Max Distance", &maxDistanceTracking, 10, 100);
 			ImGui::Checkbox("Show Labels", &showLabels);
 		}
+		
 		
 		
 		
