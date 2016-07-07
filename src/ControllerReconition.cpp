@@ -23,13 +23,27 @@ void ControllerReconition::setup(int w, int h, RecognitionMethod _myComputeBlobT
 	sender.setup(HOST, PORT);
 	
 	myComputeBlobType = _myComputeBlobType;
+	
+	//polyline
+	polylinesIndex = -1;
+	ofPolyline pol1;
+	polylines.push_back(pol1);
+	ofPolyline pol2;
+	polylines.push_back(pol2);
+	
+	imageRecognitionPosition = ofPoint(320, 10);
+	imageRecognitionW = 320;
+	imageRecognitionH = 240;
+}
+
+void ControllerReconition::updateQuadAreasRecognition(){
+	
 }
 
 //-----------------------------------------
 void ControllerReconition::update(){
 	
-	//What at copy
-	//myUpdatedBlobs = _myUpdatedBlobs;
+	updateQuadAreasRecognition();
 	
 	updateRecognitionSystem();
 	
@@ -53,6 +67,22 @@ void ControllerReconition::draw(){
 	bool isControllerWindow = true;
 	if (isControllerWindow) {
 		drawGuiControllerOptions(&isControllerWindow);
+	}
+	
+	
+	if(polylines.size() > 1){
+		//Draw polyline Areas
+		ofPushMatrix();
+		
+		ofTranslate(imageRecognitionPosition.x, imageRecognitionPosition.y, 0);
+		
+		ofSetColor(ofColor::yellowGreen);
+		polylines[0].draw();
+		
+		ofSetColor(ofColor::royalBlue);
+		polylines[1].draw();
+		
+		ofPopMatrix();
 	}
 }
 
@@ -194,31 +224,16 @@ void ControllerReconition::sendOSCBlobData(){
 	sender.sendMessage(m, false);
 }
 
-
-
-//-----------------------------------------
-void ControllerReconition::exit(){
-	
-}
-
-//-----------------------------------------
-void ControllerReconition::keyPressed(int key){
-	
-}
-
-
-
-
 //-------------------------------------------------
 void ControllerReconition::drawGuiControllerOptions(bool* opened){
 	
 	
 	ImGui::SetNextWindowSize(ImVec2(300, 200), ImGuiSetCond_FirstUseEver);
 	
-	if (ImGui::Begin("Controller Options Gui", opened, ImGuiWindowFlags_MenuBar)) {
+	if (ImGui::Begin("p & Down + MaxMin Recognition", opened, ImGuiWindowFlags_MenuBar)) {
 		
-		//ImGui::PushItemWidth(100);
-		string recognitionTextType = "Using Kinect & MaxMin Recognition";
+		
+		string recognitionTextType = "Configure Up&Down Values";
 		
 		ImGui::Text(recognitionTextType.c_str());
 		
@@ -235,27 +250,71 @@ void ControllerReconition::drawGuiControllerOptions(bool* opened){
 		
 		ImGui::Separator();
 		
-		string textOscInfo0 = "Sending OSC data:";
-		string textOscInfo1 = "Port:";
-		string textOscInfo2 = "Ip:";
+		ImGui::PushItemWidth(100);
 		
 		ImGui::Text("Sending OSC data to ");
 		ImGui::Text(ofToString(PORT,0).c_str());
 		ImGui::Text(HOST.c_str());
 		//ImGui::InputText("Host IP", HOST, IM_ARRAYSIZE(HOST));
 		//ImGui::InputText("Port Num", PORTText, IM_ARRAYSIZE(PORTText));
-		ImGui::SliderFloat("(OSC f 0) xOSCBlob", &xPosBlobFloatOsc, 0, 1);
-		ImGui::SliderFloat("(OSC f 1) yOSCBlob", &yPosBlobFloatOsc, 0, 1);
-		ImGui::SliderFloat("(OSC f 2) fUpActionBlobOSC", &fUpActionBlob_OSC, 0, 1);
-		ImGui::SliderFloat("(OSC f 3) fDownActionBlobOSC", &fDownActionBlob_OSC, 0, 1);
+		ImGui::SliderFloat("(f0) xOSCBlob", &xPosBlobFloatOsc, 0, 1);
+		ImGui::SameLine();
+		ImGui::SliderFloat("(f1) yOSCBlob", &yPosBlobFloatOsc, 0, 1);
+		//ImGui::VSliderFloat("(OSC f 2) fUpActionBlobOSC", ImVec2(20, 50), &fUpActionBlob_OSC, 0, 1);ImGui::SameLine();
+		//ImGui::VSliderFloat("(OSC f 3) fDownActionBlobOSC", ImVec2(20, 50), &fDownActionBlob_OSC, 0, 1);
+		ImGui::SliderFloat("(f2) fUpActionBlobOSC", &fUpActionBlob_OSC, 0, 1);
+		ImGui::SameLine();
+		ImGui::SliderFloat("(f13) fDownActionBlobOSC", &fDownActionBlob_OSC, 0, 1);
 		
-		
-		//ImGui::PopItemWidth();
+		ImGui::PopItemWidth();
 		
 		
 		ImGui::End();
 		
-		medianBlobHeightValue.draw(500 , 500, 320, 100, 100, "medianBlobHeightValue", true, 150);
+		//TODO Add This to plot gui
+		//medianBlobHeightValue.draw(500 , 500, 320, 100, 100, "medianBlobHeightValue", true, 150);
 	}
 }
 
+
+//-----------------------------------------
+void ControllerReconition::keyPressed(int key){
+	
+	//	cout << "polylinesIndex = " << polylinesIndex << endl;
+	
+	if(key == '1'){
+		polylinesIndex = 0;
+		polylines[polylinesIndex].clear();
+	}
+	else if(key == '2'){
+		polylinesIndex = 1;
+		polylines[polylinesIndex].clear();
+	}else if(key == OF_KEY_RETURN){
+		if(polylines.size() > 0 && polylinesIndex < polylines.size() && polylines[polylinesIndex].size() > 0){
+			polylines[polylinesIndex].close();
+		}
+	}
+
+}
+
+//-----------------------------------------
+void ControllerReconition::mouseReleased (int x, int y, int button){
+	
+
+	
+	if(x > imageRecognitionPosition.x && x < imageRecognitionPosition.x+imageRecognitionW){
+		if(y > imageRecognitionPosition.y && y < imageRecognitionPosition.y+imageRecognitionH){
+
+			if(polylines.size() > 0 && polylinesIndex < polylines.size()){
+				polylines[polylinesIndex].addVertex(ofPoint(x- imageRecognitionPosition.x, y - imageRecognitionPosition.y));
+			}
+			
+		}
+	}
+	
+}
+
+//-----------------------------------------
+void ControllerReconition::exit(){
+	
+}

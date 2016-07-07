@@ -100,6 +100,8 @@ public:
 	ofxCv::ContourFinder contourFinder;
 	
 	//Blobs
+	//int minTotalBlobs = 10;
+	//int maxTotalBlobs = 200;
 	int minSizeBlob = 10;
 	int maxSizeBlob = 640*480*0.5;
 	int numBlobs = 20;

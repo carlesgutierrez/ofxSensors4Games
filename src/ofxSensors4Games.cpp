@@ -71,3 +71,9 @@ void ofxSensors4Games::keyPressed (int key) {
 	myControllerRecognition.keyPressed(key);
 	SensorManager::getInstance()->keyPressed(key);
 }
+
+//--------------------------------------------------------------
+void ofxSensors4Games::mouseReleased (int x, int y, int button) {
+	myControllerRecognition.mouseReleased(x, y, button);
+	//SensorManager::getInstance()->keyPressed(key);
+}

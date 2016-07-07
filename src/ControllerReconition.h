@@ -30,6 +30,7 @@ public:
 	void draw();
 	void exit();
 	void keyPressed(int key);
+	void mouseReleased (int x, int y, int button);
 	void drawGuiControllerOptions(bool* opened);
 	void calcMainBlobLocation();
 	void sendOSCBlobData();
@@ -46,6 +47,16 @@ public:
 	int wBlob = -1;
 	int hBlob = -1;
 	////////////////////////////////
+	//Poliline areas recognition
+	void updateQuadAreasRecognition();
+	vector<ofPolyline> polylines;
+	int polylinesIndex = -1;
+	
+	//Patch to save the right Working area position // TODO get this data from sourceSensor // Wait until is being done properly in the GUI
+	ofPoint imageRecognitionPosition;
+	int imageRecognitionW;
+	int imageRecognitionH;
+	
 
 	//TODO other movements detection
 	//bool bMoveLeft = false;

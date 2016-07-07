@@ -495,10 +495,10 @@ void SensorManager::drawGuiSensorOptions(bool* opened){
 
 		ImGui::SliderFloat("Threshold Value", &thresholdValue, 0, 255);
 		
-		if(ImGui::SliderInt("# minBlobs", &minSizeBlob, 10, kinect.width*kinect.height*0.5)){
+		if(ImGui::SliderInt("min Area Blob", &minSizeBlob, 10, kinect.width*kinect.height*0.5)){
 			contourFinder.setMinAreaRadius(minSizeBlob);
 		}
-		if(ImGui::SliderInt("# maxBlobs", &maxSizeBlob, 10, kinect.width*kinect.height*0.5)){
+		if(ImGui::SliderInt("max Area Blob", &maxSizeBlob, 10, kinect.width*kinect.height*0.5)){
 			contourFinder.setMaxAreaRadius(maxSizeBlob);
 		}
 		

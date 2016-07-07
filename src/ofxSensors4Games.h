@@ -33,6 +33,7 @@ public:
 	void draw();
 	void exit();
 	void keyPressed(int key);
+	void mouseReleased (int x, int y, int button);
 
 	//Type of Sensor used in the ComputerVision input
 	//SensorManager mySensor;
