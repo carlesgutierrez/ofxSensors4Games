@@ -28,25 +28,31 @@ SensorManager* SensorManager::getInstance()
 
 //----------------------------------------------
 SensorManager::SensorManager()
-{}
+{
+	
+}
 //----------------------------------------------
 SensorManager::~SensorManager()
 {}
 
+
+
+
 //-----------------------------------------
-void SensorManager::setup(sensorType _sensorType){
+void SensorManager::setup(sensorType _sensorType, sensorMode _sensorMode){
 	
-	sensorModel = _sensorType;
+	typeSensor = _sensorType;
+	modeSensor = _sensorMode;
 	
 	///////////////////////
 	//Sensor Configurations
 	bool bSensorReady = false;
 	
-	if (sensorModel == kinectSensor) {
+	if (typeSensor == kinectSensor) {
 		bSensorReady = setupKinectSensor();
 	}
 	
-	else if (sensorModel == cameraSensor){
+	else if (typeSensor == cameraSensor){
 		bSensorReady = setupCameraSensor();
 		
 	}
@@ -56,6 +62,8 @@ void SensorManager::setup(sensorType _sensorType){
 		ofExit(0);
 	}
 	
+	ofRegisterKeyEvents(this);
+	
 }
 
 
@@ -64,7 +72,7 @@ void SensorManager::update(){
 	
 	bNewSensorFrame = false;
 	
-	if(sensorModel == kinectSensor){
+	if(typeSensor == kinectSensor){
 		
 		kinect.update();
 		
@@ -98,8 +106,16 @@ void SensorManager::update(){
 		bNewSensorFrame = true;
 		
 	}
-	else if (sensorModel == cameraSensor){
-		cam.update();
+	else if (typeSensor == cameraSensor){
+		
+		if(modeSensor == simulationMode){
+			videoPlayerCam.update();
+			bNewSensorFrame = videoPlayerCam.isFrameNew();
+		}
+		else if(modeSensor == realTimeMode){
+			cam.update();
+			bNewSensorFrame = cam.isFrameNew();
+		}
 		
 		if(bLearnBackground){
 			if(bresetBackground) {
@@ -107,7 +123,8 @@ void SensorManager::update(){
 				bresetBackground = false;
 			}
 		}
-		if(cam.isFrameNew()) {
+		
+		if(bNewSensorFrame) {
 			
 			//blur(movie, 10);//TODO This! easy and fast. Add slider options
 			
@@ -123,7 +140,13 @@ void SensorManager::update(){
 			else if(bSimpleBackgroundSubstraction){
 				
 				//Camera Image to Gray
-				ofxCv::convertColor(cam, computerVisionImage, CV_RGB2GRAY);
+				if(modeSensor == simulationMode){
+					ofxCv::convertColor(videoPlayerCam, computerVisionImage, CV_RGB2GRAY);
+				}
+				else if(modeSensor == realTimeMode){
+					ofxCv::convertColor(cam, computerVisionImage, CV_RGB2GRAY);
+				}
+				
 				computerVisionImage.update();
 				
 				//Save Background Frame
@@ -162,7 +185,13 @@ void SensorManager::update(){
 			else{ //ContourFinder Methods
 				
 				//Update Camera colors
-				computerVisionImage.setFromPixels(cam.getPixels(), cam.getWidth(), cam.getHeight(), OF_IMAGE_COLOR);
+				if(modeSensor == simulationMode){
+					computerVisionImage.setFromPixels(videoPlayerCam.getPixels(), sensorWidth, sensorHeight, OF_IMAGE_COLOR);
+				}
+				else if(modeSensor == realTimeMode){
+					computerVisionImage.setFromPixels(cam.getPixels(), sensorWidth, sensorHeight, OF_IMAGE_COLOR);
+				}
+				
 				computerVisionImage.update();
 				
 				//Threshold
@@ -213,9 +242,6 @@ void SensorManager::update(){
 
 			}
 
-			
-			
-			bNewSensorFrame = true;
 		}
 		
 	}
@@ -240,21 +266,21 @@ bool SensorManager::isNewSensorFrame(){
 //-----------------------------------------
 void SensorManager::draw(){
 	
-	if(sensorModel == kinectSensor){
+	if(typeSensor == kinectSensor){
 		
 		ofSetColor(255, 255, 255);
 		
 
 		// draw from the live kinect
-		kinect.drawDepth(10, 10, kinect.width*0.5, kinect.height*0.5);
-		kinect.draw(420, 10, kinect.width*0.5, kinect.height*0.5);
+		kinect.drawDepth(marginDraw, marginDraw, kinect.width*sensorDrawScale, kinect.height*sensorDrawScale);
+		kinect.draw(2*kinect.width*sensorDrawScale, marginDraw, kinect.width*sensorDrawScale, kinect.height*sensorDrawScale);
 			
-		computerVisionImage.draw(10, 320, kinect.width*0.5, kinect.height*0.5);
+		computerVisionImage.draw(marginDraw, sensorWidth*sensorDrawScale, kinect.width*sensorDrawScale, kinect.height*sensorDrawScale);
 		
 		ofSetColor(255, 0, 0);
 		ofPushMatrix();
-		ofTranslate(10, 320);
-		ofScale(0.5, 0.5);
+		ofTranslate(marginDraw, sensorWidth*sensorDrawScale);
+		ofScale(sensorDrawScale, sensorDrawScale);
 		contourFinder.draw();
 		ofPopMatrix();
 
@@ -287,30 +313,30 @@ void SensorManager::draw(){
 		
 		ofDrawBitmapString(reportStream.str(), 20, 652);
 	}
-	else if (sensorModel == cameraSensor){
+	else if (typeSensor == cameraSensor){
 		
 		if(computerVisionImage.isAllocated()) {
 			
 			ofSetColor(255, 255, 255);
 			
 			//--------------------------------------
-			//Draw CV images
+			//Draw Raw Sensor images
+			if(modeSensor == simulationMode) computerVisionImage.draw(marginDraw, marginDraw, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
+			else if(modeSensor == realTimeMode) cam.draw(marginDraw, marginDraw, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
 			
-			//movie.draw(0, 0); //TODO VIDEO OPTION
-			cam.draw(10, 10, cam.getWidth()*0.5, cam.getHeight()*0.5);
 			
 			if(bLearnBackground){
-				computerVisionImage.draw(cam.getWidth()*0.5, 10, cam.getWidth()*0.5, cam.getHeight()*0.5);
+				computerVisionImage.draw(sensorWidth*sensorDrawScale, marginDraw, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
 				ofxCv::toOf(background.getBackground(), backGroundCam);
-				backGroundCam.draw(2*cam.getWidth()*0.5, 10, cam.getWidth()*0.5, cam.getHeight()*0.5);
+				backGroundCam.draw(2*sensorWidth*sensorDrawScale, marginDraw, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
 				
 			}
 			else if(bSimpleBackgroundSubstraction){
-				diffCam.draw(cam.getWidth()*0.5, 10, cam.getWidth()*0.5, cam.getHeight()*0.5);
-				backGroundCam.draw(2*cam.getWidth()*0.5, 10, cam.getWidth()*0.5, cam.getHeight()*0.5);
+				diffCam.draw(sensorWidth*sensorDrawScale, marginDraw, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
+				backGroundCam.draw(2*sensorWidth*sensorDrawScale, marginDraw, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
 			}
 			else{
-				computerVisionImage.draw(cam.getWidth()*0.5, 10, cam.getWidth()*0.5, cam.getHeight()*0.5);
+				computerVisionImage.draw(sensorWidth*sensorDrawScale, marginDraw, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
 			}
 			
 			
@@ -327,13 +353,13 @@ void SensorManager::draw(){
 					for(int i = 0; i < contourFinder.size(); i++) {
 						ofPoint center = ofxCv::toOf(contourFinder.getCentroid(i));
 						ofPushMatrix();
-						ofTranslate(320, 10);
-						ofTranslate(center.x*0.5, center.y*0.5);
+						ofTranslate(sensorWidth*sensorDrawScale, marginDraw);
+						ofTranslate(center.x*sensorDrawScale, center.y*sensorDrawScale);
 						int label = contourFinder.getLabel(i);
 						string msg = ofToString(label) + ":" + ofToString(tracker.getAge(label));
 						ofDrawBitmapString(msg, 0, 0);
 						ofVec2f velocity = ofxCv::toOf(contourFinder.getVelocity(i));
-						ofDrawLine(0, 0, velocity.x*0.5, velocity.y*0.5);
+						ofDrawLine(0, 0, velocity.x*sensorDrawScale, velocity.y*sensorDrawScale);
 						ofPopMatrix();
 						
 					}
@@ -342,8 +368,8 @@ void SensorManager::draw(){
 				else {
 					
 					ofPushMatrix();
-					ofTranslate(320, 10);
-					ofScale(0.5, 0.5);
+					ofTranslate(sensorWidth*sensorDrawScale, marginDraw);
+					ofScale(sensorDrawScale, sensorDrawScale);
 					
 					for(int i = 0; i < contourFinder.size(); i++) {
 						unsigned int label = contourFinder.getLabel(i);
@@ -402,8 +428,8 @@ void SensorManager::draw(){
 		ofSetColor(255, 0, 0);
 		
 		ofPushMatrix();
-		ofTranslate(cam.getWidth()*0.5, 10);
-		ofScale(0.5, 0.5);
+		ofTranslate(sensorWidth*sensorDrawScale, marginDraw); //TODO change sensorDrawScale as int sensorScale var
+		ofScale(sensorDrawScale, sensorDrawScale);
 		contourFinder.draw();
 		ofPopMatrix();
 
@@ -429,7 +455,7 @@ void SensorManager::drawGuiSensorOptions(bool* opened){
 	
 	
 	string sensorTextType = "Not configured Yet";
-	if(sensorModel == kinectSensor){
+	if(typeSensor == kinectSensor){
 		sensorTextType = "Kinect 1";
 		
 		ImGui::Text(sensorTextType.c_str());
@@ -439,15 +465,15 @@ void SensorManager::drawGuiSensorOptions(bool* opened){
 		ImGui::Separator();
 		//TODO missing this property in ofxCv
 		//ImGui::SliderInt("numBlobs ", &numBlobs, 1, 20);
-		if(ImGui::SliderInt("minBlobs ", &minSizeBlob, 10, kinect.width*kinect.height*0.5)){
+		if(ImGui::SliderInt("minBlobs ", &minSizeBlob, 5, kinect.width*kinect.height*sensorDrawScale)){
 			contourFinder.setMinAreaRadius(minSizeBlob);
 		}
-		if(ImGui::SliderInt("maxBlobs ", &maxSizeBlob, 10, kinect.width*kinect.height*0.5)){
+		if(ImGui::SliderInt("maxBlobs ", &maxSizeBlob, marginDraw, kinect.width*kinect.height*sensorDrawScale)){
 			contourFinder.setMaxAreaRadius(maxSizeBlob);
 		}
 		
 		//ImGui::PopItemWidth();
-	}else if (sensorModel == cameraSensor){
+	}else if (typeSensor == cameraSensor){
 		sensorTextType = "OF Camera";
 		ImGui::Text(sensorTextType.c_str());
 		
@@ -489,16 +515,13 @@ void SensorManager::drawGuiSensorOptions(bool* opened){
 			}
 				
 		}
-		
-
-		
 
 		ImGui::SliderFloat("Threshold Value", &thresholdValue, 0, 255);
 		
-		if(ImGui::SliderInt("min Area Blob", &minSizeBlob, 10, kinect.width*kinect.height*0.5)){
+		if(ImGui::SliderInt("min Area Blob", &minSizeBlob, marginDraw, kinect.width*kinect.height*sensorDrawScale)){
 			contourFinder.setMinAreaRadius(minSizeBlob);
 		}
-		if(ImGui::SliderInt("max Area Blob", &maxSizeBlob, 10, kinect.width*kinect.height*0.5)){
+		if(ImGui::SliderInt("max Area Blob", &maxSizeBlob, marginDraw, kinect.width*kinect.height*sensorDrawScale)){
 			contourFinder.setMaxAreaRadius(maxSizeBlob);
 		}
 		
@@ -512,12 +535,6 @@ void SensorManager::drawGuiSensorOptions(bool* opened){
 			ImGui::Checkbox("Show Labels", &showLabels);
 		}
 		
-		
-		
-		
-
-		
-		
 	}
 	else{
 		cout << "SensorManager::Error Set Sensor Mode Type" << endl;
@@ -528,44 +545,37 @@ void SensorManager::drawGuiSensorOptions(bool* opened){
 
 //-----------------------------------------
 int SensorManager::getWidth(){
-	int auxWidth = -1;
-	if(sensorModel == kinectSensor){
-		auxWidth = kinect.getWidth();
-	}else if(sensorModel == cameraSensor){
-		auxWidth = cam.getWidth();
-	}
-	
-	return auxWidth;
+	return sensorWidth;
 }
 
 //-----------------------------------------
 int SensorManager::getHeight(){
-	int auxHeight = -1;
-	if(sensorModel == kinectSensor){
-		auxHeight = kinect.getHeight();
-	}else if(sensorModel == cameraSensor){
-		auxHeight = cam.getHeight();
-	}
-	
-	return auxHeight;
+	return sensorHeight;
 }
 
 //-----------------------------------------
 void SensorManager::exit(){
 	
-	if(sensorModel == kinectSensor){
+	if(typeSensor == kinectSensor){
 			
 		kinect.setCameraTiltAngle(0); // zero the tilt on exit
 		kinect.close();
 		
+		
+	}
+	else if(typeSensor == cameraSensor){
+		//I guess this is not really necesary. They do it internally
+		//videoPlayerCam.close();
+		//cam.close();
 	}
 }
 
 //------------------------------------------
-void SensorManager::keyPressed(int key){
+void SensorManager::keyReleased(ofKeyEventArgs & args){}
+void SensorManager::keyPressed(ofKeyEventArgs & args){
 	
-	if(sensorModel == kinectSensor){
-		switch (key) {
+	if(typeSensor == kinectSensor){
+		switch (args.key) {
 			case ' ':
 				//bThreshWithOpenCV = !bThreshWithOpenCV;
 				break;
@@ -654,12 +664,32 @@ void SensorManager::setTrackingMode(bool _status){
 
 //-----------------------------------------
 bool SensorManager::setupCameraSensor(){
-	cam.setup(640, 480);
 	
 	bool bConnected = false;
 	
-	//Computer Vision Stuff
-	computerVisionImage.allocate(cam.getWidth(), cam.getHeight(), OF_IMAGE_GRAYSCALE);
+	if(modeSensor == realTimeMode){
+		cam.setup(640, 480);
+		
+		computerVisionImage.allocate(cam.getWidth(), cam.getHeight(), OF_IMAGE_GRAYSCALE);
+
+		sensorWidth = cam.getWidth();
+		sensorHeight = cam.getHeight();
+		
+		if(cam.isInitialized()){
+			bConnected = true;
+		}
+		
+	}else if(modeSensor == simulationMode){
+		
+		bConnected = videoPlayerCam.load("videos/video04.mov");
+		videoPlayerCam.play();
+		
+		computerVisionImage.allocate(videoPlayerCam.getWidth(), videoPlayerCam.getHeight(), OF_IMAGE_GRAYSCALE);
+		
+		sensorWidth = videoPlayerCam.getWidth();
+		sensorHeight = videoPlayerCam.getHeight();
+	}
+	
 	
 	//filter minSizeBlob, maxSizeBlob, numBlobs
 	contourFinder.setMinAreaRadius(minSizeBlob);
@@ -673,16 +703,6 @@ bool SensorManager::setupCameraSensor(){
 		// an object can move up to 32 pixels per frame
 		contourFinder.getTracker().setMaximumDistance(maxDistanceTracking);
 		showLabels = true;
-	}
-	
-	
-	///////////////////////////////////
-	//General SensorData for others
-	sensorWidth = cam.getWidth();
-	sensorHeight = cam.getHeight();
-	
-	if(cam.isInitialized()){
-		bConnected = true;
 	}
 	
 	return bConnected;
@@ -739,6 +759,26 @@ bool SensorManager::setupKinectSensor(){
 	
 	return bConnected;
 	
+}
+
+//Getters
+//-----------------------------------------
+sensorType SensorManager::getSensorType(){
+	return typeSensor;
+}
+//-----------------------------------------
+sensorMode SensorManager::getSensorMode(){
+	return modeSensor;
+}
+
+//Setters
+//-----------------------------------------
+void SensorManager::setSensorType(sensorType _type){
+	typeSensor =_type;
+}
+//-----------------------------------------
+void  SensorManager::setSensorMode(sensorMode _mode){
+	modeSensor = _mode;
 }
 
 

@@ -6,16 +6,21 @@
 */
 
 //--------------------------------------------------------------
-void ofxSensors4Games::setup(sensorType _myType, RecognitionMethod _myComputeBlobType) {
+void ofxSensors4Games::setup(sensorType _myType, sensorMode _modeSensor, RecognitionMethod _myComputeBlobType) {
 	ofSetLogLevel(OF_LOG_VERBOSE);
 	
 	//required calls
-	SensorManager::getInstance()->sensorModel = _myType;
+	SensorManager::getInstance()->setSensorType(_myType);
+	SensorManager::getInstance()->setSensorMode(_modeSensor);
+	
+	//SensorManager::getInstance()->typeSensor = _myType;
+	//SensorManager::getInstance()->modeSensor = _modeSensor;
+	
 	gui.setup();
 	
 	//setups managers with selected SensorType
 	
-	SensorManager::getInstance()->setup(SensorManager::getInstance()->sensorModel);
+	SensorManager::getInstance()->setup(_myType, _modeSensor);
 	myControllerRecognition.setup(SensorManager::getInstance()->getWidth(),
 								  SensorManager::getInstance()->getHeight(),
 								  _myComputeBlobType);
@@ -66,6 +71,7 @@ void ofxSensors4Games::exit() {
 	SensorManager::getInstance()->exit();
 }
 
+/*
 //--------------------------------------------------------------
 void ofxSensors4Games::keyPressed (int key) {
 	myControllerRecognition.keyPressed(key);
@@ -77,3 +83,4 @@ void ofxSensors4Games::mouseReleased (int x, int y, int button) {
 	myControllerRecognition.mouseReleased(x, y, button);
 	//SensorManager::getInstance()->keyPressed(key);
 }
+*/

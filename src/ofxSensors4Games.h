@@ -28,12 +28,12 @@
 class ofxSensors4Games {
 public:
 	
-	void setup(sensorType myType, RecognitionMethod _myComputeBlobType);
+	void setup(sensorType myType, sensorMode _modeSensor, RecognitionMethod _myComputeBlobType);
 	void update();
 	void draw();
 	void exit();
-	void keyPressed(int key);
-	void mouseReleased (int x, int y, int button);
+	//void keyPressed(int key);
+	//void mouseReleased (int x, int y, int button);
 
 	//Type of Sensor used in the ComputerVision input
 	//SensorManager mySensor;

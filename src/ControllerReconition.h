@@ -29,8 +29,19 @@ public:
 	void update();
 	void draw();
 	void exit();
-	void keyPressed(int key);
-	void mouseReleased (int x, int y, int button);
+	
+	void keyPressed(ofKeyEventArgs & args);
+	void keyReleased(ofKeyEventArgs & args);
+	
+	void mouseMoved(ofMouseEventArgs & args){}
+	void mouseDragged(ofMouseEventArgs & args){}
+	void mousePressed(ofMouseEventArgs & args){}
+	void mouseReleased (ofMouseEventArgs & args);
+	void mouseScrolled (ofMouseEventArgs & args);
+	void mouseEntered (ofMouseEventArgs & args);
+	void mouseExited (ofMouseEventArgs & args);
+	
+	//////////////////////////////
 	void drawGuiControllerOptions(bool* opened);
 	void calcMainBlobLocation();
 	void sendOSCBlobData();
@@ -48,6 +59,8 @@ public:
 	int hBlob = -1;
 	////////////////////////////////
 	//Poliline areas recognition
+	
+	void updateRecognitionBlobsInsideAreas();
 	void updateQuadAreasRecognition();
 	vector<ofPolyline> polylines;
 	int polylinesIndex = -1;

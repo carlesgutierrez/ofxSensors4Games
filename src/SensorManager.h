@@ -15,6 +15,7 @@
 #include "ofxImGui.h"
 
 enum sensorType { kinectSensor, cameraSensor };
+enum sensorMode{ realTimeMode, simulationMode };
 
 class SensorManager {
 	
@@ -31,11 +32,12 @@ public:
 	SensorManager();
 	~SensorManager();
 
-	void setup(sensorType _sensorType);
+	void setup(sensorType _sensorType, sensorMode _sensorMode);
 	void update();
 	void draw();
 	void exit();
-	void keyPressed(int key);
+	void keyReleased(ofKeyEventArgs & args);
+	void keyPressed(ofKeyEventArgs & args);
 	
 	int getWidth();
 	int getHeight();
@@ -57,6 +59,7 @@ public:
 	//Webcam or similar
 	bool setupCameraSensor();
 	ofVideoGrabber cam;
+	ofVideoPlayer videoPlayerCam;
 	
 	ofxCv::RunningBackground background;
 	float learningTime = 30;
@@ -77,6 +80,17 @@ public:
 	//-----------------------
 	//Tracking mode
 	void setTrackingMode(bool _status);
+	ofxCv::ContourFinder contourFinder;
+	
+	sensorType getSensorType();
+	void setSensorType(sensorType _type);
+	sensorMode getSensorMode();
+	void setSensorMode(sensorMode _mode);
+	
+	
+	//Drawable Vars
+	float sensorDrawScale = 0.5;
+	int marginDraw = 0;
 	
 private:
 	
@@ -92,32 +106,24 @@ private:
 	int maxPersistenceTracking = 15;
 	int maxDistanceTracking = 32;
 
-public:
 	//Related to ComputerVision
-	
-	
 	ofImage computerVisionImage;
-	ofxCv::ContourFinder contourFinder;
 	
 	//Blobs
 	//int minTotalBlobs = 10;
 	//int maxTotalBlobs = 200;
-	int minSizeBlob = 10;
+	int minSizeBlob = 5;
 	int maxSizeBlob = 640*480*0.5;
 	int numBlobs = 20;
-	
 	
 	//-----------------------
 	//WebCam or similar video camera
 	//ofVideoCamera...
 
-
-	
 	//Control Vars
 	int sensorWidth = 640;//TODO check this is always modif
 	int sensorHeight = 480;
-	sensorType sensorModel;
-	
-
+	sensorType typeSensor;
+	sensorMode modeSensor;
 
 };

@@ -31,14 +31,48 @@ void ControllerReconition::setup(int w, int h, RecognitionMethod _myComputeBlobT
 	ofPolyline pol2;
 	polylines.push_back(pol2);
 	
-	imageRecognitionPosition = ofPoint(320, 10);
-	imageRecognitionW = 320;
-	imageRecognitionH = 240;
+	imageRecognitionPosition = ofPoint(sensorWidth*SensorManager::getInstance()->sensorDrawScale, SensorManager::getInstance()->marginDraw);
+	imageRecognitionW = sensorWidth*SensorManager::getInstance()->sensorDrawScale;
+	imageRecognitionH = sensorHeight*SensorManager::getInstance()->sensorDrawScale;
+	
+	ofRegisterMouseEvents(this);
+	ofRegisterKeyEvents(this);
 }
 
+//-----------------------------------------
 void ControllerReconition::updateQuadAreasRecognition(){
-	
+	updateRecognitionBlobsInsideAreas();
 }
+
+//-----------------------------------------
+void ControllerReconition::updateRecognitionBlobsInsideAreas(){
+	
+	for (int i = 0; i < SensorManager::getInstance()->contourFinder.size(); i++)
+	{
+		
+		ofPoint tmpPos = ofxCv::toOf(SensorManager::getInstance()->contourFinder.getCentroid(i));
+		
+		//ALMOST WORKING. CHECK Values: Points and Quads
+		
+		//Get if this Blob Point is Inside Area 1
+		
+		for(int j = 0; j < polylines.size(); j++){
+		
+			if(polylines[j].inside(tmpPos*SensorManager::getInstance()->sensorDrawScale)){
+				int label = SensorManager::getInstance()->contourFinder.getLabel(i);
+				cout << " Yey Im Inside this Poline " << j << " Blob # " <<  ofToString(label,0) << endl;
+				cout << " polylines[j] = " <<  polylines[j].getCentroid2D() << endl;
+				cout << " Blobs[i] = " <<  SensorManager::getInstance()->contourFinder.getCentroid(i) << endl;
+				
+				//TODO CHeck how to save in that is being tracked inside a polynine area X
+			}
+		
+		}
+		//Get if this Blob Point is Inside Area 2
+		   //idem ...
+	}
+}
+
 
 //-----------------------------------------
 void ControllerReconition::update(){
@@ -55,11 +89,11 @@ void ControllerReconition::draw(){
 	
 	//Draw Detected Point
 	ofSetColor(ofColor::red);
-	if(SensorManager::getInstance()->sensorModel == kinectSensor){
-		ofDrawCircle(10 + xPosBlob*0.5, 320 + yPosBlob*0.5, 10);//Painting blob result over the Kinect Blob Drawer
+	if(SensorManager::getInstance()->getSensorType() == kinectSensor){
+		ofDrawCircle(10 + xPosBlob*0.5, sensorWidth + yPosBlob*0.5, 10);//Painting blob result over the Kinect Blob Drawer
 	}
-	else if(SensorManager::getInstance()->sensorModel == cameraSensor){
-		ofDrawCircle(320 + xPosBlob*0.5, 10 + yPosBlob*0.5, 10);//Painting blob result over the Kinect Blob Drawer
+	else if(SensorManager::getInstance()->getSensorType() == cameraSensor){
+		ofDrawCircle(sensorWidth + xPosBlob*0.5, 10 + yPosBlob*0.5, 10);//Painting blob result over the Kinect Blob Drawer
 	}
 	
 	//Draw some Sensor Option
@@ -78,10 +112,19 @@ void ControllerReconition::draw(){
 		
 		ofSetColor(ofColor::yellowGreen);
 		polylines[0].draw();
+		vector<ofPoint> vertexes0 = polylines[0].getVertices();
+		for(int i = 0; i < vertexes0.size(); i++){
+			ofDrawBitmapString("x0 = "+ ofToString(vertexes0[i].x, 0), vertexes0[i].x, vertexes0[i].y);
+			ofDrawBitmapString("y0 = "+ ofToString(vertexes0[i].y, 0), vertexes0[i].x, vertexes0[i].y+10);
+		}
 		
 		ofSetColor(ofColor::royalBlue);
 		polylines[1].draw();
-		
+		vector<ofPoint> vertexes1 = polylines[1].getVertices();
+		for(int i = 0; i < vertexes1.size(); i++){
+			ofDrawBitmapString("x1 = "+ ofToString(vertexes1[i].x, 0), vertexes1[i].x, vertexes1[i].y);
+			ofDrawBitmapString("y1 = "+ ofToString(vertexes1[i].y, 0), vertexes1[i].x, vertexes1[i].y+10);
+		}
 		ofPopMatrix();
 	}
 }
@@ -272,24 +315,25 @@ void ControllerReconition::drawGuiControllerOptions(bool* opened){
 		ImGui::End();
 		
 		//TODO Add This to plot gui
-		//medianBlobHeightValue.draw(500 , 500, 320, 100, 100, "medianBlobHeightValue", true, 150);
+		//medianBlobHeightValue.draw(500 , 500, sensorWidth, 100, 100, "medianBlobHeightValue", true, 150);
 	}
 }
 
 
 //-----------------------------------------
-void ControllerReconition::keyPressed(int key){
+void ControllerReconition::keyReleased(ofKeyEventArgs & args){}
+void ControllerReconition::keyPressed(ofKeyEventArgs & args){
 	
 	//	cout << "polylinesIndex = " << polylinesIndex << endl;
 	
-	if(key == '1'){
+	if(args.key == '1'){
 		polylinesIndex = 0;
 		polylines[polylinesIndex].clear();
 	}
-	else if(key == '2'){
+	else if(args.key == '2'){
 		polylinesIndex = 1;
 		polylines[polylinesIndex].clear();
-	}else if(key == OF_KEY_RETURN){
+	}else if(args.key == OF_KEY_RETURN){
 		if(polylines.size() > 0 && polylinesIndex < polylines.size() && polylines[polylinesIndex].size() > 0){
 			polylines[polylinesIndex].close();
 		}
@@ -298,15 +342,25 @@ void ControllerReconition::keyPressed(int key){
 }
 
 //-----------------------------------------
-void ControllerReconition::mouseReleased (int x, int y, int button){
+//void ControllerReconition::mouseMoved(ofMouseEventArgs & args){}
+//void ControllerReconition::mouseDragged(ofMouseEventArgs & args){}
+//void ControllerReconition::mousePressed(ofMouseEventArgs & args){}
+void ControllerReconition::mouseScrolled(ofMouseEventArgs & args){}
+void ControllerReconition::mouseEntered(ofMouseEventArgs & args){}
+void ControllerReconition::mouseExited(ofMouseEventArgs & args){}
+void ControllerReconition::mouseReleased (ofMouseEventArgs & args){
 	
+	cout << "args.x = " << args.x << endl;
+	cout << "args.y = " << args.y << endl;
 
+	cout << "imageRecognitionPosition.x = " << imageRecognitionPosition.x << endl;
+	cout << "imageRecognitionPosition.y = " << imageRecognitionPosition.y << endl;
 	
-	if(x > imageRecognitionPosition.x && x < imageRecognitionPosition.x+imageRecognitionW){
-		if(y > imageRecognitionPosition.y && y < imageRecognitionPosition.y+imageRecognitionH){
+	if(args.x > imageRecognitionPosition.x && args.x < imageRecognitionPosition.x+imageRecognitionW){
+		if(args.y > imageRecognitionPosition.y && args.y < imageRecognitionPosition.y+imageRecognitionH){
 
 			if(polylines.size() > 0 && polylinesIndex < polylines.size()){
-				polylines[polylinesIndex].addVertex(ofPoint(x- imageRecognitionPosition.x, y - imageRecognitionPosition.y));
+				polylines[polylinesIndex].addVertex(ofPoint(args.x- imageRecognitionPosition.x, args.y - imageRecognitionPosition.y));
 			}
 			
 		}
@@ -316,5 +370,5 @@ void ControllerReconition::mouseReleased (int x, int y, int button){
 
 //-----------------------------------------
 void ControllerReconition::exit(){
-	
+	sender.~ofxOscSender(); //TODO how to do this properly. Shutdown() method is private.
 }
