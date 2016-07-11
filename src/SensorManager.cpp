@@ -130,9 +130,14 @@ void SensorManager::update(){
 			
 			//TODO FIX THIS bLearnBackground to not apply really a Learning background if its not active.
 			if(bLearnBackground){
+				
+
+				
 				background.setLearningTime(learningTime);
 				background.setThresholdValue(thresholdValue);
-				background.update(cam, computerVisionImage);
+				//Camera Image to Gray
+				if(modeSensor == simulationMode) background.update(videoPlayerCam, computerVisionImage);
+				else if(modeSensor == realTimeMode) background.update(cam, computerVisionImage);
 				computerVisionImage.update();
 				
 				contourFinder.findContours(computerVisionImage);
@@ -140,12 +145,9 @@ void SensorManager::update(){
 			else if(bSimpleBackgroundSubstraction){
 				
 				//Camera Image to Gray
-				if(modeSensor == simulationMode){
-					ofxCv::convertColor(videoPlayerCam, computerVisionImage, CV_RGB2GRAY);
-				}
-				else if(modeSensor == realTimeMode){
-					ofxCv::convertColor(cam, computerVisionImage, CV_RGB2GRAY);
-				}
+				if(modeSensor == simulationMode) ofxCv::convertColor(videoPlayerCam, computerVisionImage, CV_RGB2GRAY);
+				else if(modeSensor == realTimeMode) ofxCv::convertColor(cam, computerVisionImage, CV_RGB2GRAY);
+				
 				
 				computerVisionImage.update();
 				
@@ -457,7 +459,7 @@ void SensorManager::drawGuiSensorOptions(bool* opened){
 	string sensorTextType = "Not configured Yet";
 	if(typeSensor == kinectSensor){
 		sensorTextType = "Kinect 1";
-		
+
 		ImGui::Text(sensorTextType.c_str());
 		//ImGui::Checkbox("bThreshWithOpenCV", &bThreshWithOpenCV);
 		ImGui::SliderInt("nearThreshold", &nearThreshold, 0, 255);
@@ -465,10 +467,14 @@ void SensorManager::drawGuiSensorOptions(bool* opened){
 		ImGui::Separator();
 		//TODO missing this property in ofxCv
 		//ImGui::SliderInt("numBlobs ", &numBlobs, 1, 20);
-		if(ImGui::SliderInt("minBlobs ", &minSizeBlob, 5, kinect.width*kinect.height*sensorDrawScale)){
+		ImGui::SliderInt("accuracyMaxSizeBlob", &maxBlobsAccuracyMaxValue, 0, sensorWidth *sensorHeight*sensorDrawScale);
+		
+		if(ImGui::SliderInt("minBlobs ", &minSizeBlob, 5, maxBlobsAccuracyMaxValue)){
 			contourFinder.setMinAreaRadius(minSizeBlob);
 		}
-		if(ImGui::SliderInt("maxBlobs ", &maxSizeBlob, marginDraw, kinect.width*kinect.height*sensorDrawScale)){
+		
+		
+		if(ImGui::SliderInt("maxBlobs ", &maxSizeBlob, marginDraw, maxBlobsAccuracyMaxValue)){
 			contourFinder.setMaxAreaRadius(maxSizeBlob);
 		}
 		
@@ -476,6 +482,31 @@ void SensorManager::drawGuiSensorOptions(bool* opened){
 	}else if (typeSensor == cameraSensor){
 		sensorTextType = "OF Camera";
 		ImGui::Text(sensorTextType.c_str());
+		
+		if(modeSensor == simulationMode){
+			
+			//TODO InputTextFilterCharacter
+			static char cmoviePath[60] = "videos/joystick/movie_circle.mov";
+			ImGui::PushItemWidth(250);
+			ImGui::InputText("VidPath", cmoviePath, 60);ImGui::SameLine();
+			ImGui::Checkbox("Reset", &bResetMoviePath);
+			ImGui::PopItemWidth();
+			
+			if(bResetMoviePath){
+				smoviePath = std::string(cmoviePath);
+				videoPlayerCam.stop();
+				videoPlayerCam.close();
+				videoPlayerCam.load(smoviePath);
+				videoPlayerCam.play();
+				bResetMoviePath = false;
+				cout << "Reset Movie to " << smoviePath << endl;
+			}
+			
+			videoPlayerCam_pos = videoPlayerCam.getPosition();
+			if(ImGui::SliderFloat("VideoCam Position", &videoPlayerCam_pos, 0, 1)){
+				videoPlayerCam.setPosition(videoPlayerCam_pos);
+			}
+		}
 		
 		ImGui::Checkbox("Do Learning Background", &bLearnBackground);
 		
@@ -518,10 +549,12 @@ void SensorManager::drawGuiSensorOptions(bool* opened){
 
 		ImGui::SliderFloat("Threshold Value", &thresholdValue, 0, 255);
 		
-		if(ImGui::SliderInt("min Area Blob", &minSizeBlob, marginDraw, kinect.width*kinect.height*sensorDrawScale)){
+		ImGui::SliderInt("accuracyMaxSizeBlob", &maxBlobsAccuracyMaxValue, 0, sensorWidth *sensorHeight*sensorDrawScale);
+		
+		if(ImGui::SliderInt("min Area Blob", &minSizeBlob, marginDraw, maxBlobsAccuracyMaxValue)){
 			contourFinder.setMinAreaRadius(minSizeBlob);
 		}
-		if(ImGui::SliderInt("max Area Blob", &maxSizeBlob, marginDraw, kinect.width*kinect.height*sensorDrawScale)){
+		if(ImGui::SliderInt("max Area Blob", &maxSizeBlob, marginDraw, maxBlobsAccuracyMaxValue)){
 			contourFinder.setMaxAreaRadius(maxSizeBlob);
 		}
 		
@@ -681,7 +714,8 @@ bool SensorManager::setupCameraSensor(){
 		
 	}else if(modeSensor == simulationMode){
 		
-		bConnected = videoPlayerCam.load("videos/video04.mov");
+		bConnected = videoPlayerCam.load("videos/joystick/movie_circle.mov");
+		//videoPlayerCam.set	;
 		videoPlayerCam.play();
 		
 		computerVisionImage.allocate(videoPlayerCam.getWidth(), videoPlayerCam.getHeight(), OF_IMAGE_GRAYSCALE);

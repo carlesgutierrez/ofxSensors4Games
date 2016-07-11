@@ -42,14 +42,16 @@ public:
 	void mouseExited (ofMouseEventArgs & args);
 	
 	//////////////////////////////
-	void drawGuiControllerOptions(bool* opened);
+	void drawGui_MiddelXMinY_ControllerOptions(bool* opened);
+	bool bSendOsc_fMiddleX_fMinY_fUP_fDOWN = false;
 	void calcMainBlobLocation();
 	void sendOSCBlobData();
 	
 	//////////////////////////////
 	//TODO make a class of this? //Depends if laserBlob may be a different blobType then separate by types
-	//Main Controller vars
+	//Main Controller vars copied from Sensor to avoid very long names in code (multiple calls)
 	int sensorWidth, sensorHeight;
+	float sensorScale;
 	//std::vector<ofPolyline>  myUpdatedBlobs;
 	int numBlobsDetected = -1;
 	
@@ -58,8 +60,7 @@ public:
 	int wBlob = -1;
 	int hBlob = -1;
 	////////////////////////////////
-	//Poliline areas recognition
-	
+	//Polyline areas recognition
 	void updateRecognitionBlobsInsideAreas();
 	void updateQuadAreasRecognition();
 	vector<ofPolyline> polylines;
@@ -70,13 +71,13 @@ public:
 	int imageRecognitionW;
 	int imageRecognitionH;
 	
-
-	//TODO other movements detection
+	/////////////////////////////////
+	//Actions Blobs detection
 	//bool bMoveLeft = false;
 	//bool bMoveRight
 	
-	//Some simple blob Min Max Points detection
-	//Post Tracking detection things
+	//MiddleXMinY detection
+	bool isController_MiddelXMinY_Window = true;
 	ofVec2f		xMin,xMax,yMin,yMax;
 	float xDiff;
 	float yDiff;
@@ -105,8 +106,9 @@ public:
 	float yPosBlobFloatOsc;
 	
 	//OSC CONFIG
+	bool bResetHostIp = false;
 	int PORT = 12345;
-	string HOST = "127.0.0.1";
+	string HOST = "192.168.3.71";//"127.0.0.1";
 	
 	
 };

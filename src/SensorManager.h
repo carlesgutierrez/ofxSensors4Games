@@ -60,6 +60,10 @@ public:
 	bool setupCameraSensor();
 	ofVideoGrabber cam;
 	ofVideoPlayer videoPlayerCam;
+	string smoviePath;
+	bool bResetMoviePath = false;
+	
+	float videoPlayerCam_pos = 0;
 	
 	ofxCv::RunningBackground background;
 	float learningTime = 30;
@@ -113,7 +117,8 @@ private:
 	//int minTotalBlobs = 10;
 	//int maxTotalBlobs = 200;
 	int minSizeBlob = 5;
-	int maxSizeBlob = 640*480*0.5;
+	int maxSizeBlob = 1000;
+	int maxBlobsAccuracyMaxValue = maxSizeBlob;
 	int numBlobs = 20;
 	
 	//-----------------------

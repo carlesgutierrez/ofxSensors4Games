@@ -15,6 +15,7 @@
 void ControllerReconition::setup(int w, int h, RecognitionMethod _myComputeBlobType){
 	sensorWidth = w;
 	sensorHeight = h;
+	sensorScale = SensorManager::getInstance()->sensorDrawScale;
 	
 	numAverageFrammes = 100;
 	medianBlobHeightValue.setup(numAverageFrammes, 0, sensorHeight);
@@ -31,9 +32,9 @@ void ControllerReconition::setup(int w, int h, RecognitionMethod _myComputeBlobT
 	ofPolyline pol2;
 	polylines.push_back(pol2);
 	
-	imageRecognitionPosition = ofPoint(sensorWidth*SensorManager::getInstance()->sensorDrawScale, SensorManager::getInstance()->marginDraw);
-	imageRecognitionW = sensorWidth*SensorManager::getInstance()->sensorDrawScale;
-	imageRecognitionH = sensorHeight*SensorManager::getInstance()->sensorDrawScale;
+	imageRecognitionPosition = ofPoint(sensorWidth*sensorScale, SensorManager::getInstance()->marginDraw);
+	imageRecognitionW = sensorWidth*sensorScale;
+	imageRecognitionH = sensorHeight*sensorScale;
 	
 	ofRegisterMouseEvents(this);
 	ofRegisterKeyEvents(this);
@@ -58,7 +59,7 @@ void ControllerReconition::updateRecognitionBlobsInsideAreas(){
 		
 		for(int j = 0; j < polylines.size(); j++){
 		
-			if(polylines[j].inside(tmpPos*SensorManager::getInstance()->sensorDrawScale)){
+			if(polylines[j].inside(tmpPos*sensorScale)){
 				int label = SensorManager::getInstance()->contourFinder.getLabel(i);
 				cout << " Yey Im Inside this Poline " << j << " Blob # " <<  ofToString(label,0) << endl;
 				cout << " polylines[j] = " <<  polylines[j].getCentroid2D() << endl;
@@ -82,25 +83,35 @@ void ControllerReconition::update(){
 	updateRecognitionSystem();
 	
 	sendOSCBlobData();
+	
+	if(bResetHostIp){
+		sender.setup(HOST, PORT);
+		bResetHostIp = false;
+	}
 }
 
 //-----------------------------------------
 void ControllerReconition::draw(){
 	
-	//Draw Detected Point
-	ofSetColor(ofColor::red);
-	if(SensorManager::getInstance()->getSensorType() == kinectSensor){
-		ofDrawCircle(10 + xPosBlob*0.5, sensorWidth + yPosBlob*0.5, 10);//Painting blob result over the Kinect Blob Drawer
-	}
-	else if(SensorManager::getInstance()->getSensorType() == cameraSensor){
-		ofDrawCircle(sensorWidth + xPosBlob*0.5, 10 + yPosBlob*0.5, 10);//Painting blob result over the Kinect Blob Drawer
-	}
+	//Draw MAX MIN Detected Point
+	ofColor myMaxMinPointColor = ofColor::green;
+	ofSetColor(myMaxMinPointColor.r, myMaxMinPointColor.g, myMaxMinPointColor.b, 150);
+
+	ofEnableAlphaBlending();
+	
+	ofDrawCircle(sensorWidth*sensorScale+ xPosBlob*sensorScale,
+				 SensorManager::getInstance()->marginDraw + yPosBlob*sensorScale,
+				 10*sensorScale);//Painting blob result over the Kinect Blob Drawer
+	
+	ofDisableAlphaBlending();
 	
 	//Draw some Sensor Option
 	ofSetColor(ofColor::white);
-	bool isControllerWindow = true;
-	if (isControllerWindow) {
-		drawGuiControllerOptions(&isControllerWindow);
+	
+	ImGui::Checkbox("MiddleX - MinY Dectection", &isController_MiddelXMinY_Window);
+	
+	if (isController_MiddelXMinY_Window) {
+		drawGui_MiddelXMinY_ControllerOptions(&isController_MiddelXMinY_Window);
 	}
 	
 	
@@ -253,22 +264,34 @@ void ControllerReconition::udpateRecognitionBlobAction(){
 
 //-----------------------------------------
 void ControllerReconition::sendOSCBlobData(){
-	ofxOscMessage m;
-	m.clear();
-	m.setAddress("/GameBlob");
-	m.addFloatArg(xPosBlobFloatOsc);
-	m.addFloatArg(yPosBlobFloatOsc);
 	
-	// sending float to be able to make more actions filtering in the client.
-	//Like Intenisty of the action
-	m.addFloatArg(fUpActionBlob_OSC);
-	m.addFloatArg(fDownActionBlob_OSC);
+	if(bSendOsc_fMiddleX_fMinY_fUP_fDOWN){
 	
-	sender.sendMessage(m, false);
+		ofxOscMessage m;
+		m.clear();
+		m.setAddress("/GameBlob");
+		m.addFloatArg(xPosBlobFloatOsc);
+		m.addFloatArg(yPosBlobFloatOsc);
+	
+		// sending float to be able to make more actions filtering in the client.
+		//Like Intenisty of the action
+		m.addFloatArg(fUpActionBlob_OSC);
+		m.addFloatArg(fDownActionBlob_OSC);
+	
+		sender.sendMessage(m, false);
+	}
+	//TODO send here other data type
+	//for(areas)
+	//if(bSendOsc_fMiddleX_fMinY_fUP_fDOWN_Area1)
+	//if(bSendOsc_fMiddleX_fMinY_fUP_fDOWN_Area2)
+	//...
+	//if(bSendOsc_Recognized_MoveMent1)
+	//..
+	
 }
 
 //-------------------------------------------------
-void ControllerReconition::drawGuiControllerOptions(bool* opened){
+void ControllerReconition::drawGui_MiddelXMinY_ControllerOptions(bool* opened){
 	
 	
 	ImGui::SetNextWindowSize(ImVec2(300, 200), ImGuiSetCond_FirstUseEver);
@@ -293,23 +316,45 @@ void ControllerReconition::drawGuiControllerOptions(bool* opened){
 		
 		ImGui::Separator();
 		
-		ImGui::PushItemWidth(100);
+		
 		
 		ImGui::Text("Sending OSC data to ");
 		ImGui::Text(ofToString(PORT,0).c_str());
 		ImGui::Text(HOST.c_str());
+		
+		//TODO InputTextFilterCharacter
+		static char buf1[16] = "127.0.0.1";
+		ImGui::PushItemWidth(90);
+		ImGui::InputText("WIP Edit Host", buf1, 16);ImGui::SameLine();
+		ImGui::Checkbox("Reset HOST IP", &bResetHostIp);
+		ImGui::PopItemWidth();
+		
+		if(bResetHostIp){
+			//HOST = new std::string(buf1);
+			HOST = std::string(buf1);
+			cout << "Reset HOST IP" << endl;
+		}
+		
+		
 		//ImGui::InputText("Host IP", HOST, IM_ARRAYSIZE(HOST));
 		//ImGui::InputText("Port Num", PORTText, IM_ARRAYSIZE(PORTText));
-		ImGui::SliderFloat("(f0) xOSCBlob", &xPosBlobFloatOsc, 0, 1);
-		ImGui::SameLine();
-		ImGui::SliderFloat("(f1) yOSCBlob", &yPosBlobFloatOsc, 0, 1);
-		//ImGui::VSliderFloat("(OSC f 2) fUpActionBlobOSC", ImVec2(20, 50), &fUpActionBlob_OSC, 0, 1);ImGui::SameLine();
-		//ImGui::VSliderFloat("(OSC f 3) fDownActionBlobOSC", ImVec2(20, 50), &fDownActionBlob_OSC, 0, 1);
-		ImGui::SliderFloat("(f2) fUpActionBlobOSC", &fUpActionBlob_OSC, 0, 1);
-		ImGui::SameLine();
-		ImGui::SliderFloat("(f13) fDownActionBlobOSC", &fDownActionBlob_OSC, 0, 1);
-		
-		ImGui::PopItemWidth();
+		ImGui::Checkbox("Send X_Y_fUP_fDOWN", &bSendOsc_fMiddleX_fMinY_fUP_fDOWN);
+		if(bSendOsc_fMiddleX_fMinY_fUP_fDOWN){
+			ImGui::PushItemWidth(100);
+			string dataDescription1 = "(f0) xOSCBlob // (f1) yOSCBlob ";
+			string dataDescription2 = "(f2) fUpActionBlobOSC // (f3) fDownActionBlobOSC";
+			ImGui::Text(dataDescription1.c_str());
+			ImGui::Text(dataDescription2.c_str());
+			ImGui::SliderFloat("(f0)##fMiddleX_fMinY_fUP_fDOWN", &xPosBlobFloatOsc, 0, 1);ImGui::SameLine();
+			ImGui::VSliderFloat("(f1)##fMiddleX_fMinY_fUP_fDOWN", ImVec2(20, 50),&yPosBlobFloatOsc, 0, 1);ImGui::SameLine();
+			ImGui::VSliderFloat("(f2)##fMiddleX_fMinY_fUP_fDOWN", ImVec2(20, 50), &fUpActionBlob_OSC, 0, 1);ImGui::SameLine();
+			ImGui::VSliderFloat("(f3)##fMiddleX_fMinY_fUP_fDOWN", ImVec2(20, 50), &fDownActionBlob_OSC, 0, 1);
+			//ImGui::SliderFloat("(f2) fUpActionBlobOSC", &fUpActionBlob_OSC, 0, 1);
+			//ImGui::SameLine();
+			//ImGui::SliderFloat("(f3) fDownActionBlobOSC", &fDownActionBlob_OSC, 0, 1);
+
+			ImGui::PopItemWidth();
+		}
 		
 		
 		ImGui::End();
@@ -337,6 +382,23 @@ void ControllerReconition::keyPressed(ofKeyEventArgs & args){
 		if(polylines.size() > 0 && polylinesIndex < polylines.size() && polylines[polylinesIndex].size() > 0){
 			polylines[polylinesIndex].close();
 		}
+	}
+	else if(args.key == OF_KEY_BACKSPACE){
+		
+		//TESTING OSC
+		
+		ofxOscMessage m;
+		m.clear();
+		m.setAddress("/GameBlob");
+		m.addFloatArg(ofGetMouseX()/ofGetWidth()); // 0 .. 1 segun Mouse X
+		m.addFloatArg(0); // 0 .. 1 segun Mouse Y
+		
+		// sending float to be able to make more actions filtering in the client.
+		//Like Intenisty of the action
+		m.addFloatArg(1 - (ofGetMouseY()/ofGetHeight())); //Jump Action!
+		m.addFloatArg(1);
+		
+		sender.sendMessage(m, false);
 	}
 
 }
