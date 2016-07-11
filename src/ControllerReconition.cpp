@@ -90,55 +90,6 @@ void ControllerReconition::update(){
 	}
 }
 
-//-----------------------------------------
-void ControllerReconition::draw(){
-	
-	//Draw MAX MIN Detected Point
-	ofColor myMaxMinPointColor = ofColor::green;
-	ofSetColor(myMaxMinPointColor.r, myMaxMinPointColor.g, myMaxMinPointColor.b, 150);
-
-	ofEnableAlphaBlending();
-	
-	ofDrawCircle(sensorWidth*sensorScale+ xPosBlob*sensorScale,
-				 SensorManager::getInstance()->marginDraw + yPosBlob*sensorScale,
-				 10*sensorScale);//Painting blob result over the Kinect Blob Drawer
-	
-	ofDisableAlphaBlending();
-	
-	//Draw some Sensor Option
-	ofSetColor(ofColor::white);
-	
-	ImGui::Checkbox("MiddleX - MinY Dectection", &isController_MiddelXMinY_Window);
-	
-	if (isController_MiddelXMinY_Window) {
-		drawGui_MiddelXMinY_ControllerOptions(&isController_MiddelXMinY_Window);
-	}
-	
-	
-	if(polylines.size() > 1){
-		//Draw polyline Areas
-		ofPushMatrix();
-		
-		ofTranslate(imageRecognitionPosition.x, imageRecognitionPosition.y, 0);
-		
-		ofSetColor(ofColor::yellowGreen);
-		polylines[0].draw();
-		vector<ofPoint> vertexes0 = polylines[0].getVertices();
-		for(int i = 0; i < vertexes0.size(); i++){
-			ofDrawBitmapString("x0 = "+ ofToString(vertexes0[i].x, 0), vertexes0[i].x, vertexes0[i].y);
-			ofDrawBitmapString("y0 = "+ ofToString(vertexes0[i].y, 0), vertexes0[i].x, vertexes0[i].y+10);
-		}
-		
-		ofSetColor(ofColor::royalBlue);
-		polylines[1].draw();
-		vector<ofPoint> vertexes1 = polylines[1].getVertices();
-		for(int i = 0; i < vertexes1.size(); i++){
-			ofDrawBitmapString("x1 = "+ ofToString(vertexes1[i].x, 0), vertexes1[i].x, vertexes1[i].y);
-			ofDrawBitmapString("y1 = "+ ofToString(vertexes1[i].y, 0), vertexes1[i].x, vertexes1[i].y+10);
-		}
-		ofPopMatrix();
-	}
-}
 
 //-----------------------------------------
 void ControllerReconition::updateRecognitionSystem(){
@@ -174,12 +125,22 @@ void ControllerReconition::calcMainBlobLocation(){
 	
 	calculateMaxMin();
 	
+	//TODO set here the different blob detection
+	
+	
 	//OP2 Used max min calculated
-	xPosBlob = xMin.x + xDiff*0.5;
+	xPosBlob = xMax.x;
+	//xPosBlob = xMin.x + xDiff*0.5;//middle pos
+	
 	yPosBlob = yMin.y;
 	
 	//Filtered for OSC and Gui Controller
-	xPosBlobFloatOsc = (float)(sensorWidth - xPosBlob) / (float)sensorWidth;
+	if(bresumeBlob_inverX){
+		xPosBlobFloatOsc = (float)(sensorWidth - xPosBlob) / (float)sensorWidth; //Middle pos
+		
+	}else{
+		xPosBlobFloatOsc = (float)(xPosBlob) / (float)sensorWidth;
+	}
 	yPosBlobFloatOsc = (float)(yPosBlob) / (float)sensorHeight;
 }
 
@@ -290,13 +251,110 @@ void ControllerReconition::sendOSCBlobData(){
 	
 }
 
+//-----------------------------------------
+void ControllerReconition::draw(){
+	
+	ofSetColor(ofColor::white);
+	
+	drawGui_Controller();
+	
+	drawPolylinesAreas();
+	
+}
+
 //-------------------------------------------------
-void ControllerReconition::drawGui_MiddelXMinY_ControllerOptions(bool* opened){
+void ControllerReconition::drawPolylinesAreas(){
+	if(polylines.size() > 1){
+		//Draw polyline Areas
+		ofPushMatrix();
+		
+		ofTranslate(imageRecognitionPosition.x, imageRecognitionPosition.y, 0);
+		
+		ofSetColor(ofColor::yellowGreen);
+		polylines[0].draw();
+		vector<ofPoint> vertexes0 = polylines[0].getVertices();
+		for(int i = 0; i < vertexes0.size(); i++){
+			ofDrawBitmapString("x0 = "+ ofToString(vertexes0[i].x, 0), vertexes0[i].x, vertexes0[i].y);
+			ofDrawBitmapString("y0 = "+ ofToString(vertexes0[i].y, 0), vertexes0[i].x, vertexes0[i].y+10);
+		}
+		
+		ofSetColor(ofColor::royalBlue);
+		polylines[1].draw();
+		vector<ofPoint> vertexes1 = polylines[1].getVertices();
+		for(int i = 0; i < vertexes1.size(); i++){
+			ofDrawBitmapString("x1 = "+ ofToString(vertexes1[i].x, 0), vertexes1[i].x, vertexes1[i].y);
+			ofDrawBitmapString("y1 = "+ ofToString(vertexes1[i].y, 0), vertexes1[i].x, vertexes1[i].y+10);
+		}
+		ofPopMatrix();
+	}
+}
+
+//-------------------------------------------------
+void ControllerReconition::drawGui_OSC_configurable(){
+	
+	//if (ImGui::Begin("OSC Window")) {
+		ImGui::Text("Sending OSC data to ");
+		ImGui::Text(ofToString(PORT,0).c_str());
+		ImGui::Text(HOST.c_str());
+		
+		//TODO InputTextFilterCharacter
+		static char buf1[16] = "127.0.0.1";
+		ImGui::PushItemWidth(90);
+		ImGui::InputText("WIP Edit Host", buf1, 16);ImGui::SameLine();
+		ImGui::Checkbox("Reset HOST IP", &bResetHostIp);
+		ImGui::PopItemWidth();
+		
+		if(bResetHostIp){
+			HOST = std::string(buf1);
+			cout << "Lets reset HOST IP" << endl;
+		}
+		
+		//ImGui::End();
+	//}
+}
+
+//-------------------------------------------------
+void ControllerReconition::drawGui_Controller(){
+	ImGui::SetNextWindowSize(ImVec2(300, 200), ImGuiSetCond_FirstUseEver);
+	
+
+	//bool wopen = true;
+	if (ImGui::Begin("Controller Window")) {
+		
+		ImGui::Checkbox("MultiTracking Blob Detection", &isController_trackingMode);
+		ImGui::Checkbox("Resumed Blob Detection", &isController_ResumedBlob);
+		
+		if (isController_ResumedBlob) {
+			drawGui_ResumedBlob(&isController_ResumedBlob);
+		}
+		
+		if(isController_ResumedBlob) {
+			
+		}
+		
+		ImGui::Separator();
+		ImGui::Separator();
+		ImGui::Separator();
+		ImGui::Separator();
+		ImGui::Separator();
+		ImGui::Separator();
+		
+		
+		//Draw and Edit OSC info
+		drawGui_OSC_configurable();
+		
+		ImGui::End();
+	}
+
+}
+
+//-------------------------------------------------
+void ControllerReconition::drawGui_ResumedBlob(bool* opened){
 	
 	
 	ImGui::SetNextWindowSize(ImVec2(300, 200), ImGuiSetCond_FirstUseEver);
 	
-	if (ImGui::Begin("p & Down + MaxMin Recognition", opened, ImGuiWindowFlags_MenuBar)) {
+	if (ImGui::Begin("p & Down + MaxMin Recognition", opened)) {
 		
 		
 		string recognitionTextType = "Configure Up&Down Values";
@@ -316,33 +374,17 @@ void ControllerReconition::drawGui_MiddelXMinY_ControllerOptions(bool* opened){
 		
 		ImGui::Separator();
 		
+		//TODO add this ?
+		//ImGui::Text("Host IP", HOST, IM_ARRAYSIZE(HOST));
+		//ImGui::Text("Port Num", PORT, IM_ARRAYSIZE(PORT));
 		
+		ImGui::Checkbox("InvertX", &bresumeBlob_inverX);
 		
-		ImGui::Text("Sending OSC data to ");
-		ImGui::Text(ofToString(PORT,0).c_str());
-		ImGui::Text(HOST.c_str());
-		
-		//TODO InputTextFilterCharacter
-		static char buf1[16] = "127.0.0.1";
-		ImGui::PushItemWidth(90);
-		ImGui::InputText("WIP Edit Host", buf1, 16);ImGui::SameLine();
-		ImGui::Checkbox("Reset HOST IP", &bResetHostIp);
-		ImGui::PopItemWidth();
-		
-		if(bResetHostIp){
-			//HOST = new std::string(buf1);
-			HOST = std::string(buf1);
-			cout << "Reset HOST IP" << endl;
-		}
-		
-		
-		//ImGui::InputText("Host IP", HOST, IM_ARRAYSIZE(HOST));
-		//ImGui::InputText("Port Num", PORTText, IM_ARRAYSIZE(PORTText));
 		ImGui::Checkbox("Send X_Y_fUP_fDOWN", &bSendOsc_fMiddleX_fMinY_fUP_fDOWN);
 		if(bSendOsc_fMiddleX_fMinY_fUP_fDOWN){
 			ImGui::PushItemWidth(100);
-			string dataDescription1 = "(f0) xOSCBlob // (f1) yOSCBlob ";
-			string dataDescription2 = "(f2) fUpActionBlobOSC // (f3) fDownActionBlobOSC";
+			string dataDescription1 = "(f0) xOSCBlob - (f1) yOSCBlob ";
+			string dataDescription2 = "(f2) fUpActionBlobOSC - (f3) fDownActionBlobOSC";
 			ImGui::Text(dataDescription1.c_str());
 			ImGui::Text(dataDescription2.c_str());
 			ImGui::SliderFloat("(f0)##fMiddleX_fMinY_fUP_fDOWN", &xPosBlobFloatOsc, 0, 1);ImGui::SameLine();
@@ -356,12 +398,42 @@ void ControllerReconition::drawGui_MiddelXMinY_ControllerOptions(bool* opened){
 			ImGui::PopItemWidth();
 		}
 		
+		//TODO Add This to plot gui
+		//medianBlobHeightValue.draw(500 , 500, sensorWidth, 100, 100, "medianBlobHeightValue", true, 150);
 		
 		ImGui::End();
 		
-		//TODO Add This to plot gui
-		//medianBlobHeightValue.draw(500 , 500, sensorWidth, 100, 100, "medianBlobHeightValue", true, 150);
+		
+		//Draw Detected Resumed Point
+		drawResumedBlob();
+
 	}
+}
+
+void ControllerReconition::drawResumedBlob(/*int transX ,int transY, int winW, int winH*/){
+	//TODO add Translate X, translate Y , Point Position ( 0 .. 1 ), WidthWindow, HeightWindow
+ 
+	ofPushMatrix();
+	ofTranslate(sensorWidth*sensorScale, SensorManager::getInstance()->marginDraw);
+	
+	ofColor myMaxMinPointColor = ofColor::green;
+	ofSetColor(myMaxMinPointColor.r, myMaxMinPointColor.g, myMaxMinPointColor.b, 150);
+	
+	ofEnableAlphaBlending();
+	
+	ofDrawCircle(xPosBlob*sensorScale,
+				 yPosBlob*sensorScale,
+				 10*sensorScale);//Painting blob result over the Kinect Blob Drawer
+	
+	//Draw Vector Interaction for Jostick Mode
+	//If no polyline Area, then use middle point sensor
+	ofColor myLineColor = ofColor::green;
+	ofSetColor(myLineColor.r, myLineColor.g, myLineColor.b, 150);
+	ofDrawLine(sensorWidth*sensorScale*0.5, sensorHeight*sensorScale*0.5, xPosBlob*sensorScale, yPosBlob*sensorScale);
+	
+	ofDisableAlphaBlending();
+	
+	ofPopMatrix();
 }
 
 

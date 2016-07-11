@@ -449,6 +449,45 @@ void SensorManager::draw(){
 	
 }
 
+//---------------------------------------------------------------------
+bool SensorManager::updateVideoFolderComboSelections(string _videosPaths) {
+	
+	videosAvailable.clear();
+	
+	svideosDirPath = _videosPaths; //TODO Create State Video or Sensor Ready or not Ready
+	
+	myVideosDir.listDir(svideosDirPath);
+	if( selectedMovieIndex < myVideosDir.size() ){
+
+		smovieFileName = myVideosDir.getPath(selectedMovieIndex); //Get the one preselected
+		
+	}//else{
+		//cout << "Error No Video in the Default Video Folder = " << svideosDirPath << endl;
+		//selectedMovieIndex = -1;
+	//}
+	
+	
+	for (int i = 0; i < myVideosDir.size(); i++) {
+		videosAvailable.push_back(myVideosDir.getFile(i).getFileName());
+	}
+	
+	//smoviePath = std::string(svideosDirPath.c_str());
+	videoPlayerCam.stop();
+	videoPlayerCam.close();
+	bool bLoaded = videoPlayerCam.load(svideosDirPath+videosAvailable[selectedMovieIndex]);
+	if(bLoaded) videoPlayerCam.play();
+	if(bLoaded){
+		if(sensorWidth != videoPlayerCam.getWidth()){
+			sensorWidth = videoPlayerCam.getWidth();
+			sensorHeight = videoPlayerCam.getHeight();
+		}
+		//TODO reset other important Vars?
+		
+	}
+	
+	return bLoaded;
+}
+
 //-----------------------------------------
 void SensorManager::drawGuiSensorOptions(bool* opened){
 	
@@ -486,20 +525,28 @@ void SensorManager::drawGuiSensorOptions(bool* opened){
 		if(modeSensor == simulationMode){
 			
 			//TODO InputTextFilterCharacter
-			static char cmoviePath[60] = "videos/joystick/movie_circle.mov";
-			ImGui::PushItemWidth(250);
-			ImGui::InputText("VidPath", cmoviePath, 60);ImGui::SameLine();
-			ImGui::Checkbox("Reset", &bResetMoviePath);
-			ImGui::PopItemWidth();
+			static char cmoviePath[60] = "videos/default/"; // svideosDirPath.c_str(); //TODO LOAD Fisrt Video Available in the main video Folder
+			ImGui::PushItemWidth(200);
+			ImGui::InputText("Videos Path", cmoviePath, IM_ARRAYSIZE(cmoviePath));
+			static int myGuiVideoIndex = 0;
+			if(ImGui::InputInt("Index video", &myGuiVideoIndex, 1)){//Step one by one
+				if(myGuiVideoIndex > -1 && myGuiVideoIndex < videosAvailable.size()){
+					selectedMovieIndex = myGuiVideoIndex;
+				}else{
+					myGuiVideoIndex = selectedMovieIndex;
+				}
+			}
 			
-			if(bResetMoviePath){
-				smoviePath = std::string(cmoviePath);
-				videoPlayerCam.stop();
-				videoPlayerCam.close();
-				videoPlayerCam.load(smoviePath);
-				videoPlayerCam.play();
+			ImGui::SameLine();
+			ImGui::PopItemWidth();
+			ImGui::Checkbox("Reset Path", &bResetMoviePath);
+			
+			
+			if(bResetMoviePath && selectedMovieIndex != -1){
+				updateVideoFolderComboSelections(cmoviePath);
+				
 				bResetMoviePath = false;
-				cout << "Reset Movie to " << smoviePath << endl;
+				cout << "Reset Movie to " << svideosDirPath+videosAvailable[selectedMovieIndex] << endl;
 			}
 			
 			videoPlayerCam_pos = videoPlayerCam.getPosition();
@@ -714,14 +761,35 @@ bool SensorManager::setupCameraSensor(){
 		
 	}else if(modeSensor == simulationMode){
 		
-		bConnected = videoPlayerCam.load("videos/joystick/movie_circle.mov");
-		//videoPlayerCam.set	;
-		videoPlayerCam.play();
+		svideosDirPath = "videos/default/";
+		selectedMovieIndex = 0; //Default Index
+		bConnected = updateVideoFolderComboSelections(svideosDirPath);
 		
-		computerVisionImage.allocate(videoPlayerCam.getWidth(), videoPlayerCam.getHeight(), OF_IMAGE_GRAYSCALE);
+		/*
+		svideosDirPath = "videos/joystick/"; //TODO Create State Video or Sensor Ready or not Ready
+		myVideosDir.listDir(svideosDirPath);
+		if( myVideosDir.size() ){
+			myVideosDir.sort();
+			selectedMovieIndex = 0; //by default the 0 index
+			smovieFileName = myVideosDir.getPath(selectedMovieIndex);
+			bConnected = videoPlayerCam.load(myVideosDir.getPath(selectedMovieIndex)); //Get the first one
+			videoPlayerCam.play();
+			
+			sensorWidth = videoPlayerCam.getWidth();
+			sensorHeight = videoPlayerCam.getHeight();
+			
+			if(bConnected)computerVisionImage.allocate(sensorWidth, sensorHeight, OF_IMAGE_GRAYSCALE);
+			//TODO Check no errors loading bad things here
+			
+
+		}else{
+			cout << "No videos in this Folder" << svideosDirPath << endl;
+			//ofExit(0);
+		}
+		 
+		 */
 		
-		sensorWidth = videoPlayerCam.getWidth();
-		sensorHeight = videoPlayerCam.getHeight();
+
 	}
 	
 	

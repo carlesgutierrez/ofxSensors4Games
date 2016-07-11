@@ -13,6 +13,7 @@
 #include "ofxCv.h"
 #include "ofxKinect.h"
 #include "ofxImGui.h"
+#define IM_ARRAYSIZE(_ARR)  ((int)(sizeof(_ARR)/sizeof(*_ARR)))
 
 enum sensorType { kinectSensor, cameraSensor };
 enum sensorMode{ realTimeMode, simulationMode };
@@ -56,13 +57,18 @@ public:
 	int angle;
 	
 	//-----------------------
-	//Webcam or similar
+	//Webcam, Video or similar
+	bool updateVideoFolderComboSelections(string _videosPaths);
+	
 	bool setupCameraSensor();
 	ofVideoGrabber cam;
 	ofVideoPlayer videoPlayerCam;
-	string smoviePath;
+	ofDirectory myVideosDir;
+	string svideosDirPath;
+	string smovieFileName;
+	int selectedMovieIndex = -1;
 	bool bResetMoviePath = false;
-	
+	vector <string> videosAvailable;
 	float videoPlayerCam_pos = 0;
 	
 	ofxCv::RunningBackground background;

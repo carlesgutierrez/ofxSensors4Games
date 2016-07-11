@@ -15,9 +15,6 @@
 #include "statsRecorder.h"
 #include "SensorManager.h"
 
-//OSC DATA
-#define IM_ARRAYSIZE(_ARR)  ((int)(sizeof(_ARR)/sizeof(*_ARR)))
-
 //Status Regonition Controller Type
 enum RecognitionMethod { MaxMinsAllBlob, GigestBlob, RadarBlob, LaserBlob }; //TODO Add all this methods
 enum ActionRecognitionType { GoUpAction, GoDownAction }; //Up and Down from median height blob player.
@@ -42,9 +39,20 @@ public:
 	void mouseExited (ofMouseEventArgs & args);
 	
 	//////////////////////////////
-	void drawGui_MiddelXMinY_ControllerOptions(bool* opened);
+	//RESUMED BLOB
+	//
+	void drawResumedBlob();
+	void drawPolylinesAreas();
+	void drawGui_Controller();
+	void drawGui_OSC_configurable();
+	bool isController_ResumedBlob = true;
+	void drawGui_ResumedBlob(bool* opened);
 	bool bSendOsc_fMiddleX_fMinY_fUP_fDOWN = false;
+	bool bresumeBlob_inverX = true;
 	void calcMainBlobLocation();
+	
+	//////////////////////////////
+	//OSC
 	void sendOSCBlobData();
 	
 	//////////////////////////////
@@ -72,12 +80,11 @@ public:
 	int imageRecognitionH;
 	
 	/////////////////////////////////
-	//Actions Blobs detection
-	//bool bMoveLeft = false;
+	//Tracking Blobs detection
+	bool isController_trackingMode = false;
 	//bool bMoveRight
 	
-	//MiddleXMinY detection
-	bool isController_MiddelXMinY_Window = true;
+	//Resume Blob MaxMinMiddel detections
 	ofVec2f		xMin,xMax,yMin,yMax;
 	float xDiff;
 	float yDiff;
