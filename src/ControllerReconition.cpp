@@ -29,9 +29,13 @@ void ControllerReconition::setup(int w, int h, RecognitionMethod _myComputeBlobT
 	
 	//polyline
 	polylinesIndex = -1;
+	
+	//ofRectangle rec1 = ofRectangle(0, 0, 0, 0);
 	ofPolyline pol1;
+	pol1.clear();
 	polylines.push_back(pol1);
 	ofPolyline pol2;
+	pol2.clear();
 	polylines.push_back(pol2);
 	
 	imageRecognitionPosition = ofPoint(sensorWidth*sensorScale, SensorManager::getInstance()->marginDraw);
@@ -67,18 +71,18 @@ void ControllerReconition::updateRecognitionBlobsInsideAreas(){
 		//ALMOST WORKING. CHECK Values: Points and Quads
 		
 		//Get if this Blob Point is Inside Area 1
-		
+		cout << "polylines.size() " << polylines.size() << endl;
 		for(int j = 0; j < polylines.size(); j++){
-		
-			if(polylines[j].inside(tmpPos*sensorScale)){
-				int label = SensorManager::getInstance()->contourFinder.getLabel(i);
-				cout << " Yey Im Inside this Poline " << j << " Blob # " <<  ofToString(label,0) << endl;
-				cout << " polylines[j] = " <<  polylines[j].getCentroid2D() << endl;
-				cout << " Blobs[i] = " <<  SensorManager::getInstance()->contourFinder.getCentroid(i) << endl;
+			if(polylines[j].isClosed()){
+				if(polylines[j].inside(tmpPos*sensorScale)){
+					int label = SensorManager::getInstance()->contourFinder.getLabel(i);
+					cout << " Yey Im Inside this Poline " << j << " Blob # " <<  ofToString(label,0) << endl;
+					cout << " polylines[j] = " <<  polylines[j].getCentroid2D() << endl;
+					cout << " Blobs[i] = " <<  SensorManager::getInstance()->contourFinder.getCentroid(i) << endl;
 				
-				//TODO CHeck how to save in that is being tracked inside a polynine area X
+					//TODO CHeck how to save in that is being tracked inside a polynine area X
+				}
 			}
-		
 		}
 		//Get if this Blob Point is Inside Area 2
 		   //idem ...

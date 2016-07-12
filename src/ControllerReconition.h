@@ -7,14 +7,12 @@
 //
 //
 #pragma once
-
 #include "ofMain.h"
 //#include "ofxCvBlob.h"
 #include "ofxImGui.h"
-#include "ofxOsc.h"
 #include "statsRecorder.h"
 #include "SensorManager.h"
-#include "ofxNetwork.h"
+
 
 
 //Status Regonition Controller Type

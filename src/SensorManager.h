@@ -8,7 +8,8 @@
 
 
 #pragma once
-
+#include "ofxNetwork.h"
+#include "ofxOsc.h"
 #include "ofMain.h"
 #include "ofxCv.h"
 #include "ofxKinect.h"
