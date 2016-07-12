@@ -5,7 +5,7 @@ void ofApp::setup(){
 	
 	ofSetFrameRate(60);
 	
-	mySensorController.setup(cameraSensor, MaxMinsAllBlob);  // kinectSensor
+	mySensorController.setup(cameraSensor, simulationMode, MaxMinsAllBlob);  //cameraSensor , kinectSensor // realTimeMode, simulationMode
 	
 }
 
@@ -22,7 +22,7 @@ void ofApp::draw(){
 
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){
-	mySensorController.keyPressed(key);
+
 }
 
 //--------------------------------------------------------------
@@ -47,7 +47,7 @@ void ofApp::mousePressed(int x, int y, int button){
 
 //--------------------------------------------------------------
 void ofApp::mouseReleased(int x, int y, int button){
-
+	
 }
 
 //--------------------------------------------------------------
