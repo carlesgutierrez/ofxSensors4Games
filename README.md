@@ -24,12 +24,32 @@ Usage
 Examples
 --------
 
-myControllerOscServer // sends OSC commands as: 
-* PangBlob
-	- (float) that represents (x pos) 	[0..1]
-	- (float) that represents (y pos) 	[0..1]
-	- (float) that represents (UP mov) 	[0..1]
-	- (float) that represents (DOWN mov)	[0..1]
+myControllerOscServer sends different desired and selected data
+
+//ResumedBlob
+osc:/GameBlob
+	- (float) x pos 	[0..1]
+	- (float) y pos 	[0..1]
+	- (float) UP mov 	[0..1]
+	- (float) DOWN mov	[0..1]
+(TODO)	- (int) Poligon Points	[0..1] //For now just 4 ( Quad )
+(TODO)	- (float) Quad Area x0	[0..1]
+(TODO)	- (float) Quad Area x1	[0..1]
+(TODO)	- (float) Quad Area x2	[0..1]
+(TODO)	- (float) Quad Area x3	[0..1]
+
+//Tracking Blobs (WIP)
+osc:/TrackingBlobs
+	- (int) id
+	- (float) pos
+	- (float) vel
+	- (int) detected action
+(TODO)	- (int) Poligon Points	[0..1] //For now just 4 ( Quad )
+(TODO)	- (float) Quad Area x0	[0..1]
+(TODO)	- (float) Quad Area x1	[0..1]
+(TODO)	- (float) Quad Area x2	[0..1]
+(TODO)	- (float) Quad Area x3	[0..1]
+
 
 Dependencies
 ------------
@@ -37,6 +57,7 @@ Externals:
 ofxImgui (https://github.com/jvcleave/ofxImGui)
 
 Internals:
+ofxNetwork
 ofxOsc
 ofxOpencv
 ofxKinect
