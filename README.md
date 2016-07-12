@@ -28,39 +28,39 @@ myControllerOscServer sends different desired and selected data
 
 //ResumedBlob
 osc:/GameBlob
-	- (float) x pos 	[0..1]
-	- (float) y pos 	[0..1]
-	- (float) UP mov 	[0..1]
-	- (float) DOWN mov	[0..1]
-(TODO)	- (int) Poligon Points	[0..1] //For now just 4 ( Quad )
-(TODO)	- (float) Quad Area x0	[0..1]
-(TODO)	- (float) Quad Area x1	[0..1]
-(TODO)	- (float) Quad Area x2	[0..1]
-(TODO)	- (float) Quad Area x3	[0..1]
+*	- (float) x pos 	[0..1]
+*	- (float) y pos 	[0..1]
+*	- (float) UP mov 	[0..1]
+*	- (float) DOWN mov	[0..1]
+* (TODO)	- (int) Poligon Points	[0..1] //For now just 4 ( Quad )
+* (TODO)	- (float) Quad Area x0	[0..1]
+* (TODO)	- (float) Quad Area x1	[0..1]
+* (TODO)	- (float) Quad Area x2	[0..1]
+* (TODO)	- (float) Quad Area x3	[0..1]
 
 //Tracking Blobs (WIP)
 osc:/TrackingBlobs
-	- (int) id
-	- (float) pos
-	- (float) vel
-	- (int) detected action
-(TODO)	- (int) Poligon Points	[0..1] //For now just 4 ( Quad )
-(TODO)	- (float) Quad Area x0	[0..1]
-(TODO)	- (float) Quad Area x1	[0..1]
-(TODO)	- (float) Quad Area x2	[0..1]
-(TODO)	- (float) Quad Area x3	[0..1]
+*	- (int) id
+*	- (float) pos
+*	- (float) vel
+*	- (int) detected action
+* (TODO)	- (int) Poligon Points	[0..1] //For now just 4 ( Quad )
+* (TODO)	- (float) Quad Area x0	[0..1]
+* (TODO)	- (float) Quad Area x1	[0..1]
+* (TODO)	- (float) Quad Area x2	[0..1]
+* (TODO)	- (float) Quad Area x3	[0..1]
 
 
 Dependencies
 ------------
 Externals:
-ofxImgui (https://github.com/jvcleave/ofxImGui)
+* ofxImgui (https://github.com/jvcleave/ofxImGui)
 
 Internals:
-ofxNetwork
-ofxOsc
-ofxOpencv
-ofxKinect
+* ofxNetwork
+* ofxOsc
+* ofxOpencv
+* ofxKinect
 
 
 Compatibility
