@@ -748,6 +748,8 @@ bool SensorManager::setupCameraSensor(){
 	bool bConnected = false;
 	
 	if(modeSensor == realTimeMode){
+		cam.listDevices();
+		//cam.setDeviceID(1);
 		cam.setup(640, 480);
 		
 		computerVisionImage.allocate(cam.getWidth(), cam.getHeight(), OF_IMAGE_GRAYSCALE);

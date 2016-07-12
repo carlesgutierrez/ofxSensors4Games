@@ -14,6 +14,8 @@
 #include "ofxOsc.h"
 #include "statsRecorder.h"
 #include "SensorManager.h"
+#include "ofxNetwork.h"
+
 
 //Status Regonition Controller Type
 enum RecognitionMethod { MaxMinsAllBlob, GigestBlob, RadarBlob, LaserBlob }; //TODO Add all this methods
@@ -38,6 +40,11 @@ public:
 	void mouseEntered (ofMouseEventArgs & args);
 	void mouseExited (ofMouseEventArgs & args);
 	
+	
+	void setupUDP(string _ip, int _port);
+	ofxUDPManager udpConnection;
+	bool bSendUDP_fMiddleX_fMinY_fUP_fDOWN = false;
+	
 	//////////////////////////////
 	//RESUMED BLOB
 	//
@@ -49,6 +56,14 @@ public:
 	void drawGui_ResumedBlob(bool* opened);
 	bool bSendOsc_fMiddleX_fMinY_fUP_fDOWN = false;
 	bool bresumeBlob_inverX = true;
+	//bool bresumeBlob_maxX = true;
+	//bool bresumeBlob_minX = false;
+	//bool bresumeBlob_minY = true;
+	//bool bresumeBlob_maxY = false;
+	int item_resumedBlob_X = 0;
+	
+	int item_resumedBlob_Y = 1;
+	
 	void calcMainBlobLocation();
 	
 	//////////////////////////////
@@ -115,7 +130,7 @@ public:
 	//OSC CONFIG
 	bool bResetHostIp = false;
 	int PORT = 12345;
-	string HOST = "192.168.3.71";//"127.0.0.1";
+	string HOST = "127.0.0.1";//MLP: "192.168.2.254";
 	
 	
 };

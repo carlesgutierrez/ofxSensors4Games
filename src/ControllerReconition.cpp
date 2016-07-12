@@ -22,6 +22,8 @@ void ControllerReconition::setup(int w, int h, RecognitionMethod _myComputeBlobT
 	
 	// open an outgoing connection to HOST:PORT
 	sender.setup(HOST, PORT);
+	//TODO Check if both can be created at same time. Theoretically if PORTS are different should work
+	setupUDP(HOST, 29095); // 29095 port is used in GODOT (game engine) software.
 	
 	myComputeBlobType = _myComputeBlobType;
 	
@@ -38,6 +40,15 @@ void ControllerReconition::setup(int w, int h, RecognitionMethod _myComputeBlobT
 	
 	ofRegisterMouseEvents(this);
 	ofRegisterKeyEvents(this);
+}
+
+void ControllerReconition::setupUDP(string _ip, int _port){
+	
+	//create the socket and set to send to 127.0.0.1:11999
+	udpConnection.Create();
+	udpConnection.Connect(_ip.c_str(),_port);
+	udpConnection.SetNonBlocking(true);
+
 }
 
 //-----------------------------------------
@@ -86,6 +97,7 @@ void ControllerReconition::update(){
 	
 	if(bResetHostIp){
 		sender.setup(HOST, PORT);
+		setupUDP(HOST, 29095); // 29095 port is used in GODOT (game engine) software.
 		bResetHostIp = false;
 	}
 }
@@ -126,13 +138,21 @@ void ControllerReconition::calcMainBlobLocation(){
 	calculateMaxMin();
 	
 	//TODO set here the different blob detection
+	if(item_resumedBlob_X == 0)xPosBlob = xMax.x;//max contourn point (right) X
+	else if(item_resumedBlob_X == 1)xPosBlob = xMin.x;//min contourn point (left) X
+	else if(item_resumedBlob_X == 2)xPosBlob = xMin.x + xDiff*0.5;//middle pos X of all contourns blobs detected
 	
+	if(item_resumedBlob_Y == 0)yPosBlob = yMax.y;//idem Y
+	else if(item_resumedBlob_Y == 1)yPosBlob = yMin.y;//idem Y
+	else if(item_resumedBlob_Y == 2)yPosBlob = yMin.y + yDiff*0.5;//middle pos Y of all contourns blobs detected
+	
+	//if(bresumeBlob_minY)yPosBlob = yMin.y;
+	//else if(bresumeBlob_maxY)yPosBlob = yMax.x;
 	
 	//OP2 Used max min calculated
-	xPosBlob = xMax.x;
+	//xPosBlob = xMax.x;
 	//xPosBlob = xMin.x + xDiff*0.5;//middle pos
-	
-	yPosBlob = yMin.y;
+	//yPosBlob = yMin.y;
 	
 	//Filtered for OSC and Gui Controller
 	if(bresumeBlob_inverX){
@@ -240,6 +260,16 @@ void ControllerReconition::sendOSCBlobData(){
 		m.addFloatArg(fDownActionBlob_OSC);
 	
 		sender.sendMessage(m, false);
+	}
+	
+	if(bSendUDP_fMiddleX_fMinY_fUP_fDOWN){
+		
+		string message = "/GameBlob ffff ";
+		message = message + ofToString(xPosBlobFloatOsc,2) + " " + ofToString(yPosBlobFloatOsc,2) + " " + ofToString(fUpActionBlob_OSC,2) + " " + ofToString(fDownActionBlob_OSC,2);
+		udpConnection.Send(message.c_str(),message.length());
+		
+		cout << "message UDP = " << message << endl;
+	
 	}
 	//TODO send here other data type
 	//for(areas)
@@ -373,20 +403,20 @@ void ControllerReconition::drawGui_ResumedBlob(bool* opened){
 		ImGui::SliderFloat("medianHeightBlob", &medianHeightBlob, 0, 1);
 		
 		ImGui::Separator();
+
+		const char* combo_resumedBlob_X[] = { "bresumeBlob_maxX", "bresumeBlob_minX", "bresumeBlob_middleX" };
+		const char* combo_resumedBlob_Y[] = { "bresumeBlob_maxY", "bresumeBlob_minY", "bresumeBlob_middleY" };
 		
-		//TODO add this ?
-		//ImGui::Text("Host IP", HOST, IM_ARRAYSIZE(HOST));
-		//ImGui::Text("Port Num", PORT, IM_ARRAYSIZE(PORT));
+		ImGui::Combo("ResumeBlob X type", &item_resumedBlob_X, combo_resumedBlob_X, IM_ARRAYSIZE(combo_resumedBlob_X));
+		ImGui::Combo("ResumeBlob Y type", &item_resumedBlob_Y, combo_resumedBlob_Y, IM_ARRAYSIZE(combo_resumedBlob_Y));
 		
-		ImGui::Checkbox("InvertX", &bresumeBlob_inverX);
+		ImGui::Checkbox("Send UDP", &bSendUDP_fMiddleX_fMinY_fUP_fDOWN);
 		
-		ImGui::Checkbox("Send X_Y_fUP_fDOWN", &bSendOsc_fMiddleX_fMinY_fUP_fDOWN);
-		if(bSendOsc_fMiddleX_fMinY_fUP_fDOWN){
+		if(bSendUDP_fMiddleX_fMinY_fUP_fDOWN){
+			
+			ImGui::Checkbox("OSC Invert X", &bresumeBlob_inverX);
+			
 			ImGui::PushItemWidth(100);
-			string dataDescription1 = "(f0) xOSCBlob - (f1) yOSCBlob ";
-			string dataDescription2 = "(f2) fUpActionBlobOSC - (f3) fDownActionBlobOSC";
-			ImGui::Text(dataDescription1.c_str());
-			ImGui::Text(dataDescription2.c_str());
 			ImGui::SliderFloat("(f0)##fMiddleX_fMinY_fUP_fDOWN", &xPosBlobFloatOsc, 0, 1);ImGui::SameLine();
 			ImGui::VSliderFloat("(f1)##fMiddleX_fMinY_fUP_fDOWN", ImVec2(20, 50),&yPosBlobFloatOsc, 0, 1);ImGui::SameLine();
 			ImGui::VSliderFloat("(f2)##fMiddleX_fMinY_fUP_fDOWN", ImVec2(20, 50), &fUpActionBlob_OSC, 0, 1);ImGui::SameLine();
@@ -394,6 +424,31 @@ void ControllerReconition::drawGui_ResumedBlob(bool* opened){
 			//ImGui::SliderFloat("(f2) fUpActionBlobOSC", &fUpActionBlob_OSC, 0, 1);
 			//ImGui::SameLine();
 			//ImGui::SliderFloat("(f3) fDownActionBlobOSC", &fDownActionBlob_OSC, 0, 1);
+			string dataDescription1 = "(f0) xOSCBlob - (f1) yOSCBlob ";
+			string dataDescription2 = "(f2) fUpActionBlobOSC - (f3) fDownActionBlobOSC";
+			ImGui::Text(dataDescription1.c_str());
+			ImGui::Text(dataDescription2.c_str());
+			
+			ImGui::PopItemWidth();
+		}
+		
+		ImGui::Checkbox("Send OSC", &bSendOsc_fMiddleX_fMinY_fUP_fDOWN);
+		if(bSendOsc_fMiddleX_fMinY_fUP_fDOWN){
+			
+			ImGui::Checkbox("Send Inverted X", &bresumeBlob_inverX);
+			
+			ImGui::PushItemWidth(100);
+			ImGui::SliderFloat("(f0)##fMiddleX_fMinY_fUP_fDOWN", &xPosBlobFloatOsc, 0, 1);ImGui::SameLine();
+			ImGui::VSliderFloat("(f1)##fMiddleX_fMinY_fUP_fDOWN", ImVec2(20, 50),&yPosBlobFloatOsc, 0, 1);ImGui::SameLine();
+			ImGui::VSliderFloat("(f2)##fMiddleX_fMinY_fUP_fDOWN", ImVec2(20, 50), &fUpActionBlob_OSC, 0, 1);ImGui::SameLine();
+			ImGui::VSliderFloat("(f3)##fMiddleX_fMinY_fUP_fDOWN", ImVec2(20, 50), &fDownActionBlob_OSC, 0, 1);
+			//ImGui::SliderFloat("(f2) fUpActionBlobOSC", &fUpActionBlob_OSC, 0, 1);
+			//ImGui::SameLine();
+			//ImGui::SliderFloat("(f3) fDownActionBlobOSC", &fDownActionBlob_OSC, 0, 1);
+			string dataDescription1 = "(f0) xOSCBlob - (f1) yOSCBlob ";
+			string dataDescription2 = "(f2) fUpActionBlobOSC - (f3) fDownActionBlobOSC";
+			ImGui::Text(dataDescription1.c_str());
+			ImGui::Text(dataDescription2.c_str());
 
 			ImGui::PopItemWidth();
 		}
