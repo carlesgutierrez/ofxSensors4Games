@@ -71,14 +71,14 @@ void ControllerReconition::updateRecognitionBlobsInsideAreas(){
 		//ALMOST WORKING. CHECK Values: Points and Quads
 		
 		//Get if this Blob Point is Inside Area 1
-		cout << "polylines.size() " << polylines.size() << endl;
+		//cout << "polylines.size() " << polylines.size() << endl;
 		for(int j = 0; j < polylines.size(); j++){
 			if(polylines[j].isClosed()){
 				if(polylines[j].inside(tmpPos*sensorScale)){
 					int label = SensorManager::getInstance()->contourFinder.getLabel(i);
 					cout << " Yey Im Inside this Poline " << j << " Blob # " <<  ofToString(label,0) << endl;
-					cout << " polylines[j] = " <<  polylines[j].getCentroid2D() << endl;
-					cout << " Blobs[i] = " <<  SensorManager::getInstance()->contourFinder.getCentroid(i) << endl;
+					//cout << " polylines[j] = " <<  polylines[j].getCentroid2D() << endl;
+					//cout << " Blobs[i] = " <<  SensorManager::getInstance()->contourFinder.getCentroid(i) << endl;
 				
 					//TODO CHeck how to save in that is being tracked inside a polynine area X
 				}
