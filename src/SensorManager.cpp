@@ -763,7 +763,12 @@ bool SensorManager::setupCameraSensor(){
 		
 	}else if(modeSensor == simulationMode){
 		
-		svideosDirPath = "videos/default/";
+#ifdef TARGET_WIN32
+		svideosDirPath = "videos/default";
+#else
+		svideosDirPath = "videos/default";
+#endif
+		
 		selectedMovieIndex = 0; //Default Index
 		bConnected = updateVideoFolderComboSelections(svideosDirPath);
 		
