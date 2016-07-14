@@ -764,7 +764,7 @@ bool SensorManager::setupCameraSensor(){
 	}else if(modeSensor == simulationMode){
 		
 #ifdef TARGET_WIN32
-		svideosDirPath = "videos/default";
+		svideosDirPath = "videos/default/";
 #else
 		svideosDirPath = "videos/default";
 #endif
