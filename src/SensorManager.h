@@ -12,9 +12,16 @@
 #include "ofxOsc.h"
 #include "ofMain.h"
 #include "ofxCv.h"
-#include "ofxKinect.h"
 #include "ofxImGui.h"
 #define IM_ARRAYSIZE(_ARR)  ((int)(sizeof(_ARR)/sizeof(*_ARR)))
+
+
+#ifdef USE_SENSOR_KINECT
+#include "ofxKinect.h"
+#endif
+
+
+
 
 enum sensorType { kinectSensor, cameraSensor };
 enum sensorMode{ realTimeMode, simulationMode };
@@ -48,10 +55,13 @@ public:
 	
 	bool isNewSensorFrame();
 	
+
 	//----------------------
 	//Kinect
 	bool setupKinectSensor();
+#ifdef USE_SENSOR_KINECT
 	ofxKinect kinect;
+#endif
 	//bool bThreshWithOpenCV;
 	int nearThreshold;
 	int farThreshold;
@@ -59,8 +69,10 @@ public:
 	
 	//-----------------------
 	//Webcam, Video or similar
+private:
+	void resetSimpleSensorCamera();
 	bool updateVideoFolderComboSelections(string _videosPaths);
-	
+public:
 	bool setupCameraSensor();
 	ofVideoGrabber cam;
 	ofVideoPlayer videoPlayerCam;
@@ -68,6 +80,7 @@ public:
 	string svideosDirPath;
 	string smovieFileName;
 	int selectedMovieIndex = -1;
+	int selectedCameraIndex = 0;
 	bool bResetMoviePath = false;
 	vector <string> videosAvailable;
 	float videoPlayerCam_pos = 0;

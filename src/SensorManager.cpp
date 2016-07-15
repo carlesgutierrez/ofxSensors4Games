@@ -49,7 +49,11 @@ void SensorManager::setup(sensorType _sensorType, sensorMode _sensorMode){
 	bool bSensorReady = false;
 	
 	if (typeSensor == kinectSensor) {
+		
+#ifdef USE_SENSOR_KINECT
 		bSensorReady = setupKinectSensor();
+#endif
+		
 	}
 	
 	else if (typeSensor == cameraSensor){
@@ -73,7 +77,9 @@ void SensorManager::update(){
 	bNewSensorFrame = false;
 	
 	if(typeSensor == kinectSensor){
-		
+
+#ifdef USE_SENSOR_KINECT
+
 		kinect.update();
 		
 		// there is a new frame and we are connected
@@ -104,7 +110,8 @@ void SensorManager::update(){
 		//contourFinder.findContours(grayImage, minSizeBlob, maxSizeBlob, numBlobs, false);
 		contourFinder.findContours(computerVisionImage);
 		bNewSensorFrame = true;
-		
+#endif
+
 	}
 	else if (typeSensor == cameraSensor){
 		
@@ -270,6 +277,8 @@ void SensorManager::draw(){
 	
 	if(typeSensor == kinectSensor){
 		
+#ifdef USE_SENSOR_KINECT
+
 		ofSetColor(255, 255, 255);
 		
 
@@ -314,6 +323,8 @@ void SensorManager::draw(){
 		}
 		
 		ofDrawBitmapString(reportStream.str(), 20, 652);
+#endif
+
 	}
 	else if (typeSensor == cameraSensor){
 		
@@ -489,6 +500,13 @@ bool SensorManager::updateVideoFolderComboSelections(string _videosPaths) {
 }
 
 //-----------------------------------------
+void SensorManager::resetSimpleSensorCamera() {
+	cam.close();
+	cam.setDeviceID(selectedCameraIndex);
+	cam.setup(640, 480);//TODO editable format
+}
+
+//-----------------------------------------
 void SensorManager::drawGuiSensorOptions(bool* opened){
 	
 	string textBlobsFound = "#blobs = "+ofToString(contourFinder.size(), 0);
@@ -497,6 +515,9 @@ void SensorManager::drawGuiSensorOptions(bool* opened){
 	
 	string sensorTextType = "Not configured Yet";
 	if(typeSensor == kinectSensor){
+
+#ifdef USE_SENSOR_KINECT
+
 		sensorTextType = "Kinect 1";
 
 		ImGui::Text(sensorTextType.c_str());
@@ -517,12 +538,53 @@ void SensorManager::drawGuiSensorOptions(bool* opened){
 			contourFinder.setMaxAreaRadius(maxSizeBlob);
 		}
 		
+#endif
 		//ImGui::PopItemWidth();
 	}else if (typeSensor == cameraSensor){
 		sensorTextType = "OF Camera";
 		ImGui::Text(sensorTextType.c_str());
 		
-		if(modeSensor == simulationMode){
+		if (modeSensor == realTimeMode) {
+		
+
+			ImGui::PushItemWidth(200);
+			static int myGuiCameraIndex = 0;
+			if (ImGui::InputInt("Index Camera", &myGuiCameraIndex, 1)) {//Step one by one
+				if (myGuiCameraIndex > -1 && myGuiCameraIndex < cam.listDevices().size()) {
+					selectedCameraIndex = myGuiCameraIndex;
+				}
+				else {
+					myGuiCameraIndex = selectedCameraIndex;
+				}
+			}
+			ImGui::PopItemWidth();
+
+#ifdef OF_VIDEO_CAPTURE_DIRECTSHOW
+			static bool bCameraComposite = false;
+			if (ImGui::Checkbox("SET COMPOSITE", &bCameraComposite)) {
+				if (bCameraComposite) {
+					shared_ptr<ofDirectShowGrabber> auxGrabber = shared_ptr <OF_VID_GRABBER_TYPE>(new OF_VID_GRABBER_TYPE);
+					auxGrabber->VI.setupDevice(selectedCameraIndex, VI_COMPOSITE);
+					cam.setGrabber(auxGrabber);
+				}
+				else {
+					resetSimpleSensorCamera();
+				}
+				
+			}
+#endif
+			if (ImGui::Button("Reset Camera", ImVec2(150, 20))) {
+				resetSimpleSensorCamera();
+			}
+
+			if (ImGui::Button("Settings Camera", ImVec2(150, 30))) {
+				cam.videoSettings();
+			}
+
+
+		
+		}
+		else if(modeSensor == simulationMode){
 			
 			//TODO InputTextFilterCharacter
 			static char cmoviePath[60] = "videos/default/"; // svideosDirPath.c_str(); //TODO LOAD Fisrt Video Available in the main video Folder
@@ -637,10 +699,11 @@ int SensorManager::getHeight(){
 void SensorManager::exit(){
 	
 	if(typeSensor == kinectSensor){
-			
+
+#ifdef USE_SENSOR_KINECT
 		kinect.setCameraTiltAngle(0); // zero the tilt on exit
 		kinect.close();
-		
+#endif
 		
 	}
 	else if(typeSensor == cameraSensor){
@@ -655,6 +718,9 @@ void SensorManager::keyReleased(ofKeyEventArgs & args){}
 void SensorManager::keyPressed(ofKeyEventArgs & args){
 	
 	if(typeSensor == kinectSensor){
+
+#ifdef USE_SENSOR_KINECT
+
 		switch (args.key) {
 			case ' ':
 				//bThreshWithOpenCV = !bThreshWithOpenCV;
@@ -733,6 +799,7 @@ void SensorManager::keyPressed(ofKeyEventArgs & args){
 				kinect.setCameraTiltAngle(angle);
 				break;
 		}
+#endif
 	}
 }
 
@@ -748,8 +815,10 @@ bool SensorManager::setupCameraSensor(){
 	bool bConnected = false;
 	
 	if(modeSensor == realTimeMode){
+		
+		cam.setVerbose(true);
 		cam.listDevices();
-		//cam.setDeviceID(1);
+		cam.setDeviceID(selectedCameraIndex);
 		cam.setup(640, 480);
 		
 		computerVisionImage.allocate(cam.getWidth(), cam.getHeight(), OF_IMAGE_GRAYSCALE);
@@ -766,36 +835,11 @@ bool SensorManager::setupCameraSensor(){
 #ifdef TARGET_WIN32
 		svideosDirPath = "videos/default/";
 #else
-		svideosDirPath = "videos/default";
+		svideosDirPath = "videos/default/";
 #endif
 		
 		selectedMovieIndex = 0; //Default Index
 		bConnected = updateVideoFolderComboSelections(svideosDirPath);
-		
-		/*
-		svideosDirPath = "videos/joystick/"; //TODO Create State Video or Sensor Ready or not Ready
-		myVideosDir.listDir(svideosDirPath);
-		if( myVideosDir.size() ){
-			myVideosDir.sort();
-			selectedMovieIndex = 0; //by default the 0 index
-			smovieFileName = myVideosDir.getPath(selectedMovieIndex);
-			bConnected = videoPlayerCam.load(myVideosDir.getPath(selectedMovieIndex)); //Get the first one
-			videoPlayerCam.play();
-			
-			sensorWidth = videoPlayerCam.getWidth();
-			sensorHeight = videoPlayerCam.getHeight();
-			
-			if(bConnected)computerVisionImage.allocate(sensorWidth, sensorHeight, OF_IMAGE_GRAYSCALE);
-			//TODO Check no errors loading bad things here
-			
-
-		}else{
-			cout << "No videos in this Folder" << svideosDirPath << endl;
-			//ofExit(0);
-		}
-		 
-		 */
-		
 
 	}
 	
@@ -822,6 +866,9 @@ bool SensorManager::setupCameraSensor(){
 bool SensorManager::setupKinectSensor(){
 	
 	bool bConnected = false;
+
+#ifdef USE_SENSOR_KINECT
+
 	
 	// enable depth->video image calibration
 	kinect.setRegistration(true);
@@ -865,9 +912,11 @@ bool SensorManager::setupKinectSensor(){
 	//General SensorData for others
 	sensorWidth = kinect.width;
 	sensorHeight = kinect.height;
-	
+
+#endif	
 	return bConnected;
-	
+
+
 }
 
 //Getters

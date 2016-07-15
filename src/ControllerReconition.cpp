@@ -543,11 +543,11 @@ void ControllerReconition::mouseEntered(ofMouseEventArgs & args){}
 void ControllerReconition::mouseExited(ofMouseEventArgs & args){}
 void ControllerReconition::mouseReleased (ofMouseEventArgs & args){
 	
-	cout << "args.x = " << args.x << endl;
-	cout << "args.y = " << args.y << endl;
+	//cout << "args.x = " << args.x << endl;
+	//cout << "args.y = " << args.y << endl;
 
-	cout << "imageRecognitionPosition.x = " << imageRecognitionPosition.x << endl;
-	cout << "imageRecognitionPosition.y = " << imageRecognitionPosition.y << endl;
+	//cout << "imageRecognitionPosition.x = " << imageRecognitionPosition.x << endl;
+	//cout << "imageRecognitionPosition.y = " << imageRecognitionPosition.y << endl;
 	
 	if(args.x > imageRecognitionPosition.x && args.x < imageRecognitionPosition.x+imageRecognitionW){
 		if(args.y > imageRecognitionPosition.y && args.y < imageRecognitionPosition.y+imageRecognitionH){
