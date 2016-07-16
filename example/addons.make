@@ -1,7 +1,6 @@
+ofxCv
 ofxImGui
-ofxKinect
+ofxNetwork
 ofxOpenCv
 ofxOsc
 ofxSensors4Games
-ofxNetwork
-ofxCv
