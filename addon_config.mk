@@ -26,7 +26,7 @@ common:
 	# or use += in several lines
 	ADDON_DEPENDENCIES = ofxJSON
 	ADDON_DEPENDENCIES += ofxCv
-	ADDON_DEPENDENCIES += ofxKinect
+	#ADDON_DEPENDENCIES += ofxKinect
 	ADDON_DEPENDENCIES += ofxNetwork
 	ADDON_DEPENDENCIES += ofxOpencv
 	ADDON_DEPENDENCIES += ofxOSC

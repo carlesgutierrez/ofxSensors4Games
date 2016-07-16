@@ -21,7 +21,7 @@
 
 #include "ofMain.h"
 
-#define USE_SENSOR_KINECT // comment this to avoid Kinect issues Lib and not use it
+//#define USE_SENSOR_KINECT // comment this to avoid Kinect issues Lib and not use it
 
 #include "SensorManager.h"
 #include "ControllerReconition.h"

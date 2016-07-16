@@ -60,7 +60,7 @@ Internals:
 * ofxNetwork
 * ofxOsc
 * ofxOpencv
-* ofxKinect
+* ofxKinect add this manually. !!! README  !!! ofxkinect README (usb libs install) 
 
 
 Compatibility
