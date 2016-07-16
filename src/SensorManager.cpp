@@ -560,6 +560,8 @@ void SensorManager::drawGuiSensorOptions(bool* opened){
 			ImGui::PopItemWidth();
 
 #ifdef OF_VIDEO_CAPTURE_DIRECTSHOW
+/* 
+//WIP. This require public access to VI (Directshow)
 			static bool bCameraComposite = false;
 			if (ImGui::Checkbox("SET COMPOSITE", &bCameraComposite)) {
 				if (bCameraComposite) {
@@ -572,6 +574,7 @@ void SensorManager::drawGuiSensorOptions(bool* opened){
 				}
 				
 			}
+*/
 #endif
 			if (ImGui::Button("Reset Camera", ImVec2(150, 20))) {
 				resetSimpleSensorCamera();
@@ -587,7 +590,7 @@ void SensorManager::drawGuiSensorOptions(bool* opened){
 		else if(modeSensor == simulationMode){
 			
 			//TODO InputTextFilterCharacter
-			static char cmoviePath[60] = "videos/default/"; // svideosDirPath.c_str(); //TODO LOAD Fisrt Video Available in the main video Folder
+			static char cmoviePath[60] = "videos/default/"; //This will load fisrt Video available at the this Folder
 			ImGui::PushItemWidth(200);
 			ImGui::InputText("Videos Path", cmoviePath, IM_ARRAYSIZE(cmoviePath));
 			static int myGuiVideoIndex = 0;
