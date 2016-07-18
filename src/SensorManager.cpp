@@ -35,7 +35,25 @@ SensorManager::SensorManager()
 SensorManager::~SensorManager()
 {}
 
+//Getters
+//-----------------------------------------
+sensorType SensorManager::getSensorType(){
+	return typeSensor;
+}
+//-----------------------------------------
+sensorMode SensorManager::getSensorMode(){
+	return modeSensor;
+}
 
+//Setters
+//-----------------------------------------
+void SensorManager::setSensorType(sensorType _type){
+	typeSensor =_type;
+}
+//-----------------------------------------
+void  SensorManager::setSensorMode(sensorMode _mode){
+	modeSensor = _mode;
+}
 
 
 //-----------------------------------------
@@ -49,16 +67,14 @@ void SensorManager::setup(sensorType _sensorType, sensorMode _sensorMode){
 	bool bSensorReady = false;
 	
 	if (typeSensor == kinectSensor) {
-		
 #ifdef USE_SENSOR_KINECT
 		bSensorReady = setupKinectSensor();
 #endif
-		
-	}
-	
-	else if (typeSensor == cameraSensor){
+	}else if (typeSensor == cameraSensor){
 		bSensorReady = setupCameraSensor();
 		
+	}else if(typeSensor == externalSickSensor){
+		bSensorReady = setupExternalSickSensor();
 	}
 	
 	if(bSensorReady == false){
@@ -254,6 +270,12 @@ void SensorManager::update(){
 		}
 		
 	}
+	else if (typeSensor == externalSickSensor){
+		
+		//This updates osc data that contains all Blobs
+		bNewSensorFrame = updateExternalSickSensor();
+
+	}
 	
 	
 	
@@ -354,7 +376,7 @@ void SensorManager::draw(){
 			
 			
 			//---------------------------------------
-			//Kyle Blob Tracker Visualization
+			//Kyle Mcdonnal - Blob Tracker Visualization
 			if(bTrackgingActive){
 				
 				//TODO To acces this from outside may be neceseary to clean
@@ -447,6 +469,18 @@ void SensorManager::draw(){
 		ofPopMatrix();
 
 	
+	}
+	else if(typeSensor == externalSickSensor){
+		
+		ofSetColor(ofColor::grey);
+		ofDrawRectangle(0, 0, sensorWidth, sensorHeight);
+		
+		ofSetColor(ofColor::greenYellow);
+		
+		for (int i = 0; i < sickBlobs.size() ; i++){
+			ofDrawBitmapString("id: " + ofToString(sickBlobs[i].id, 0), sickBlobs[i].pos.x*sensorWidth*sensorDrawScale, sickBlobs[i].pos.y*sensorWidth*sensorDrawScale + 7);
+			ofDrawCircle(sickBlobs[i].pos.x*sensorWidth*sensorDrawScale, sickBlobs[i].pos.y*sensorWidth*sensorDrawScale, 10); //Rescaling
+		}
 	}
 
 	ofSetColor(255, 255, 255);
@@ -680,6 +714,10 @@ void SensorManager::drawGuiSensorOptions(bool* opened){
 			ImGui::Checkbox("Show Labels", &showLabels);
 		}
 		
+	}
+	else if(typeSensor == externalSickSensor){
+		string auxmessage = "Sick received in OSC at PORT " + ofToString(PortRecvExt, 0);
+		ImGui::Text(auxmessage.c_str());
 	}
 	else{
 		cout << "SensorManager::Error Set Sensor Mode Type" << endl;
@@ -922,24 +960,60 @@ bool SensorManager::setupKinectSensor(){
 
 }
 
-//Getters
+
 //-----------------------------------------
-sensorType SensorManager::getSensorType(){
-	return typeSensor;
-}
-//-----------------------------------------
-sensorMode SensorManager::getSensorMode(){
-	return modeSensor;
+bool SensorManager::setupExternalSickSensor(){
+		receiverExt.setup(PortRecvExt);
+		sensorWidth = 640; //Fake Dims
+		sensorHeight = 480;//
+		//We supouse this is allways right? But port could be ocupied... //TODO check this case
+	return true;
+	
 }
 
-//Setters
 //-----------------------------------------
-void SensorManager::setSensorType(sensorType _type){
-	typeSensor =_type;
-}
-//-----------------------------------------
-void  SensorManager::setSensorMode(sensorMode _mode){
-	modeSensor = _mode;
+bool SensorManager::updateExternalSickSensor(){
+	
+	int counterBlobsId;
+	bool hasReceivedSomeThing = false;
+	
+	if(receiverExt.hasWaitingMessages() > 0){
+		
+		counterBlobsId = 0;//Manual counter
+		sickBlobs.clear();//Will Work? //Check in wich frame was sent to avoid delays?
+		//cout << "SensorManager::update OSC => Checking how long take this Timer = " << ofToString(ofGetElapsedTimeMillis(),0) << endl;
+	}
+	
+	// check for waiting messages
+	while(receiverExt.hasWaitingMessages()){
+		// get the next message
+		ofxOscMessage m;
+		receiverExt.getNextMessage(m);
+		
+		//get all sick blobs
+		if(m.getAddress() == "/SickBlobs"){
+			
+			sickData auxSickData;
+			
+			//int auxId = m.getArgAsFloat(0); //In future
+			int auxId = counterBlobsId;
+			auxSickData.id = auxId;
+			
+			ofPoint auxPos;
+			auxPos.x = m.getArgAsFloat(0); //x
+			auxPos.y = m.getArgAsFloat(1); //y
+			auxSickData.pos = auxPos;
+			
+			sickBlobs.push_back(auxSickData);
+			
+			//manual counter
+			counterBlobsId++;
+			
+			hasReceivedSomeThing = true;
+		}
+		
+		
+	}
 }
 
 

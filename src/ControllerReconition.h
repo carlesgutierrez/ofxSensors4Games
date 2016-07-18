@@ -16,7 +16,7 @@
 
 
 //Status Regonition Controller Type
-enum RecognitionMethod { MaxMinsAllBlob, GigestBlob, RadarBlob, LaserBlob }; //TODO Add all this methods
+enum RecognitionMethod { MaxMinsAllBlob, TrackingBlobs }; //TODO Add all this methods
 enum ActionRecognitionType { GoUpAction, GoDownAction }; //Up and Down from median height blob player.
 
 class ControllerReconition {
@@ -38,10 +38,6 @@ public:
 	void mouseEntered (ofMouseEventArgs & args);
 	void mouseExited (ofMouseEventArgs & args);
 	
-	
-	void setupUDP(string _ip, int _port);
-	ofxUDPManager udpConnection;
-	bool bSendUDP_fMiddleX_fMinY_fUP_fDOWN = false;
 	
 	//////////////////////////////
 	//RESUMED BLOB
@@ -120,10 +116,20 @@ public:
 	float fUpActionBlob_OSC = 0;
 	float fDownActionBlob_OSC = 0;
 	
-	//OSC filterd data
-	ofxOscSender sender;
 	float xPosBlobFloatOsc;
 	float yPosBlobFloatOsc;
+	
+	
+	///////////////////////////////
+	////OSC
+	
+	//Sender
+	void setupUDP(string _ip, int _port);
+	ofxUDPManager udpConnection;
+	bool bSendUDP_fMiddleX_fMinY_fUP_fDOWN = false;
+	
+	//OSC filterd data
+	ofxOscSender sender;
 	
 	//OSC CONFIG
 	bool bResetHostIp = false;

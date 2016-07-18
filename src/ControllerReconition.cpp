@@ -68,19 +68,14 @@ void ControllerReconition::updateRecognitionBlobsInsideAreas(){
 		
 		ofPoint tmpPos = ofxCv::toOf(SensorManager::getInstance()->contourFinder.getCentroid(i));
 		
-		//ALMOST WORKING. CHECK Values: Points and Quads
-		
 		//Get if this Blob Point is Inside Area 1
 		//cout << "polylines.size() " << polylines.size() << endl;
 		for(int j = 0; j < polylines.size(); j++){
 			if(polylines[j].isClosed()){
 				if(polylines[j].inside(tmpPos*sensorScale)){
 					int label = SensorManager::getInstance()->contourFinder.getLabel(i);
-					cout << " Yey Im Inside this Poline " << j << " Blob # " <<  ofToString(label,0) << endl;
-					//cout << " polylines[j] = " <<  polylines[j].getCentroid2D() << endl;
-					//cout << " Blobs[i] = " <<  SensorManager::getInstance()->contourFinder.getCentroid(i) << endl;
-				
-					//TODO CHeck how to save in that is being tracked inside a polynine area X
+					//cout << "Inside this Poline " << j << " Blob # " <<  ofToString(label,0) << endl;
+					//TODO Send or add This "Label inside area X" recognition with the polinie points too
 				}
 			}
 		}
@@ -112,23 +107,26 @@ void ControllerReconition::updateRecognitionSystem(){
 	
 	//If new SensorFrame
 	if (SensorManager::getInstance()->isNewSensorFrame()) {
-	//	cout << "Singletoon Working !!! !!! !!! ! !!! !!! !" << endl;
 	
 		if(myComputeBlobType == MaxMinsAllBlob){
+			//Calc Max Mins and get the relative position to the Camera. //TODO get relative pos to the area1,2,n
 			calcMainBlobLocation();
-			//Recognize Blob Action
-			//TODO recover wierd error here...
+			//WIP Calc some average to detect UP or Down Sudden movemnts.
 			udpateRecognitionBlobAction();
 
-		}else {
-			//by default get just bigger blob and update cacl values to send OSC too
-			if(SensorManager::getInstance()->contourFinder.getContours().size() > 0){
-				//TODO
-				//xPosBlob = myUpdatedBlobs[0].centroid.x;
-				//yPosBlob = myUpdatedBlobs[0].centroid.y;
-			}
-		
-		//No Up & down Detections
+		}
+		else if(myComputeBlobType == TrackingBlobs){
+			//TODO
+			//Process all this Tracking data as you want.
+			//Get some relevant situations of all of them
+			//like density factor, distance average, velocity average,
+			//check clusters aras
+			//	- then find with blob is alone in his area
+			//  - then find wich blob is in a populated area
+			// Etc...
+		}
+		else {
+			cout << "Controller Error:: Update Recognition needs to know the Type of Data to process from SensorManager" << endl;
 	}
 	}
 

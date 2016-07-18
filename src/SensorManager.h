@@ -21,9 +21,21 @@
 #endif
 
 
+struct sickData
+{
+	int id;
+	ofPoint pos;
+	//int britness;
+};
 
+struct radarData
+{
+	int id;
+	ofPoint pos;
+	int strength;
+};
 
-enum sensorType { kinectSensor, cameraSensor };
+enum sensorType { kinectSensor, cameraSensor, externalSickSensor };
 enum sensorMode{ realTimeMode, simulationMode };
 
 class SensorManager {
@@ -111,18 +123,23 @@ public:
 	sensorMode getSensorMode();
 	void setSensorMode(sensorMode _mode);
 	
+	//------------------------
+	//External OSC sick
+	//TODO add struct or class with Id & britness?
+	vector<sickData> sickBlobs;
+	bool setupExternalSickSensor();
+	bool updateExternalSickSensor();//Returns true if has received something at least
 	
 	//Drawable Vars
 	float sensorDrawScale = 0.5;
 	int marginDraw = 0;
 	
 private:
-	
-	//----------------------
-	//General Sensor frame available
-	bool bNewSensorFrame = false;
 
+	//Any sensor, New Data received and available
+	bool bNewSensorFrame = false;
 	
+	//Related to ComputerVision
 	//-----------------------
 	//Tracking mode
 	bool bTrackgingActive = false;
@@ -130,12 +147,9 @@ private:
 	int maxPersistenceTracking = 15;
 	int maxDistanceTracking = 32;
 
-	//Related to ComputerVision
 	ofImage computerVisionImage;
 	
 	//Blobs
-	//int minTotalBlobs = 10;
-	//int maxTotalBlobs = 200;
 	int minSizeBlob = 5;
 	int maxSizeBlob = 1000;
 	int maxBlobsAccuracyMaxValue = maxSizeBlob;
@@ -143,12 +157,15 @@ private:
 	
 	//-----------------------
 	//WebCam or similar video camera
-	//ofVideoCamera...
-
 	//Control Vars
 	int sensorWidth = 640;//TODO check this is always modif
 	int sensorHeight = 480;
 	sensorType typeSensor;
 	sensorMode modeSensor;
+	
+	//Receiver externalSickSensor
+	const int PortRecvExt = 4000; //Default value
+	ofxOscReceiver receiverExt;
+	bool bResetHostIp = false;
 
 };
