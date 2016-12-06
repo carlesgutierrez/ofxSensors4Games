@@ -22,8 +22,21 @@ Installation
 Copy the `ofxSensors4Games` folder into your `openFrameworks/addons/` folder.
 Use included Examples for testing: In ofApp.cpp at setup choose your sensor / simulation mode.
 
+	
+Dependencies
+------------
+Externals:
+* ofxImgui (https://github.com/jvcleave/ofxImGui)
+
+Internals:
+* ofxNetwork
+* ofxOsc
+* ofxOpencv
+* ofxKinect add this manually. !!! README  !!! ofxkinect README (usb libs install) 
+
+
 Compatibility
--------------
+------------
 
 Tested with OF 0.9.x on
 
@@ -33,13 +46,10 @@ Tested with OF 0.9.x on
 
 For dedicated camera uses. It's important to have full control of sensor: 
  - For webcam cameras: Auto White Balance and Auto Exposition are required to allow a precise camera control.
-	
+
+
 Usage
 -----
-
-
-Examples
---------
 
 myControllerOscServer sends different desired and selected data
 
@@ -68,23 +78,7 @@ osc:/TrackingBlobs
 * (TODO)	- (float) Quad Area x3	[0..1]
 
 
-Dependencies
-------------
-Externals:
-* ofxImgui (https://github.com/jvcleave/ofxImGui)
-
-Internals:
-* ofxNetwork
-* ofxOsc
-* ofxOpencv
-* ofxKinect add this manually. !!! README  !!! ofxkinect README (usb libs install) 
-
-
-Compatibility
-------------
-This addon uses oF v0.9.3 (still in development in OSX) 
-
-
+ 
 <!-- TODO 
 
 -->
