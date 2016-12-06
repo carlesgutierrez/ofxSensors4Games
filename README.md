@@ -6,9 +6,9 @@ ofxSensors4Games
 Introduction
 ------------
 
-**!!! WARNING:** this addon uses oF v0.9.3 that is still in development.
+This addon uses oF v0.9.8 that is still in development.
 
-This addon provides a interface to control games from sensors ( Kienct, Camera, others...) 
+This addon provides a interface to control games from sensors ( Kinect, Camera, Others by OSC) 
 
 
 
@@ -16,6 +16,8 @@ Installation
 ------------
 
 Just copy the `ofxSensors4Games` folder into your `openFrameworks/addons/` folder.
+Copy paste Examples included in you MyApps folder and try them. 
+At ofApp.cpp setup choose your sensor or simulation mode.
 
 Usage
 -----
