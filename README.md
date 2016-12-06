@@ -6,18 +6,21 @@ ofxSensors4Games
 Introduction
 ------------
 
-This addon uses oF v0.9.8 that is still in development.
+This addon provides a interface to control games by sending detected actions to external games by OSC / UPD.
+Infrared cameras are the most cheap to use. But There are other powerfull sensors that can be also used. 
+For now I keep the posibility external sensors by OSC protocol sending kind of blob data. 
 
-This addon provides a interface to control games from sensors ( Kinect, Camera, Others by OSC) 
+Internal Sensors allowed: Camera and Videoplayer for testing. Kinect ( require specific installation ).
+External sensors tested are: RadarGlxRss3 and LaserRange Sick LMS1XX. 
 
+This addon is using the last v0.9.8 release but should work with others 0.9.x Of versions.
 
 
 Installation
 ------------
 
-Just copy the `ofxSensors4Games` folder into your `openFrameworks/addons/` folder.
-Copy paste Examples included in you MyApps folder and try them. 
-At ofApp.cpp setup choose your sensor or simulation mode.
+Copy the `ofxSensors4Games` folder into your `openFrameworks/addons/` folder.
+Use included Examples for testing: In ofApp.cpp at setup choose your sensor / simulation mode.
 
 Usage
 -----
