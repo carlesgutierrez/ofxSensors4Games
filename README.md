@@ -22,6 +22,18 @@ Installation
 Copy the `ofxSensors4Games` folder into your `openFrameworks/addons/` folder.
 Use included Examples for testing: In ofApp.cpp at setup choose your sensor / simulation mode.
 
+Compatibility
+-------------
+
+Tested with OF 0.9.x on
+
+    Mac OS 10.11, Xcode 7 (WIP)
+    Windows 7, QTcreator (WIP)
+    Windows 7/10, Visual Studio 2015
+
+For dedicated camera uses. It's important to have full control of sensor: 
+ - For webcam cameras: Auto White Balance and Auto Exposition are required to allow a precise camera control.
+	
 Usage
 -----
 
