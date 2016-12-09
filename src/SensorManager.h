@@ -99,6 +99,11 @@ public:
 	vector <string> videosAvailable;
 	float videoPlayerCam_pos = 0;
 	
+	//Computer Vision Vars
+	void mainComputerVision(ofImage imageToCompute);
+	void applyMaskToImgVideoCam(ofRectangle _rectArea, ofImage & imageToMask);
+	void updateSourceImageRaw(ofRectangle _rectArea, ofImage & imageToUse);
+
 	ofxCv::RunningBackground background;
 	float learningTime = 30;
 	float thresholdValue = 10;
@@ -149,7 +154,16 @@ private:
 	int maxPersistenceTracking = 15;
 	int maxDistanceTracking = 32;
 
+	ofImage sourceImageRaw;
+	ofFbo mySourcedSensorFbo;
+	ofImage sensorImage1;
+	ofImage sensorImage2;
 	ofImage computerVisionImage;
+	//TODO set shit rect at Gui 
+	ofRectangle rectArea1;
+	ofVec2f posDrawArea1;
+	ofRectangle rectArea2;
+
 	
 	//Blobs
 	int minSizeBlob = 5;

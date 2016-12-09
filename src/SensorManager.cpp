@@ -81,6 +81,12 @@ void SensorManager::setup(sensorType _sensorType, sensorMode _sensorMode){
 		cout << "//*///*/*/*/*/*/*/* Error sensor setup **/*/*/*////**///" << endl;
 		ofExit(0);
 	}
+
+	//For Computer Vision Setup some general vars
+	sensorImage1.allocate(getWidth(), getHeight(), OF_IMAGE_COLOR);
+	mySourcedSensorFbo.allocate(getWidth(), getHeight(), GL_RGB);
+	//sensorImage2.allocate(cam.getWidth(), cam.getHeight(), OF_IMAGE_COLOR);
+	//sourceImageRaw.allocate(cam.getWidth(), cam.getHeight(), OF_IMAGE_COLOR);
 	
 	ofRegisterKeyEvents(this);
 	
@@ -151,124 +157,15 @@ void SensorManager::update(){
 		
 		if(bNewSensorFrame) {
 			
-			//blur(movie, 10);//TODO This! easy and fast. Add slider options
+			//if (bArea1) {
+				updateSourceImageRaw(rectArea1, sensorImage1);
+				mainComputerVision(sensorImage1);
+			//}
 			
-			//TODO FIX THIS bLearnBackground to not apply really a Learning background if its not active.
-			if(bLearnBackground){
-				
-
-				
-				background.setLearningTime(learningTime);
-				background.setThresholdValue(thresholdValue);
-				//Camera Image to Gray
-				if(modeSensor == simulationMode) background.update(videoPlayerCam, computerVisionImage);
-				else if(modeSensor == realTimeMode) background.update(cam, computerVisionImage);
-				computerVisionImage.update();
-				
-				contourFinder.findContours(computerVisionImage);
-			}
-			else if(bSimpleBackgroundSubstraction){
-				
-				//Camera Image to Gray
-				if(modeSensor == simulationMode) ofxCv::convertColor(videoPlayerCam, computerVisionImage, CV_RGB2GRAY);
-				else if(modeSensor == realTimeMode) ofxCv::convertColor(cam, computerVisionImage, CV_RGB2GRAY);
-				
-				
-				computerVisionImage.update();
-				
-				//Save Background Frame
-				if(bresetBackground){
-					backGroundCam = computerVisionImage;
-					backGroundCam.update();
-					bresetBackground = false;
-				}
-				
-				
-				//then background substraction //TODO check diferent methods
-				ofxCv::absdiff(computerVisionImage, backGroundCam, diffCam);
-				
-				//Apply invert Threshold
-				if(bInvertContourFinderThreshold)contourFinder.setInvert(true);
-				else contourFinder.setInvert(false);
-				
-				if(bContourFinderThreshold){
-					//FindContours Threshold
-					contourFinder.setThreshold(thresholdValue);
-					contourFinder.findContours(diffCam);
-				}else if(bAutoThreshold){
-					//Automatic Thresholding
-					ofxCv::autothreshold(diffCam);
-					contourFinder.findContours(diffCam);
-				}
-				else{
-					//Regular Threshold
-					ofxCv::threshold(diffCam, thresholdValue);
-					contourFinder.findContours(diffCam);
-				}
-				
-				diffCam.update();
-				
-			}
-			else{ //ContourFinder Methods
-				
-				//Update Camera colors
-				if(modeSensor == simulationMode){
-					computerVisionImage.setFromPixels(videoPlayerCam.getPixels(), sensorWidth, sensorHeight, OF_IMAGE_COLOR);
-				}
-				else if(modeSensor == realTimeMode){
-					computerVisionImage.setFromPixels(cam.getPixels(), sensorWidth, sensorHeight, OF_IMAGE_COLOR);
-				}
-				
-				computerVisionImage.update();
-				
-				//Threshold
-				
-				if(bContourFinderThreshold){
-					
-					contourFinder.setAutoThreshold(true);
-					
-					if(bContourFinderColorThreshold){
-						//FindContours Threshold
-						contourFinder.setUseTargetColor(true);
-						contourFinder.setTargetColor(colorTargetContourFinder);
-						//TODO ADD Color Picker From Camera.
-					}
-				
-				}else{
-					//Default Threshold Method
-					/*
-					 ContourFinder::ContourFinder()
-					 :autoThreshold(true)
-					 ,invert(false)
-					 ,simplify(true)
-					 ,thresholdValue(128.)
-					 ,useTargetColor(false)
-					 ,contourFindingMode(CV_RETR_EXTERNAL)
-					 ,sortBySize(false) {
-						resetMinArea();
-						resetMaxArea();
-					 }*/
-					
-					contourFinder.setAutoThreshold(true);
-					contourFinder.setInvert(false);
-					contourFinder.setUseTargetColor(false);
-					contourFinder.setThreshold(thresholdValue);
-				}
-				
-				
-				//Apply invert Threshold
-				if(bInvertContourFinderThreshold)contourFinder.setInvert(true);
-				else contourFinder.setInvert(false);
-				
-				
-				//Apply Configured Thresdhold
-				contourFinder.setThreshold(thresholdValue);
-				
-				//Find Countours
-				contourFinder.findContours(computerVisionImage);
-
-			}
-
+			//if (bArea2) {
+			//	updateSourceImageRaw(rectArea2, sensorImage2);
+			//	mainComputerVision(sensorImage2);
+			//}
 		}
 		
 	}
@@ -289,7 +186,164 @@ void SensorManager::update(){
 
 }
 
+//-----------------------------------------
+void SensorManager::applyMaskToImgVideoCam(ofRectangle _rectArea, ofImage & imageToMask) {
 
+	mySourcedSensorFbo.begin();
+	// Cleaning everthing with alpha mask on 0 in order to make it transparent for default
+	ofClear(0, 0, 0, 0);
+
+	//ofSetColor(0);
+	//ofDrawRectangle(0,0, getWidth(), getHeight());
+
+	//Draw Subsection
+	ofSetColor(255);
+	imageToMask.drawSubsection(_rectArea.x, _rectArea.y, _rectArea.width, _rectArea.height, 0, 0);//0,0 seems right. Otherwise not sure what is being used
+
+	
+	mySourcedSensorFbo.end();
+
+	//baseImageToMask.cropFrom(imageToMask, _rectArea.x, _rectArea.y, _rectArea.width, _rectArea.height);
+	//baseImageToMask.update();
+	ofPixels auxPixels;
+	mySourcedSensorFbo.readToPixels(auxPixels);
+
+	imageToMask.setFromPixels(auxPixels);//, 0, 0, getWidth(), getHeight()
+
+}
+
+//-----------------------------------------
+void SensorManager::updateSourceImageRaw(ofRectangle _rectArea, ofImage &image2Update) {
+	//get Pixels from sensor ( VideoPlayer or VideoCamera )
+	if (modeSensor == simulationMode) {
+		image2Update.setFromPixels(videoPlayerCam.getPixels(), videoPlayerCam.getWidth(), videoPlayerCam.getHeight(), OF_IMAGE_COLOR);
+	}
+	else if (modeSensor == realTimeMode) {
+		image2Update.setFromPixels(cam.getPixels(), videoPlayerCam.getWidth(), videoPlayerCam.getHeight(), OF_IMAGE_COLOR);
+	}
+
+	image2Update.update();
+	//Update this sensorImage and Crop desired Arae inside sensorImage1
+	applyMaskToImgVideoCam(_rectArea, image2Update);
+}
+
+//-----------------------------------------
+void SensorManager::mainComputerVision(ofImage _image2Compute) {
+
+	//blur(movie, 10);//TODO This! easy and fast. Add slider options
+
+	//TODO FIX THIS bLearnBackground to not apply really a Learning background if its not active.
+	if (bLearnBackground) {
+
+
+
+		background.setLearningTime(learningTime);
+		background.setThresholdValue(thresholdValue);
+		//Camera Image to Gray
+		background.update(sensorImage1, computerVisionImage);
+		
+		computerVisionImage.update();
+
+		contourFinder.findContours(computerVisionImage);
+	}
+	else if (bSimpleBackgroundSubstraction) {
+
+		//Camera Image to Gray
+		ofxCv::convertColor(sensorImage1, computerVisionImage, CV_RGB2GRAY);
+
+		computerVisionImage.update();
+
+		//Save Background Frame
+		if (bresetBackground) {
+			backGroundCam = computerVisionImage;
+			backGroundCam.update();
+			bresetBackground = false;
+		}
+
+
+		//then background substraction //TODO check diferent methods
+		ofxCv::absdiff(computerVisionImage, backGroundCam, diffCam);
+
+		//Apply invert Threshold
+		if (bInvertContourFinderThreshold)contourFinder.setInvert(true);
+		else contourFinder.setInvert(false);
+
+		if (bContourFinderThreshold) {
+			//FindContours Threshold
+			contourFinder.setThreshold(thresholdValue);
+			contourFinder.findContours(diffCam);
+		}
+		else if (bAutoThreshold) {
+			//Automatic Thresholding
+			ofxCv::autothreshold(diffCam);
+			contourFinder.findContours(diffCam);
+		}
+		else {
+			//Regular Threshold
+			ofxCv::threshold(diffCam, thresholdValue);
+			contourFinder.findContours(diffCam);
+		}
+
+		diffCam.update();
+
+	}
+	else { //ContourFinder Methods
+
+		//Update Camera colors
+
+		computerVisionImage.setFromPixels(sensorImage1.getPixels(), sensorWidth, sensorHeight, OF_IMAGE_COLOR);
+
+		computerVisionImage.update();
+
+		//Threshold
+
+		if (bContourFinderThreshold) {
+
+			contourFinder.setAutoThreshold(true);
+
+			if (bContourFinderColorThreshold) {
+				//FindContours Threshold
+				contourFinder.setUseTargetColor(true);
+				contourFinder.setTargetColor(colorTargetContourFinder);
+				//TODO ADD Color Picker From Camera.
+			}
+
+		}
+		else {
+			//Default Threshold Method
+			/*
+			ContourFinder::ContourFinder()
+			:autoThreshold(true)
+			,invert(false)
+			,simplify(true)
+			,thresholdValue(128.)
+			,useTargetColor(false)
+			,contourFindingMode(CV_RETR_EXTERNAL)
+			,sortBySize(false) {
+			resetMinArea();
+			resetMaxArea();
+			}*/
+
+			contourFinder.setAutoThreshold(true);
+			contourFinder.setInvert(false);
+			contourFinder.setUseTargetColor(false);
+			contourFinder.setThreshold(thresholdValue);
+		}
+
+
+		//Apply invert Threshold
+		if (bInvertContourFinderThreshold)contourFinder.setInvert(true);
+		else contourFinder.setInvert(false);
+
+
+		//Apply Configured Thresdhold
+		contourFinder.setThreshold(thresholdValue);
+
+		//Find Countours
+		contourFinder.findContours(computerVisionImage);
+
+	}
+}
 
 //-----------------------------------------
 bool SensorManager::isNewSensorFrame(){
@@ -492,6 +546,21 @@ void SensorManager::draw(){
 		this->drawGuiSensorOptions(&isSensorWindow);
 	}
 
+	//last Draw if camera options for filtering image
+	if (typeSensor == cameraSensor) {
+		ofRectangle auxRectArea1 = rectArea1;
+		auxRectArea1.x = rectArea1.x * sensorDrawScale;
+		auxRectArea1.y = rectArea1.y *sensorDrawScale;
+		auxRectArea1.width = rectArea1.getWidth() * sensorDrawScale;
+		auxRectArea1.height = rectArea1.getHeight() *sensorDrawScale;
+
+		//Draw it
+		ofPushStyle();
+		ofNoFill();
+		ofSetColor(ofColor::red);
+		ofDrawRectangle(auxRectArea1);
+		ofPopStyle();
+	}
 
 	
 }
@@ -652,7 +721,17 @@ void SensorManager::drawGuiSensorOptions(bool* opened){
 				videoPlayerCam.setPosition(videoPlayerCam_pos);
 			}
 		}
+
+		ImGui::Text("Area Sensor 1");
+		ImGui::SliderFloat("X Rect Sensor 1 ", &rectArea1.x, 0, getWidth());
+		ImGui::SliderFloat("Y Rect Sensor 1 ", &rectArea1.y, 0, getHeight());
+		ImGui::SliderFloat("W Rect Sensor 1 ", &rectArea1.width, 0, getWidth());
+		ImGui::SliderFloat("H Rect Sensor 1 ", &rectArea1.height, 0, getHeight());
 		
+		ImGui::SliderFloat("X posDrawArea1 ", &posDrawArea1.x, 0, getWidth());
+		ImGui::SliderFloat("Y posDrawArea1 ", &posDrawArea1.y, 0, getHeight());
+		
+
 		ImGui::Checkbox("Do Learning Background", &bLearnBackground);
 		
 		if(ImGui::Button("Reset Background")){
@@ -863,6 +942,8 @@ bool SensorManager::setupCameraSensor(){
 
 		computerVisionImage.allocate(cam.getWidth(), cam.getHeight(), OF_IMAGE_GRAYSCALE);
 
+		rectArea1.set(0, 0, cam.getWidth(), cam.getHeight());
+
 		sensorWidth = cam.getWidth();
 		sensorHeight = cam.getHeight();
 		
@@ -1021,6 +1102,8 @@ bool SensorManager::updateExternalSickSensor(){
 		
 		
 	}
+
+	return hasReceivedSomeThing;
 }
 
 
