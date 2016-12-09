@@ -1,24 +1,24 @@
 //
-//  sensorManagement.cpp
+//  Sensors.cpp
 //  ofxControlArkadeGames
 //
 //  Created by carles on 17/06/16.
 //
 //
 
-#include "SensorManager.h"
+#include "Sensors.h"
 
 // SINGLETON initalizations
-bool SensorManager::instanceFlag = false;
-SensorManager* SensorManager::single = NULL;
+bool Sensors::instanceFlag = false;
+Sensors* Sensors::single = NULL;
 
 //----------------------------------------------
 
-SensorManager* SensorManager::getInstance()
+Sensors* Sensors::getInstance()
 {
 	if(! instanceFlag)
 	{
-		single = new SensorManager();
+		single = new Sensors();
 		instanceFlag = true;
 		return single;
 	}else{
@@ -27,37 +27,37 @@ SensorManager* SensorManager::getInstance()
 }
 
 //----------------------------------------------
-SensorManager::SensorManager()
+Sensors::Sensors()
 {
 	
 }
 //----------------------------------------------
-SensorManager::~SensorManager()
+Sensors::~Sensors()
 {}
 
 //Getters
 //-----------------------------------------
-sensorType SensorManager::getSensorType(){
+sensorType Sensors::getSensorType(){
 	return typeSensor;
 }
 //-----------------------------------------
-sensorMode SensorManager::getSensorMode(){
+sensorMode Sensors::getSensorMode(){
 	return modeSensor;
 }
 
 //Setters
 //-----------------------------------------
-void SensorManager::setSensorType(sensorType _type){
+void Sensors::setSensorType(sensorType _type){
 	typeSensor =_type;
 }
 //-----------------------------------------
-void  SensorManager::setSensorMode(sensorMode _mode){
+void  Sensors::setSensorMode(sensorMode _mode){
 	modeSensor = _mode;
 }
 
 
 //-----------------------------------------
-void SensorManager::setup(sensorType _sensorType, sensorMode _sensorMode){
+void Sensors::setup(sensorType _sensorType, sensorMode _sensorMode){
 	
 	typeSensor = _sensorType;
 	modeSensor = _sensorMode;
@@ -88,7 +88,7 @@ void SensorManager::setup(sensorType _sensorType, sensorMode _sensorMode){
 
 
 //-----------------------------------------
-void SensorManager::update(){
+void Sensors::update(){
 	
 	bNewSensorFrame = false;
 	
@@ -118,15 +118,13 @@ void SensorManager::update(){
 			
 			//Set pixels back to main cv image
 			computerVisionImage.setFromPixels(pix);
-
+			
 			// find contours which are between the size of 20 pixels and 1/3 the w*h pixels.
 			// also, find holes is set to true so we will get interior contours as well....
 			//contourFinder.findContours(grayImage, minSizeBlob, maxSizeBlob, numBlobs, false);
 			contourFinder.findContours(computerVisionImage);
 			bNewSensorFrame = true;
 		}
-
-		
 
 #endif
 
@@ -292,12 +290,12 @@ void SensorManager::update(){
 
 
 //-----------------------------------------
-bool SensorManager::isNewSensorFrame(){
+bool Sensors::isNewSensorFrame(){
 	return bNewSensorFrame;
 }
 
 //-----------------------------------------
-void SensorManager::draw(){
+void Sensors::draw(){
 	
 	if(typeSensor == kinectSensor){
 		
@@ -497,7 +495,7 @@ void SensorManager::draw(){
 }
 
 //---------------------------------------------------------------------
-bool SensorManager::updateVideoFolderComboSelections(string _videosPaths) {
+bool Sensors::updateVideoFolderComboSelections(string _videosPaths) {
 	
 	videosAvailable.clear();
 	
@@ -536,14 +534,14 @@ bool SensorManager::updateVideoFolderComboSelections(string _videosPaths) {
 }
 
 //-----------------------------------------
-void SensorManager::resetSimpleSensorCamera() {
+void Sensors::resetSimpleSensorCamera() {
 	cam.close();
 	cam.setDeviceID(selectedCameraIndex);
 	cam.setup(640, 480);//TODO editable format
 }
 
 //-----------------------------------------
-void SensorManager::drawGuiSensorOptions(bool* opened){
+void Sensors::drawGuiSensorOptions(bool* opened){
 	
 	string textBlobsFound = "#blobs = "+ofToString(contourFinder.size(), 0);
 	ImGui::Text(textBlobsFound.c_str());
@@ -596,18 +594,21 @@ void SensorManager::drawGuiSensorOptions(bool* opened){
 			ImGui::PopItemWidth();
 
 #ifdef OF_VIDEO_CAPTURE_DIRECTSHOW
-	#ifdef USE_FULL_DIRECTSHOW_ACCESS
-				//WIP. This require public access to VI (Directshow) at OF
-				static bool bCameraComposite = false;
-				if (ImGui::Checkbox("WIP - RESET TO COMPOSITE", &bCameraComposite)) {
-					if (bCameraComposite) {
-						shared_ptr<ofDirectShowGrabber> auxGrabber = shared_ptr <OF_VID_GRABBER_TYPE>(new OF_VID_GRABBER_TYPE);
-						auxGrabber->VI.setupDevice(selectedCameraIndex, VI_COMPOSITE);
-						cam.setGrabber(auxGrabber);
-						ofExit();
-					}				
+
+//WIP. This require public access to VI (Directshow)
+			static bool bCameraComposite = false;
+			if (ImGui::Checkbox("SET COMPOSITE", &bCameraComposite)) {
+				if (bCameraComposite) {
+					shared_ptr<ofDirectShowGrabber> auxGrabber = shared_ptr <OF_VID_GRABBER_TYPE>(new OF_VID_GRABBER_TYPE);
+					auxGrabber->VI.setupDevice(selectedCameraIndex, VI_COMPOSITE);
+					cam.setGrabber(auxGrabber);
 				}
-	#endif
+				else {
+					resetSimpleSensorCamera();
+				}
+				
+			}
+
 #endif
 			if (ImGui::Button("Reset Camera", ImVec2(150, 20))) {
 				resetSimpleSensorCamera();
@@ -719,24 +720,24 @@ void SensorManager::drawGuiSensorOptions(bool* opened){
 		ImGui::Text(auxmessage.c_str());
 	}
 	else{
-		cout << "SensorManager::Error Set Sensor Mode Type" << endl;
+		cout << "Sensors::Error Set Sensor Mode Type" << endl;
 	}
 
 }
 
 
 //-----------------------------------------
-int SensorManager::getWidth(){
+int Sensors::getWidth(){
 	return sensorWidth;
 }
 
 //-----------------------------------------
-int SensorManager::getHeight(){
+int Sensors::getHeight(){
 	return sensorHeight;
 }
 
 //-----------------------------------------
-void SensorManager::exit(){
+void Sensors::exit(){
 	
 	if(typeSensor == kinectSensor){
 
@@ -754,8 +755,8 @@ void SensorManager::exit(){
 }
 
 //------------------------------------------
-void SensorManager::keyReleased(ofKeyEventArgs & args){}
-void SensorManager::keyPressed(ofKeyEventArgs & args){
+void Sensors::keyReleased(ofKeyEventArgs & args){}
+void Sensors::keyPressed(ofKeyEventArgs & args){
 	
 	if(typeSensor == kinectSensor){
 
@@ -844,13 +845,13 @@ void SensorManager::keyPressed(ofKeyEventArgs & args){
 }
 
 //----------------------------------------
-void SensorManager::setTrackingMode(bool _status){
+void Sensors::setTrackingMode(bool _status){
 	bTrackgingActive = _status;
 }
 
 
 //-----------------------------------------
-bool SensorManager::setupCameraSensor(){
+bool Sensors::setupCameraSensor(){
 	
 	bool bConnected = false;
 	
@@ -860,7 +861,7 @@ bool SensorManager::setupCameraSensor(){
 		cam.listDevices();
 		cam.setDeviceID(selectedCameraIndex);
 		cam.setup(640, 480);
-
+		
 		computerVisionImage.allocate(cam.getWidth(), cam.getHeight(), OF_IMAGE_GRAYSCALE);
 
 		sensorWidth = cam.getWidth();
@@ -868,14 +869,6 @@ bool SensorManager::setupCameraSensor(){
 		
 		if(cam.isInitialized()){
 			bConnected = true;
-		}
-		else {
-			//second try
-			cout << "second try" << endl;
-			shared_ptr<ofDirectShowGrabber> auxGrabber = shared_ptr <OF_VID_GRABBER_TYPE>(new OF_VID_GRABBER_TYPE);
-			auxGrabber->VI.setupDevice(selectedCameraIndex, VI_USB);
-			cam.setGrabber(auxGrabber);
-			cam.setup(640, 480);
 		}
 		
 	}else if(modeSensor == simulationMode){
@@ -911,7 +904,7 @@ bool SensorManager::setupCameraSensor(){
 
 
 //-----------------------------------------
-bool SensorManager::setupKinectSensor(){
+bool Sensors::setupKinectSensor(){
 	
 	bool bConnected = false;
 
@@ -969,7 +962,7 @@ bool SensorManager::setupKinectSensor(){
 
 
 //-----------------------------------------
-bool SensorManager::setupExternalSickSensor(){
+bool Sensors::setupExternalSickSensor(){
 		receiverExt.setup(PortRecvExt);
 		sensorWidth = 640; //Fake Dims
 		sensorHeight = 480;//
@@ -979,7 +972,7 @@ bool SensorManager::setupExternalSickSensor(){
 }
 
 //-----------------------------------------
-bool SensorManager::updateExternalSickSensor(){
+bool Sensors::updateExternalSickSensor(){
 	
 	int counterBlobsId;
 	bool hasReceivedSomeThing = false;
@@ -988,7 +981,7 @@ bool SensorManager::updateExternalSickSensor(){
 		
 		counterBlobsId = 0;//Manual counter
 		sickBlobs.clear();//Will Work? //Check in wich frame was sent to avoid delays?
-		//cout << "SensorManager::update OSC => Checking how long take this Timer = " << ofToString(ofGetElapsedTimeMillis(),0) << endl;
+		//cout << "Sensors::update OSC => Checking how long take this Timer = " << ofToString(ofGetElapsedTimeMillis(),0) << endl;
 	}
 	
 	// check for waiting messages

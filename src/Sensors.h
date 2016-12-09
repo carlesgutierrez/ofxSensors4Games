@@ -1,5 +1,5 @@
 //
-//  SensorManager.h
+//  Sensors.h
 //  ofxControlArkadeGames
 //
 //  Created by carles on 17/06/16.
@@ -15,8 +15,6 @@
 #include "ofxImGui.h"
 #define IM_ARRAYSIZE(_ARR)  ((int)(sizeof(_ARR)/sizeof(*_ARR)))
 
-//Uncomment this to get full access to DIRECTSHOW VIDEO INPUT library in OF
-//#define USE_FULL_DIRECTSHOW_ACCESS
 
 #ifdef USE_SENSOR_KINECT
 #include "ofxKinect.h"
@@ -40,20 +38,20 @@ struct radarData
 enum sensorType { kinectSensor, cameraSensor, externalSickSensor };
 enum sensorMode{ realTimeMode, simulationMode };
 
-class SensorManager {
+class Sensors {
 	
 // variables & methods for singleton
 private:
 	static bool	instanceFlag;
-	static SensorManager *single;
+	static Sensors *single;
 public:
-	static SensorManager* getInstance();
+	static Sensors* getInstance();
 // end singleton
 	
 public:
 
-	SensorManager();
-	~SensorManager();
+	Sensors();
+	~Sensors();
 
 	void setup(sensorType _sensorType, sensorMode _sensorMode);
 	void update();
