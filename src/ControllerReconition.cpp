@@ -12,7 +12,10 @@
 // Set borders
 
 //-----------------------------------------
-void ControllerReconition::setup(int w, int h, RecognitionMethod _myComputeBlobType){
+void ControllerReconition::setup(int w, int h, RecognitionMethod _myComputeBlobType, ofxCv::ContourFinder * _contourFinder){
+
+	myContourFinder = _contourFinder;//Copy Adress 
+
 	sensorWidth = w;
 	sensorHeight = h;
 	sensorScale = SensorManager::getInstance()->sensorDrawScale;
@@ -55,6 +58,7 @@ void ControllerReconition::setupUDP(string _ip, int _port){
 
 }
 
+/*
 //-----------------------------------------
 void ControllerReconition::updateQuadAreasRecognition(){
 	updateRecognitionBlobsInsideAreas();
@@ -83,13 +87,14 @@ void ControllerReconition::updateRecognitionBlobsInsideAreas(){
 		   //idem ...
 	}
 }
-
+*/
 
 //-----------------------------------------
 void ControllerReconition::update(){
-	
+
+	/*
 	updateQuadAreasRecognition();
-	
+	*/
 	updateRecognitionSystem();
 	
 	sendOSCBlobData();
@@ -135,7 +140,7 @@ void ControllerReconition::updateRecognitionSystem(){
 //-----------------------------------------
 void ControllerReconition::calcMainBlobLocation(){
 	//Udpate here desired values
-	numBlobsDetected = SensorManager::getInstance()->contourFinder.getContours().size();
+	numBlobsDetected = myContourFinder->getContours().size();
 	
 	calculateMaxMin();
 	
@@ -169,22 +174,22 @@ void ControllerReconition::calcMainBlobLocation(){
 //----------------------------------------------------------------
 void ControllerReconition::calculateMaxMin(){
 	
-	if( SensorManager::getInstance()->contourFinder.getPolylines().size() > 0 ){
+	if( myContourFinder->getPolylines().size() > 0 ){
 		xMin.x=sensorWidth,
 		xMax.x=0.0,
 		yMin.y=sensorHeight,
 		yMax.y=0.0;
 	
 	
-		for (int i = 0; i < SensorManager::getInstance()->contourFinder.getPolylines().size(); i++)
+		for (int i = 0; i < myContourFinder->getPolylines().size(); i++)
 		{
 		
-			int length_of_contour = SensorManager::getInstance()->contourFinder.getPolylines()[i].getVertices().size();
+			int length_of_contour = myContourFinder->getPolylines()[i].getVertices().size();
 		
 			//for Each blob seach Max Mins
 			for(int j = 0; j < length_of_contour; j++){
 			
-				ofVec2f tmpPos = SensorManager::getInstance()->contourFinder.getPolylines()[i].getVertices()[j];
+				ofVec2f tmpPos = myContourFinder->getPolylines()[i].getVertices()[j];
 			
 				if( tmpPos.x > xMax.x){
 					xMax.x=tmpPos.x;

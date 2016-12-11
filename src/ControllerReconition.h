@@ -22,7 +22,7 @@ enum ActionRecognitionType { GoUpAction, GoDownAction }; //Up and Down from medi
 class ControllerReconition {
 public:
 	
-	void setup(int w, int h, RecognitionMethod _myComputeBlobType);
+	void setup(int w, int h, RecognitionMethod _myComputeBlobType, ofxCv::ContourFinder * _contourFinder);
 	void update();
 	void draw();
 	void exit();
@@ -38,7 +38,11 @@ public:
 	void mouseEntered (ofMouseEventArgs & args);
 	void mouseExited (ofMouseEventArgs & args);
 	
-	
+	/////////////////////
+	//Udpated from Camera
+	ofxCv::ContourFinder * myContourFinder;
+
+
 	//////////////////////////////
 	//RESUMED BLOB
 	//
@@ -78,8 +82,10 @@ public:
 	int hBlob = -1;
 	////////////////////////////////
 	//Polyline areas recognition
+	/*
 	void updateRecognitionBlobsInsideAreas();
 	void updateQuadAreasRecognition();
+	*/
 	vector<ofPolyline> polylines;
 	int polylinesIndex = -1;
 	

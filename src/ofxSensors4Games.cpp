@@ -21,9 +21,12 @@ void ofxSensors4Games::setup(sensorType _myType, sensorMode _modeSensor, Recogni
 	//setups managers with selected SensorType
 	
 	SensorManager::getInstance()->setup(_myType, _modeSensor);
-	myControllerRecognition.setup(SensorManager::getInstance()->getWidth(),
-								  SensorManager::getInstance()->getHeight(),
-								  _myComputeBlobType);
+	myControllerRecognition.setup(
+								SensorManager::getInstance()->getWidth(),
+								SensorManager::getInstance()->getHeight(),
+								_myComputeBlobType,
+								SensorManager::getInstance()->computerVisionSensor1.contourFinder
+								);
 	
 	
 }
