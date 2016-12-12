@@ -74,7 +74,7 @@ void SensorManager::setup(sensorType _sensorType, sensorMode _sensorMode){
 		bSensorReady = setupCameraSensor();
 		//Setup CV
 		computerVisionSensor1.setup(1, 640, 480); //TODO Change this to JSon params loaded at a config file
-		//computerVisionSensor2.setup(2, 640, 480); //TODO Change this to JSon params loaded at a config file
+		computerVisionSensor2.setup(2, 640, 480); //TODO Change this to JSon params loaded at a config file
 		
 	}else if(typeSensor == externalSickSensor){
 		bSensorReady = setupExternalSickSensor();
@@ -151,7 +151,8 @@ void SensorManager::update(){
 			bNewSensorFrame = cam.isFrameNew();
 		}
 		
-		computerVisionSensor1.udpateBackground();
+		if (bArea1)computerVisionSensor1.udpateBackground();
+		if (bArea2)computerVisionSensor2.udpateBackground();
 		
 		if(bNewSensorFrame) {
 			
@@ -161,9 +162,9 @@ void SensorManager::update(){
 			}
 			
 			if (bArea2) {
-				/*TODO*/
-			//	updateSourceImageRaw(rectArea2, sensorImage2);
-			//	mainComputerVision(sensorImage2);
+				/*WIP*/
+				updateSourceImageRaw(rectArea2, sensorImage2);
+				computerVisionSensor2.mainComputerVision(sensorImage2);
 			}
 		}
 		
@@ -233,7 +234,20 @@ bool SensorManager::isNewSensorFrame(){
 
 //-----------------------------------------
 void SensorManager::draw(){
+
+	//TODO , Contour Finder not drawing now, and Second Image paint in red.
+
+	//Draw GUI Sensors
 	
+	ofSetColor(255, 255, 255);
+	//Draw some Sensor Option
+	static bool isSensorWindow = true;//TODO may be hide this in a regular bool loaded from json config file
+	if (isSensorWindow) {
+		this->drawGuiSensorOptions(&isSensorWindow);
+	}
+
+
+	//Draw Sensors
 	if(typeSensor == kinectSensor){
 		
 #ifdef USE_SENSOR_KINECT
@@ -291,14 +305,19 @@ void SensorManager::draw(){
 
 		//--------------------------------------
 		//Draw Raw Sensor images
+		//if (modeSensor == realTimeMode) cam.draw(marginDraw, marginDraw, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
+		//if (modeSensor == simulationMode && bArea1) computerVisionSensor1.computerVisionImage.draw(marginDraw, marginDraw, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
+		//if (modeSensor == simulationMode && bArea2) computerVisionSensor2.computerVisionImage.draw(marginDraw, marginDraw, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
+
+
 		if (bArea1) {
-			if (modeSensor == simulationMode) computerVisionSensor1.computerVisionImage.draw(marginDraw, marginDraw, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
-			else if (modeSensor == realTimeMode) cam.draw(marginDraw, marginDraw, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
+			computerVisionSensor1.computerVisionImage.draw(marginDraw, marginDraw, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
 			computerVisionSensor1.draw(sensorDrawScale, marginDraw);
 		}
 		if (bArea2) {
-			/*TODO*/
-			computerVisionSensor1.draw(sensorDrawScale, marginDraw);
+			//TODO draw this in a different place
+			computerVisionSensor2.computerVisionImage.draw(marginDraw, marginDraw + sensorHeight*sensorDrawScale, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
+			computerVisionSensor2.draw(sensorDrawScale, marginDraw + sensorHeight*sensorDrawScale);
 		}
 
 		
@@ -317,13 +336,6 @@ void SensorManager::draw(){
 			ofDrawBitmapString("id: " + ofToString(sickBlobs[i].id, 0), sickBlobs[i].pos.x*sensorWidth*sensorDrawScale, sickBlobs[i].pos.y*sensorWidth*sensorDrawScale + 7);
 			ofDrawCircle(sickBlobs[i].pos.x*sensorWidth*sensorDrawScale, sickBlobs[i].pos.y*sensorWidth*sensorDrawScale, 10); //Rescaling
 		}
-	}
-
-	ofSetColor(255, 255, 255);
-	//Draw some Sensor Option
-	bool isSensorWindow = true;
-	if (isSensorWindow) {
-		this->drawGuiSensorOptions(&isSensorWindow);
 	}
 
 	//last Draw if camera options for filtering image
@@ -498,21 +510,37 @@ void SensorManager::drawGuiSensorOptions(bool* opened){
 			}
 		}
 
-		ImGui::PushItemWidth(100);
+		
 
-		ImGui::Text("Area Sensor 1");
-		ImGui::SliderFloat("X Rect Sensor 1 ", &rectArea1.x, 0, getWidth());
-		ImGui::SliderFloat("Y Rect Sensor 1 ", &rectArea1.y, 0, getHeight());
-		ImGui::SliderFloat("W Rect Sensor 1 ", &rectArea1.width, 0, getWidth());
-		ImGui::SliderFloat("H Rect Sensor 1 ", &rectArea1.height, 0, getHeight());
+		if (ImGui::CollapsingHeader("Area Sensor 1")) {
+			ImGui::Checkbox("Active Area 1", &bArea1);
+			ImGui::PushItemWidth(100);
+			ImGui::SliderFloat("X Rect Sensor 1 ", &rectArea1.x, 0, getWidth());
+			ImGui::SliderFloat("Y Rect Sensor 1 ", &rectArea1.y, 0, getHeight());
+			ImGui::SliderFloat("W Rect Sensor 1 ", &rectArea1.width, 0, getWidth());
+			ImGui::SliderFloat("H Rect Sensor 1 ", &rectArea1.height, 0, getHeight());
+
+			ImGui::SliderFloat("X posDrawArea1 ", &posDrawArea1.x, 0, getWidth());
+			ImGui::SliderFloat("Y posDrawArea1 ", &posDrawArea1.y, 0, getHeight());
+			ImGui::PopItemWidth();
+		}
+
+		if (ImGui::CollapsingHeader("Area Sensor 2")) {
+			ImGui::Checkbox("Active Area 2", &bArea2);
+			ImGui::PushItemWidth(100);
+			ImGui::SliderFloat("X Rect Sensor 2 ", &rectArea2.x, 0, getWidth());
+			ImGui::SliderFloat("Y Rect Sensor 2 ", &rectArea2.y, 0, getHeight());
+			ImGui::SliderFloat("W Rect Sensor 2 ", &rectArea2.width, 0, getWidth());
+			ImGui::SliderFloat("H Rect Sensor 2 ", &rectArea2.height, 0, getHeight());
+
+			ImGui::SliderFloat("X posDrawArea2 ", &posDrawArea2.x, 0, getWidth());
+			ImGui::SliderFloat("Y posDrawArea2 ", &posDrawArea2.y, 0, getHeight());
+			ImGui::PopItemWidth();
+		}
 		
-		ImGui::SliderFloat("X posDrawArea1 ", &posDrawArea1.x, 0, getWidth());
-		ImGui::SliderFloat("Y posDrawArea1 ", &posDrawArea1.y, 0, getHeight());
-		
-		ImGui::PopItemWidth();
 
 		if(bArea1)computerVisionSensor1.drawGui();
-		//if (bArea2)computerVisionSensor2.drawGui();
+		if(bArea2)computerVisionSensor2.drawGui();
 		
 	}
 	else if(typeSensor == externalSickSensor){

@@ -111,121 +111,6 @@ public:
 		}
 	}
 
-	//----------------------------------------
-	void draw(float _sensorDrawScale, int _marginDraw) {
-
-		if (computerVisionImage.isAllocated()) {
-
-			ofSetColor(255, 255, 255);
-
-			if (bLearnBackground) {
-				computerVisionImage.draw(cameraWidth*_sensorDrawScale, _marginDraw, cameraWidth*_sensorDrawScale, cameraHeight*_sensorDrawScale);
-				ofxCv::toOf(background.getBackground(), backGroundCam);
-				backGroundCam.draw(2 * cameraWidth*_sensorDrawScale, _marginDraw, cameraWidth*_sensorDrawScale, cameraHeight*_sensorDrawScale);
-
-			}
-			else if (bSimpleBackgroundSubstraction) {
-				diffCam.draw(cameraWidth*_sensorDrawScale, _marginDraw, cameraWidth*_sensorDrawScale, cameraHeight*_sensorDrawScale);
-				backGroundCam.draw(2 * cameraWidth*_sensorDrawScale, _marginDraw, cameraWidth*_sensorDrawScale, cameraHeight*_sensorDrawScale);
-			}
-			else {
-				computerVisionImage.draw(cameraWidth*_sensorDrawScale, _marginDraw, cameraWidth*_sensorDrawScale, cameraHeight*_sensorDrawScale);
-			}
-
-
-			//---------------------------------------
-			//Kyle Mcdonnal - Blob Tracker Visualization
-			if (bTrackgingActive) {
-
-				//TODO To acces this from outside may be neceseary to clean
-				ofxCv::RectTracker& tracker = contourFinder->getTracker();
-
-
-				if (showLabels) {
-
-					for (int i = 0; i < contourFinder->size(); i++) {
-						ofPoint center = ofxCv::toOf(contourFinder->getCentroid(i));
-						ofPushMatrix();
-						ofTranslate(cameraWidth*_sensorDrawScale, _marginDraw);
-						ofTranslate(center.x*_sensorDrawScale, center.y*_sensorDrawScale);
-						int label = contourFinder->getLabel(i);
-						string msg = ofToString(label) + ":" + ofToString(tracker.getAge(label));
-						ofDrawBitmapString(msg, 0, 0);
-						ofVec2f velocity = ofxCv::toOf(contourFinder->getVelocity(i));
-						ofDrawLine(0, 0, velocity.x*_sensorDrawScale, velocity.y*_sensorDrawScale);
-						ofPopMatrix();
-
-					}
-
-				}
-				else {
-
-					ofPushMatrix();
-					ofTranslate(cameraWidth*_sensorDrawScale, _marginDraw);
-					ofScale(_sensorDrawScale, _sensorDrawScale);
-
-					for (int i = 0; i < contourFinder->size(); i++) {
-						unsigned int label = contourFinder->getLabel(i);
-						// only draw a line if this is not a new label
-						if (tracker.existsPrevious(label)) {
-							// use the label to pick a random color
-							ofSeedRandom(label << 24);
-							ofSetColor(ofColor::fromHsb(ofRandom(255), 255, 255));
-							// get the tracked object (cv::Rect) at current and previous position
-							const cv::Rect& previous = tracker.getPrevious(label);
-							const cv::Rect& current = tracker.getCurrent(label);
-							// get the centers of the rectangles
-							ofVec2f previousPosition(previous.x + previous.width / 2, previous.y + previous.height / 2);
-							ofVec2f currentPosition(current.x + current.width / 2, current.y + current.height / 2);
-							ofDrawLine(previousPosition, currentPosition);
-						}
-					}
-
-					ofPopMatrix();
-				}
-
-
-
-				// this chunk of code visualizes the creation and destruction of labels
-				const vector<unsigned int>& currentLabels = tracker.getCurrentLabels();
-				const vector<unsigned int>& previousLabels = tracker.getPreviousLabels();
-				const vector<unsigned int>& newLabels = tracker.getNewLabels();
-				const vector<unsigned int>& deadLabels = tracker.getDeadLabels();
-
-				ofSetColor(ofxCv::cyanPrint);
-				for (int i = 0; i < currentLabels.size(); i++) {
-					int j = currentLabels[i];
-					ofDrawLine(j, 0, j, 4);
-				}
-				ofSetColor(ofxCv::magentaPrint);
-				for (int i = 0; i < previousLabels.size(); i++) {
-					int j = previousLabels[i];
-					ofDrawLine(j, 4, j, 8);
-				}
-				ofSetColor(ofxCv::yellowPrint);
-				for (int i = 0; i < newLabels.size(); i++) {
-					int j = newLabels[i];
-					ofDrawLine(j, 8, j, 12);
-				}
-				ofSetColor(ofColor::white);
-				for (int i = 0; i < deadLabels.size(); i++) {
-					int j = deadLabels[i];
-					ofDrawLine(j, 12, j, 16);
-				}
-
-				//Finally the countours matching our image
-				ofSetColor(255, 0, 0);
-
-				ofPushMatrix();
-				ofTranslate(cameraWidth*_sensorDrawScale, _marginDraw); //TODO change _sensorDrawScale as int sensorScale var
-				ofScale(_sensorDrawScale, _sensorDrawScale);
-				contourFinder->draw();
-				ofPopMatrix();
-
-			}
-		}
-	}
-
 	//-----------------------------------------
 	void mainComputerVision(ofImage _image2Compute) {
 
@@ -343,7 +228,121 @@ public:
 
 		}
 	}
+	
+	//----------------------------------------
+	void draw(float _sensorDrawScale, int _marginDraw) {
 
+		if (computerVisionImage.isAllocated()) {
+
+			ofSetColor(255, 255, 255);
+
+			if (bLearnBackground) {
+				computerVisionImage.draw(cameraWidth*_sensorDrawScale, _marginDraw, cameraWidth*_sensorDrawScale, cameraHeight*_sensorDrawScale);
+				ofxCv::toOf(background.getBackground(), backGroundCam);
+				backGroundCam.draw(2 * cameraWidth*_sensorDrawScale, _marginDraw, cameraWidth*_sensorDrawScale, cameraHeight*_sensorDrawScale);
+
+			}
+			else if (bSimpleBackgroundSubstraction) {
+				diffCam.draw(cameraWidth*_sensorDrawScale, _marginDraw, cameraWidth*_sensorDrawScale, cameraHeight*_sensorDrawScale);
+				backGroundCam.draw(2 * cameraWidth*_sensorDrawScale, _marginDraw, cameraWidth*_sensorDrawScale, cameraHeight*_sensorDrawScale);
+			}
+			else {
+				computerVisionImage.draw(cameraWidth*_sensorDrawScale, _marginDraw, cameraWidth*_sensorDrawScale, cameraHeight*_sensorDrawScale);
+			}
+
+
+			//---------------------------------------
+			//Kyle Mcdonnal - Blob Tracker Visualization
+			if (bTrackgingActive) {
+
+				//TODO To acces this from outside may be neceseary to clean
+				ofxCv::RectTracker& tracker = contourFinder->getTracker();
+
+
+				if (showLabels) {
+
+					for (int i = 0; i < contourFinder->size(); i++) {
+						ofPoint center = ofxCv::toOf(contourFinder->getCentroid(i));
+						ofPushMatrix();
+						ofTranslate(cameraWidth*_sensorDrawScale, _marginDraw);
+						ofTranslate(center.x*_sensorDrawScale, center.y*_sensorDrawScale);
+						int label = contourFinder->getLabel(i);
+						string msg = ofToString(label) + ":" + ofToString(tracker.getAge(label));
+						ofDrawBitmapString(msg, 0, 0);
+						ofVec2f velocity = ofxCv::toOf(contourFinder->getVelocity(i));
+						ofDrawLine(0, 0, velocity.x*_sensorDrawScale, velocity.y*_sensorDrawScale);
+						ofPopMatrix();
+
+					}
+
+				}
+				else {
+
+					ofPushMatrix();
+					ofTranslate(cameraWidth*_sensorDrawScale, _marginDraw);
+					ofScale(_sensorDrawScale, _sensorDrawScale);
+
+					for (int i = 0; i < contourFinder->size(); i++) {
+						unsigned int label = contourFinder->getLabel(i);
+						// only draw a line if this is not a new label
+						if (tracker.existsPrevious(label)) {
+							// use the label to pick a random color
+							ofSeedRandom(label << 24);
+							ofSetColor(ofColor::fromHsb(ofRandom(255), 255, 255));
+							// get the tracked object (cv::Rect) at current and previous position
+							const cv::Rect& previous = tracker.getPrevious(label);
+							const cv::Rect& current = tracker.getCurrent(label);
+							// get the centers of the rectangles
+							ofVec2f previousPosition(previous.x + previous.width / 2, previous.y + previous.height / 2);
+							ofVec2f currentPosition(current.x + current.width / 2, current.y + current.height / 2);
+							ofDrawLine(previousPosition, currentPosition);
+						}
+					}
+
+					ofPopMatrix();
+				}
+
+
+
+				// this chunk of code visualizes the creation and destruction of labels
+				const vector<unsigned int>& currentLabels = tracker.getCurrentLabels();
+				const vector<unsigned int>& previousLabels = tracker.getPreviousLabels();
+				const vector<unsigned int>& newLabels = tracker.getNewLabels();
+				const vector<unsigned int>& deadLabels = tracker.getDeadLabels();
+
+				ofSetColor(ofxCv::cyanPrint);
+				for (int i = 0; i < currentLabels.size(); i++) {
+					int j = currentLabels[i];
+					ofDrawLine(j, 0, j, 4);
+				}
+				ofSetColor(ofxCv::magentaPrint);
+				for (int i = 0; i < previousLabels.size(); i++) {
+					int j = previousLabels[i];
+					ofDrawLine(j, 4, j, 8);
+				}
+				ofSetColor(ofxCv::yellowPrint);
+				for (int i = 0; i < newLabels.size(); i++) {
+					int j = newLabels[i];
+					ofDrawLine(j, 8, j, 12);
+				}
+				ofSetColor(ofColor::white);
+				for (int i = 0; i < deadLabels.size(); i++) {
+					int j = deadLabels[i];
+					ofDrawLine(j, 12, j, 16);
+				}
+
+				//Finally the countours matching our image
+				ofSetColor(255, 0, 0);
+
+				ofPushMatrix();
+				ofTranslate(cameraWidth*_sensorDrawScale, _marginDraw); //TODO change _sensorDrawScale as int sensorScale var
+				ofScale(_sensorDrawScale, _sensorDrawScale);
+				contourFinder->draw();
+				ofPopMatrix();
+
+			}
+		}
+	}
 
 	//--------------------------------------------
 	void drawGui() {
