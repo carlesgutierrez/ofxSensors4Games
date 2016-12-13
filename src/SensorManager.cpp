@@ -198,7 +198,7 @@ void SensorManager::applyMaskToImgVideoCam(ofRectangle _rectArea, ofImage & imag
 
 	//Draw Subsection
 	ofSetColor(255);
-	imageToMask.drawSubsection(_rectArea.x, _rectArea.y, _rectArea.width, _rectArea.height, 0, 0);//0,0 seems right. Otherwise not sure what is being used
+	imageToMask.drawSubsection(_rectArea.x, _rectArea.y, _rectArea.width, _rectArea.height, _rectArea.x, _rectArea.y);
 
 	
 	mySourcedSensorFbo.end();
@@ -208,7 +208,7 @@ void SensorManager::applyMaskToImgVideoCam(ofRectangle _rectArea, ofImage & imag
 	ofPixels auxPixels;
 	mySourcedSensorFbo.readToPixels(auxPixels);
 
-	imageToMask.setFromPixels(auxPixels);//, 0, 0, getWidth(), getHeight()
+	imageToMask.setFromPixels(auxPixels);
 
 }
 
@@ -520,8 +520,8 @@ void SensorManager::drawGuiSensorOptions(bool* opened){
 			ImGui::SliderFloat("W Rect Sensor 1 ", &rectArea1.width, 0, getWidth());
 			ImGui::SliderFloat("H Rect Sensor 1 ", &rectArea1.height, 0, getHeight());
 
-			ImGui::SliderFloat("X posDrawArea1 ", &posDrawArea1.x, 0, getWidth());
-			ImGui::SliderFloat("Y posDrawArea1 ", &posDrawArea1.y, 0, getHeight());
+			//ImGui::SliderFloat("X posDrawArea1 ", &posDrawArea1.x, 0, getWidth());
+			//ImGui::SliderFloat("Y posDrawArea1 ", &posDrawArea1.y, 0, getHeight());
 			ImGui::PopItemWidth();
 		}
 
@@ -533,8 +533,8 @@ void SensorManager::drawGuiSensorOptions(bool* opened){
 			ImGui::SliderFloat("W Rect Sensor 2 ", &rectArea2.width, 0, getWidth());
 			ImGui::SliderFloat("H Rect Sensor 2 ", &rectArea2.height, 0, getHeight());
 
-			ImGui::SliderFloat("X posDrawArea2 ", &posDrawArea2.x, 0, getWidth());
-			ImGui::SliderFloat("Y posDrawArea2 ", &posDrawArea2.y, 0, getHeight());
+			//ImGui::SliderFloat("X posDrawArea2 ", &posDrawArea2.x, 0, getWidth());
+			//ImGui::SliderFloat("Y posDrawArea2 ", &posDrawArea2.y, 0, getHeight());
 			ImGui::PopItemWidth();
 		}
 		

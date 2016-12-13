@@ -331,16 +331,18 @@ public:
 					ofDrawLine(j, 12, j, 16);
 				}
 
-				//Finally the countours matching our image
-				ofSetColor(255, 0, 0);
 
-				ofPushMatrix();
-				ofTranslate(cameraWidth*_sensorDrawScale, _marginDraw); //TODO change _sensorDrawScale as int sensorScale var
-				ofScale(_sensorDrawScale, _sensorDrawScale);
-				contourFinder->draw();
-				ofPopMatrix();
 
 			}
+
+			//Finally the countours matching our image
+			ofSetColor(255, 0, 0);
+
+			ofPushMatrix();
+			ofTranslate(cameraWidth*_sensorDrawScale, _marginDraw); //TODO change _sensorDrawScale as int sensorScale var
+			ofScale(_sensorDrawScale, _sensorDrawScale);
+			contourFinder->draw();
+			ofPopMatrix();
 		}
 	}
 
@@ -521,6 +523,12 @@ public:
 	//Drawable Vars
 	float sensorDrawScale = 0.5;
 	int marginDraw = 0;
+
+	//TODO set shit rect at Gui 
+	ofRectangle rectArea1;
+	ofRectangle rectArea2;
+	bool bArea1 = true;
+	bool bArea2 = false;
 	
 private:
 	
@@ -532,13 +540,7 @@ private:
 	ofImage sensorImage1;
 	ofImage sensorImage2;
 
-	//TODO set shit rect at Gui 
-	ofRectangle rectArea1;
-	ofVec2f posDrawArea1;
-	ofRectangle rectArea2;
-	ofVec2f posDrawArea2;
-	bool bArea1 = true;
-	bool bArea2 = false;
+
 
 	//-----------------------
 	//WebCam or similar video camera

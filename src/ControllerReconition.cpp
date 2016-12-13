@@ -12,7 +12,9 @@
 // Set borders
 
 //-----------------------------------------
-void ControllerReconition::setup(int w, int h, RecognitionMethod _myComputeBlobType, ofxCv::ContourFinder * _contourFinder){
+void ControllerReconition::setup(int w, int h, RecognitionMethod _myComputeBlobType, ofxCv::ContourFinder * _contourFinder, int _idCntroller){
+
+	idController = _idCntroller;
 
 	myContourFinder = _contourFinder;//Copy Adress 
 
@@ -90,14 +92,18 @@ void ControllerReconition::updateRecognitionBlobsInsideAreas(){
 */
 
 //-----------------------------------------
-void ControllerReconition::update(){
+void ControllerReconition::update(ofRectangle rectAreaPlayer){
 
 	/*
 	updateQuadAreasRecognition();
 	*/
-	updateRecognitionSystem();
+	updateRecognitionSystem(rectAreaPlayer);
 	
-	sendOSCBlobData();
+	if (numBlobsDetected > 0) {
+		sendOSCBlobData();
+	}else{
+		//do nothing
+	}
 	
 	if(bResetHostIp){
 		sender.setup(HOST, PORT);
@@ -108,14 +114,14 @@ void ControllerReconition::update(){
 
 
 //-----------------------------------------
-void ControllerReconition::updateRecognitionSystem(){
+void ControllerReconition::updateRecognitionSystem(ofRectangle _rectAreaPlayer){
 	
 	//If new SensorFrame
 	if (SensorManager::getInstance()->isNewSensorFrame()) {
 	
 		if(myComputeBlobType == MaxMinsAllBlob){
 			//Calc Max Mins and get the relative position to the Camera. //TODO get relative pos to the area1,2,n
-			calcMainBlobLocation();
+			calcMainBlobLocation(_rectAreaPlayer);
 			//WIP Calc some average to detect UP or Down Sudden movemnts.
 			udpateRecognitionBlobAction();
 
@@ -138,7 +144,7 @@ void ControllerReconition::updateRecognitionSystem(){
 }
 
 //-----------------------------------------
-void ControllerReconition::calcMainBlobLocation(){
+void ControllerReconition::calcMainBlobLocation(ofRectangle _rectAreaPlayer){
 	//Udpate here desired values
 	numBlobsDetected = myContourFinder->getContours().size();
 	
@@ -153,22 +159,26 @@ void ControllerReconition::calcMainBlobLocation(){
 	else if(item_resumedBlob_Y == 1)yPosBlob = yMin.y;//idem Y
 	else if(item_resumedBlob_Y == 2)yPosBlob = yMin.y + yDiff*0.5;//middle pos Y of all contourns blobs detected
 	
-	//if(bresumeBlob_minY)yPosBlob = yMin.y;
-	//else if(bresumeBlob_maxY)yPosBlob = yMax.x;
-	
-	//OP2 Used max min calculated
-	//xPosBlob = xMax.x;
-	//xPosBlob = xMin.x + xDiff*0.5;//middle pos
-	//yPosBlob = yMin.y;
-	
-	//Filtered for OSC and Gui Controller
-	if(bresumeBlob_inverX){
-		xPosBlobFloatOsc = (float)(sensorWidth - xPosBlob) / (float)sensorWidth; //Middle pos
-		
-	}else{
-		xPosBlobFloatOsc = (float)(xPosBlob) / (float)sensorWidth;
+	//Find the relative position indide the Rectangle
+	//and save it inside the OSC/UPD vars ready to send out
+	float insideRectPosX = xPosBlob - _rectAreaPlayer.x;
+	float insideRectPosY = _rectAreaPlayer.y - yPosBlob;
+
+	//cout << "_rectAreaPlayer.x = " << _rectAreaPlayer.x << endl;
+	//cout << "xPosBlob = " << xPosBlob << endl;
+	//cout << " xPosBlob - _rectAreaPlayer.x = insideRectPosX = " << insideRectPosX << endl;
+
+	if (_rectAreaPlayer.inside(xPosBlob, yPosBlob)) {
+		xPosBlobFloatOsc = ofMap(insideRectPosX, 0, _rectAreaPlayer.width, 0, 1);
+		yPosBlobFloatOsc = ofMap(insideRectPosY, 0, _rectAreaPlayer.height, 0, 1);
+		if (bresumeBlob_inverX) {
+			xPosBlobFloatOsc = 1 - xPosBlobFloatOsc;
+		}
 	}
-	yPosBlobFloatOsc = (float)(yPosBlob) / (float)sensorHeight;
+	else {
+		xPosBlobFloatOsc = 0.5;
+		yPosBlobFloatOsc = 0.5;
+	}
 }
 
 //----------------------------------------------------------------
@@ -275,7 +285,8 @@ void ControllerReconition::sendOSCBlobData(){
 		message = message + ofToString(xPosBlobFloatOsc,2) + " " + ofToString(yPosBlobFloatOsc,2) + " " + ofToString(fUpActionBlob_OSC,2) + " " + ofToString(fDownActionBlob_OSC,2);
 		udpConnection.Send(message.c_str(),message.length());
 		
-		cout << "message UDP = " << message << endl;
+		//cout << "message UDP = " << message << endl;
+		//cout << "UPD properties GetTimeoutSend = " << udpConnection.GetTimeoutSend();
 	
 	}
 	//TODO send here other data type
@@ -295,36 +306,10 @@ void ControllerReconition::draw(){
 	
 	drawGui_Controller();
 	
-	drawPolylinesAreas();
+	//drawPolylinesAreas();
 	
 }
 
-//-------------------------------------------------
-void ControllerReconition::drawPolylinesAreas(){
-	if(polylines.size() > 1){
-		//Draw polyline Areas
-		ofPushMatrix();
-		
-		ofTranslate(imageRecognitionPosition.x, imageRecognitionPosition.y, 0);
-		
-		ofSetColor(ofColor::yellowGreen);
-		polylines[0].draw();
-		vector<ofPoint> vertexes0 = polylines[0].getVertices();
-		for(int i = 0; i < vertexes0.size(); i++){
-			ofDrawBitmapString("x0 = "+ ofToString(vertexes0[i].x, 0), vertexes0[i].x, vertexes0[i].y);
-			ofDrawBitmapString("y0 = "+ ofToString(vertexes0[i].y, 0), vertexes0[i].x, vertexes0[i].y+10);
-		}
-		
-		ofSetColor(ofColor::royalBlue);
-		polylines[1].draw();
-		vector<ofPoint> vertexes1 = polylines[1].getVertices();
-		for(int i = 0; i < vertexes1.size(); i++){
-			ofDrawBitmapString("x1 = "+ ofToString(vertexes1[i].x, 0), vertexes1[i].x, vertexes1[i].y);
-			ofDrawBitmapString("y1 = "+ ofToString(vertexes1[i].y, 0), vertexes1[i].x, vertexes1[i].y+10);
-		}
-		ofPopMatrix();
-	}
-}
 
 //-------------------------------------------------
 void ControllerReconition::drawGui_OSC_configurable(){
@@ -352,46 +337,40 @@ void ControllerReconition::drawGui_OSC_configurable(){
 
 //-------------------------------------------------
 void ControllerReconition::drawGui_Controller(){
-	ImGui::SetNextWindowSize(ImVec2(300, 200), ImGuiSetCond_FirstUseEver);
+	ImGui::SetNextWindowSize(ImVec2(300, 200));
 	
-
+	//cout << "Check this Out PreVious window" << endl;
 	//bool wopen = true;
-	if (ImGui::Begin("Controller Window")) {
+	string myControlerIdText = "ControllerRecognition Ctrl" + ofToString(idController);
+	
+	ImGui::Begin(myControlerIdText.c_str());
 		
-		ImGui::Checkbox("MultiTracking Blob Detection", &isController_trackingMode);
-		ImGui::Checkbox("Resumed Blob Detection", &isController_ResumedBlob);
+	drawGui_ResumedBlob();
+
+	ImGui::Separator();
+	ImGui::Separator();
+	ImGui::Separator();
+	ImGui::Separator();
+	ImGui::Separator();
+	ImGui::Separator();
+
+	//Draw and Edit OSC info
+	drawGui_OSC_configurable();
 		
-		if (isController_ResumedBlob) {
-			drawGui_ResumedBlob(&isController_ResumedBlob);
-		}
-		
-		if(isController_ResumedBlob) {
-			
-		}
-		
-		ImGui::Separator();
-		ImGui::Separator();
-		ImGui::Separator();
-		ImGui::Separator();
-		ImGui::Separator();
-		ImGui::Separator();
-		
-		
-		//Draw and Edit OSC info
-		drawGui_OSC_configurable();
-		
-		ImGui::End();
-	}
+	ImGui::End();
+	
 
 }
 
 //-------------------------------------------------
-void ControllerReconition::drawGui_ResumedBlob(bool* opened){
+void ControllerReconition::drawGui_ResumedBlob(){
 	
 	
 	ImGui::SetNextWindowSize(ImVec2(300, 200), ImGuiSetCond_FirstUseEver);
 	
-	if (ImGui::Begin("p & Down + MaxMin Recognition", opened)) {
+	string myControlerIdText = "MaxMins CtrlRecognition " + ofToString(idController);
+
+	if (ImGui::Begin(myControlerIdText.c_str())) {
 		
 		
 		string recognitionTextType = "Configure Up&Down Values";

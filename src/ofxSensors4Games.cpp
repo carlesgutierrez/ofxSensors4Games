@@ -21,12 +21,22 @@ void ofxSensors4Games::setup(sensorType _myType, sensorMode _modeSensor, Recogni
 	//setups managers with selected SensorType
 	
 	SensorManager::getInstance()->setup(_myType, _modeSensor);
-	myControllerRecognition.setup(
+
+	myControllerRecognition1.setup(
 								SensorManager::getInstance()->getWidth(),
 								SensorManager::getInstance()->getHeight(),
 								_myComputeBlobType,
-								SensorManager::getInstance()->computerVisionSensor1.contourFinder
+								SensorManager::getInstance()->computerVisionSensor1.contourFinder,
+								1
 								);
+
+	myControllerRecognition2.setup(
+		SensorManager::getInstance()->getWidth(),
+		SensorManager::getInstance()->getHeight(),
+		_myComputeBlobType,
+		SensorManager::getInstance()->computerVisionSensor2.contourFinder,
+		2
+		);
 	
 	
 }
@@ -35,7 +45,13 @@ void ofxSensors4Games::setup(sensorType _myType, sensorMode _modeSensor, Recogni
 void ofxSensors4Games::update() {
 	
 	SensorManager::getInstance()->update();
-	myControllerRecognition.update();
+	
+	if (SensorManager::getInstance()->bArea1) {
+		myControllerRecognition1.update(SensorManager::getInstance()->rectArea1);
+	}
+	if (SensorManager::getInstance()->bArea2) {
+		myControllerRecognition2.update(SensorManager::getInstance()->rectArea2);
+	}
 }
 
 //--------------------------------------------------------------
@@ -59,7 +75,8 @@ void ofxSensors4Games::draw() {
 	
 	//General Draws with possibles Guis windows
 	SensorManager::getInstance()->draw();
-	myControllerRecognition.draw();
+	myControllerRecognition1.draw();
+	myControllerRecognition2.draw();
 	
 	//required to call this at end
 	gui.end();
@@ -70,7 +87,8 @@ void ofxSensors4Games::draw() {
 
 //--------------------------------------------------------------
 void ofxSensors4Games::exit() {
-	myControllerRecognition.exit();
+	myControllerRecognition1.exit();
+	myControllerRecognition2.exit();
 	SensorManager::getInstance()->exit();
 }
 

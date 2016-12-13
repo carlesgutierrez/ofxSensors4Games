@@ -42,7 +42,8 @@ public:
 	//SensorManager mySensor;
 	
 	//Computer Visition
-	ControllerReconition myControllerRecognition;
+	ControllerReconition myControllerRecognition1;
+	ControllerReconition myControllerRecognition2;
 	
 	//Gui interaction
 	ofxImGui gui;

@@ -21,9 +21,9 @@ enum ActionRecognitionType { GoUpAction, GoDownAction }; //Up and Down from medi
 
 class ControllerReconition {
 public:
-	
-	void setup(int w, int h, RecognitionMethod _myComputeBlobType, ofxCv::ContourFinder * _contourFinder);
-	void update();
+	int idController = -1;
+	void setup(int w, int h, RecognitionMethod _myComputeBlobType, ofxCv::ContourFinder * _contourFinder, int idControll);
+	void update(ofRectangle _rectAreaPlayer);
 	void draw();
 	void exit();
 	
@@ -51,7 +51,7 @@ public:
 	void drawGui_Controller();
 	void drawGui_OSC_configurable();
 	bool isController_ResumedBlob = true;
-	void drawGui_ResumedBlob(bool* opened);
+	void drawGui_ResumedBlob();
 	bool bSendOsc_fMiddleX_fMinY_fUP_fDOWN = false;
 	bool bresumeBlob_inverX = true;
 	//bool bresumeBlob_maxX = true;
@@ -62,7 +62,7 @@ public:
 	
 	int item_resumedBlob_Y = 1;
 	
-	void calcMainBlobLocation();
+	void calcMainBlobLocation(ofRectangle _rectAreaPlayer);
 	
 	//////////////////////////////
 	//OSC
@@ -108,7 +108,7 @@ public:
 	//Advanced Filtered Blob Data
 	//median stat value
 	RecognitionMethod myComputeBlobType;
-	void updateRecognitionSystem();
+	void updateRecognitionSystem(ofRectangle _rectAreaPlayer);
 	void udpateRecognitionBlobAction();
 	
 	//int numFramesStates = 100; //TODO Addd to gui
