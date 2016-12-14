@@ -32,16 +32,9 @@ void ControllerReconition::setup(int w, int h, RecognitionMethod _myComputeBlobT
 	
 	myComputeBlobType = _myComputeBlobType;
 	
-	//polyline
-	polylinesIndex = -1;
-	
-	//ofRectangle rec1 = ofRectangle(0, 0, 0, 0);
-	ofPolyline pol1;
-	pol1.clear();
-	polylines.push_back(pol1);
-	ofPolyline pol2;
-	pol2.clear();
-	polylines.push_back(pol2);
+	//Area ref tranking
+	rectAreaPlayer.set(0, 0, sensorWidth*sensorScale, sensorHeight*sensorScale);
+
 	
 	imageRecognitionPosition = ofPoint(sensorWidth*sensorScale, SensorManager::getInstance()->marginDraw);
 	imageRecognitionW = sensorWidth*sensorScale;
@@ -59,37 +52,6 @@ void ControllerReconition::setupUDP(string _ip, int _port){
 	udpConnection.SetNonBlocking(true);
 
 }
-
-/*
-//-----------------------------------------
-void ControllerReconition::updateQuadAreasRecognition(){
-	updateRecognitionBlobsInsideAreas();
-}
-
-//-----------------------------------------
-void ControllerReconition::updateRecognitionBlobsInsideAreas(){
-	
-	for (int i = 0; i < SensorManager::getInstance()->contourFinder.size(); i++)
-	{
-		
-		ofPoint tmpPos = ofxCv::toOf(SensorManager::getInstance()->contourFinder.getCentroid(i));
-		
-		//Get if this Blob Point is Inside Area 1
-		//cout << "polylines.size() " << polylines.size() << endl;
-		for(int j = 0; j < polylines.size(); j++){
-			if(polylines[j].isClosed()){
-				if(polylines[j].inside(tmpPos*sensorScale)){
-					int label = SensorManager::getInstance()->contourFinder.getLabel(i);
-					//cout << "Inside this Poline " << j << " Blob # " <<  ofToString(label,0) << endl;
-					//TODO Send or add This "Label inside area X" recognition with the polinie points too
-				}
-			}
-		}
-		//Get if this Blob Point is Inside Area 2
-		   //idem ...
-	}
-}
-*/
 
 //-----------------------------------------
 void ControllerReconition::update(ofRectangle rectAreaPlayer){
@@ -116,6 +78,8 @@ void ControllerReconition::update(ofRectangle rectAreaPlayer){
 //-----------------------------------------
 void ControllerReconition::updateRecognitionSystem(ofRectangle _rectAreaPlayer){
 	
+	rectAreaPlayer = _rectAreaPlayer;
+
 	//If new SensorFrame
 	if (SensorManager::getInstance()->isNewSensorFrame()) {
 	
@@ -136,9 +100,12 @@ void ControllerReconition::updateRecognitionSystem(ofRectangle _rectAreaPlayer){
 			//  - then find wich blob is in a populated area
 			// Etc...
 		}
+		//TODO try to detect vector direction actions
+		//else if (myComputeBlobType == KalmanVectorDirDetection) {
+		//}
 		else {
 			cout << "Controller Error:: Update Recognition needs to know the Type of Data to process from SensorManager" << endl;
-	}
+		}
 	}
 
 }
@@ -176,8 +143,9 @@ void ControllerReconition::calcMainBlobLocation(ofRectangle _rectAreaPlayer){
 		}
 	}
 	else {
-		xPosBlobFloatOsc = 0.5;
-		yPosBlobFloatOsc = 0.5;
+		//xPosBlobFloatOsc = 0.5;
+		//yPosBlobFloatOsc = 0.5;
+		cout << "Error xPosBlob outside the area rectangle" << endl;
 	}
 }
 
@@ -467,10 +435,9 @@ void ControllerReconition::drawResumedBlob(/*int transX ,int transY, int winW, i
 				 10*sensorScale);//Painting blob result over the Kinect Blob Drawer
 	
 	//Draw Vector Interaction for Jostick Mode
-	//If no polyline Area, then use middle point sensor
 	ofColor myLineColor = ofColor::green;
 	ofSetColor(myLineColor.r, myLineColor.g, myLineColor.b, 150);
-	ofDrawLine(sensorWidth*sensorScale*0.5, sensorHeight*sensorScale*0.5, xPosBlob*sensorScale, yPosBlob*sensorScale);
+	ofDrawLine(rectAreaPlayer.getCenter().x*sensorScale, rectAreaPlayer.getCenter().y*sensorScale, xPosBlob*sensorScale, yPosBlob*sensorScale);
 	
 	ofDisableAlphaBlending();
 	
@@ -480,41 +447,7 @@ void ControllerReconition::drawResumedBlob(/*int transX ,int transY, int winW, i
 
 //-----------------------------------------
 void ControllerReconition::keyReleased(ofKeyEventArgs & args){}
-void ControllerReconition::keyPressed(ofKeyEventArgs & args){
-	
-	//	cout << "polylinesIndex = " << polylinesIndex << endl;
-	
-	if(args.key == '1'){
-		polylinesIndex = 0;
-		polylines[polylinesIndex].clear();
-	}
-	else if(args.key == '2'){
-		polylinesIndex = 1;
-		polylines[polylinesIndex].clear();
-	}else if(args.key == OF_KEY_RETURN){
-		if(polylines.size() > 0 && polylinesIndex < polylines.size() && polylines[polylinesIndex].size() > 0){
-			polylines[polylinesIndex].close();
-		}
-	}
-	else if(args.key == OF_KEY_BACKSPACE){
-		
-		//TESTING OSC
-		
-		ofxOscMessage m;
-		m.clear();
-		m.setAddress("/GameBlob");
-		m.addFloatArg(ofGetMouseX()/ofGetWidth()); // 0 .. 1 segun Mouse X
-		m.addFloatArg(0); // 0 .. 1 segun Mouse Y
-		
-		// sending float to be able to make more actions filtering in the client.
-		//Like Intenisty of the action
-		m.addFloatArg(1 - (ofGetMouseY()/ofGetHeight())); //Jump Action!
-		m.addFloatArg(1);
-		
-		sender.sendMessage(m, false);
-	}
-
-}
+void ControllerReconition::keyPressed(ofKeyEventArgs & args){}
 
 //-----------------------------------------
 //void ControllerReconition::mouseMoved(ofMouseEventArgs & args){}
@@ -523,25 +456,7 @@ void ControllerReconition::keyPressed(ofKeyEventArgs & args){
 void ControllerReconition::mouseScrolled(ofMouseEventArgs & args){}
 void ControllerReconition::mouseEntered(ofMouseEventArgs & args){}
 void ControllerReconition::mouseExited(ofMouseEventArgs & args){}
-void ControllerReconition::mouseReleased (ofMouseEventArgs & args){
-	
-	//cout << "args.x = " << args.x << endl;
-	//cout << "args.y = " << args.y << endl;
-
-	//cout << "imageRecognitionPosition.x = " << imageRecognitionPosition.x << endl;
-	//cout << "imageRecognitionPosition.y = " << imageRecognitionPosition.y << endl;
-	
-	if(args.x > imageRecognitionPosition.x && args.x < imageRecognitionPosition.x+imageRecognitionW){
-		if(args.y > imageRecognitionPosition.y && args.y < imageRecognitionPosition.y+imageRecognitionH){
-
-			if(polylines.size() > 0 && polylinesIndex < polylines.size()){
-				polylines[polylinesIndex].addVertex(ofPoint(args.x- imageRecognitionPosition.x, args.y - imageRecognitionPosition.y));
-			}
-			
-		}
-	}
-	
-}
+void ControllerReconition::mouseReleased (ofMouseEventArgs & args){}
 
 //-----------------------------------------
 void ControllerReconition::exit(){

@@ -31,12 +31,12 @@ void ofxSensors4Games::setup(sensorType _myType, sensorMode _modeSensor, Recogni
 								);
 
 	myControllerRecognition2.setup(
-		SensorManager::getInstance()->getWidth(),
-		SensorManager::getInstance()->getHeight(),
-		_myComputeBlobType,
-		SensorManager::getInstance()->computerVisionSensor2.contourFinder,
-		2
-		);
+								SensorManager::getInstance()->getWidth(),
+								SensorManager::getInstance()->getHeight(),
+								_myComputeBlobType,
+								SensorManager::getInstance()->computerVisionSensor2.contourFinder,
+								2
+								);
 	
 	
 }
@@ -75,7 +75,11 @@ void ofxSensors4Games::draw() {
 	
 	//General Draws with possibles Guis windows
 	SensorManager::getInstance()->draw();
+	
+	if (SensorManager::getInstance()->bArea1)
 	myControllerRecognition1.draw();
+	
+	if (SensorManager::getInstance()->bArea2)
 	myControllerRecognition2.draw();
 	
 	//required to call this at end

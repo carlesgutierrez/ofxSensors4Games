@@ -515,7 +515,7 @@ void SensorManager::drawGuiSensorOptions(bool* opened){
 		if (ImGui::CollapsingHeader("Area Sensor 1")) {
 			ImGui::Checkbox("Active Area 1", &bArea1);
 			ImGui::PushItemWidth(100);
-			ImGui::SliderFloat("X Rect Sensor 1 ", &rectArea1.x, 0, getWidth());
+			ImGui::SliderFloat("X Rect Sensor 1 ", &rectArea1.x, 0, getWidth());//TODO limit this until (getWidth() -rectArea1.width). Check how to do it dynamic slider ImGui
 			ImGui::SliderFloat("Y Rect Sensor 1 ", &rectArea1.y, 0, getHeight());
 			ImGui::SliderFloat("W Rect Sensor 1 ", &rectArea1.width, 0, getWidth());
 			ImGui::SliderFloat("H Rect Sensor 1 ", &rectArea1.height, 0, getHeight());
