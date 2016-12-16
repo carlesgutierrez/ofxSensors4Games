@@ -53,6 +53,69 @@ void ControllerReconition::setupUDP(string _ip, int _port){
 
 }
 
+ofxJSONElement ControllerReconition::getParams()
+{
+	ofxJSONElement jsonParams;
+	jsonParams.clear();
+
+	if (idController == 1) {
+		jsonParams["idController1"]["learningTime"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.learningTime);
+		jsonParams["idController1"]["thresholdValue"], ofToString(SensorManager::getInstance()->computerVisionSensor1.thresholdValue);
+		jsonParams["idController1"]["bSimpleBackgroundSubstraction"], ofToString(SensorManager::getInstance()->computerVisionSensor1.bSimpleBackgroundSubstraction);
+		jsonParams["idController1"]["bLearnBackground"], ofToString(SensorManager::getInstance()->computerVisionSensor1.bLearnBackground);
+		jsonParams["idController1"]["bAutoThreshold"], ofToString(SensorManager::getInstance()->computerVisionSensor1.bAutoThreshold);
+		jsonParams["idController1"]["thresholdValue"], ofToString(SensorManager::getInstance()->computerVisionSensor1.thresholdValue);
+		jsonParams["idController1"]["bContourFinderThreshold"], ofToString(SensorManager::getInstance()->computerVisionSensor1.bContourFinderThreshold);
+		jsonParams["idController1"]["bContourFinderColorThreshold"], ofToString(SensorManager::getInstance()->computerVisionSensor1.bContourFinderColorThreshold);
+	}
+	else if(idController == 1) {
+		jsonParams["idController2"]["learningTime"] = ofToString(SensorManager::getInstance()->computerVisionSensor2.learningTime);
+		jsonParams["idController2"]["thresholdValue"], ofToString(SensorManager::getInstance()->computerVisionSensor2.thresholdValue);
+		jsonParams["idController2"]["bSimpleBackgroundSubstraction"], ofToString(SensorManager::getInstance()->computerVisionSensor2.bSimpleBackgroundSubstraction);
+		jsonParams["idController2"]["bLearnBackground"], ofToString(SensorManager::getInstance()->computerVisionSensor2.bLearnBackground);
+		jsonParams["idController2"]["bAutoThreshold"], ofToString(SensorManager::getInstance()->computerVisionSensor2.bAutoThreshold);
+		jsonParams["idController2"]["thresholdValue"], ofToString(SensorManager::getInstance()->computerVisionSensor2.thresholdValue);
+		jsonParams["idController2"]["bContourFinderThreshold"], ofToString(SensorManager::getInstance()->computerVisionSensor2.bContourFinderThreshold);
+		jsonParams["idController2"]["bContourFinderColorThreshold"], ofToString(SensorManager::getInstance()->computerVisionSensor2.bContourFinderColorThreshold);
+
+	}
+	else cout << "Error Saving idController not recognized" << endl;
+
+	return jsonParams;
+}
+
+//-------------------------------------------------------------------
+bool ControllerReconition::setParams(ofxJSONElement jsonFile)
+{
+	bool bLoaded = true;
+
+
+	if (idController == 1) {
+
+		SensorManager::getInstance()->computerVisionSensor1.learningTime = ofToFloat(jsonFile["idController1"]["learningTime"].asString());
+		SensorManager::getInstance()->computerVisionSensor1.thresholdValue = ofToFloat(jsonFile["idController1"]["thresholdValue"].asString());
+		SensorManager::getInstance()->computerVisionSensor1.bSimpleBackgroundSubstraction = ofToFloat(jsonFile["idController1"]["bSimpleBackgroundSubstraction"].asString());
+		SensorManager::getInstance()->computerVisionSensor1.bLearnBackground = ofToFloat(jsonFile["idController1"]["bLearnBackground"].asString());
+		SensorManager::getInstance()->computerVisionSensor1.bAutoThreshold = ofToFloat(jsonFile["idController1"]["bAutoThreshold"].asString());
+		SensorManager::getInstance()->computerVisionSensor1.thresholdValue = ofToFloat(jsonFile["idController1"]["thresholdValue"].asString());
+		SensorManager::getInstance()->computerVisionSensor1.bContourFinderThreshold = ofToFloat(jsonFile["idController1"]["bContourFinderThreshold"].asString());
+		SensorManager::getInstance()->computerVisionSensor1.bContourFinderColorThreshold = ofToFloat(jsonFile["idController1"]["bContourFinderColorThreshold"].asString());
+	}
+	else if (idController == 2) {
+		SensorManager::getInstance()->computerVisionSensor2.learningTime = ofToFloat(jsonFile["idController2"]["learningTime"].asString());
+		SensorManager::getInstance()->computerVisionSensor2.thresholdValue = ofToFloat(jsonFile["idController2"]["thresholdValue"].asString());
+		SensorManager::getInstance()->computerVisionSensor2.bSimpleBackgroundSubstraction = ofToFloat(jsonFile["idController2"]["bSimpleBackgroundSubstraction"].asString());
+		SensorManager::getInstance()->computerVisionSensor2.bLearnBackground = ofToFloat(jsonFile["idController2"]["bLearnBackground"].asString());
+		SensorManager::getInstance()->computerVisionSensor2.bAutoThreshold = ofToFloat(jsonFile["idController2"]["bAutoThreshold"].asString());
+		SensorManager::getInstance()->computerVisionSensor2.thresholdValue = ofToFloat(jsonFile["idController2"]["thresholdValue"].asString());
+		SensorManager::getInstance()->computerVisionSensor2.bContourFinderThreshold = ofToFloat(jsonFile["idController2"]["bContourFinderThreshold"].asString());
+		SensorManager::getInstance()->computerVisionSensor2.bContourFinderColorThreshold = ofToFloat(jsonFile["idController2"]["bContourFinderColorThreshold"].asString());
+	}
+	else cout << "Error setting idController not recognized" << endl;
+
+	return bLoaded;
+}
+
 //-----------------------------------------
 void ControllerReconition::update(ofRectangle rectAreaPlayer){
 
@@ -425,22 +488,30 @@ void ControllerReconition::drawResumedBlob(/*int transX ,int transY, int winW, i
 	ofPushMatrix();
 	ofTranslate(sensorWidth*sensorScale, SensorManager::getInstance()->marginDraw);
 	
-	ofColor myMaxMinPointColor = ofColor::green;
-	ofSetColor(myMaxMinPointColor.r, myMaxMinPointColor.g, myMaxMinPointColor.b, 150);
-	
 	ofEnableAlphaBlending();
 	
-	ofDrawCircle(xPosBlob*sensorScale,
-				 yPosBlob*sensorScale,
-				 10*sensorScale);//Painting blob result over the Kinect Blob Drawer
-	
 	//Draw Vector Interaction for Jostick Mode
-	ofColor myLineColor = ofColor::green;
+	ofPushStyle();
+	ofColor myLineColor;
+	if(idController == 1)myLineColor = ofColor::green;
+	else if(idController == 2)myLineColor = ofColor::pink;
+	else myLineColor = ofColor::orangeRed; //Error color line not definet yet
+
 	ofSetColor(myLineColor.r, myLineColor.g, myLineColor.b, 150);
-	ofDrawLine(rectAreaPlayer.getCenter().x*sensorScale, rectAreaPlayer.getCenter().y*sensorScale, xPosBlob*sensorScale, yPosBlob*sensorScale);
+
+	ofDrawCircle(xPosBlob*sensorScale,
+		yPosBlob*sensorScale + sensorWidth*(idController-1)*sensorScale, //Auto Down draw Variable
+		10 * sensorScale);//Painting blob result over the Kinect Blob Drawer
+
+	ofSetLineWidth(2);
+	ofSetColor(myLineColor.r, myLineColor.g, myLineColor.b, 150);
+	ofDrawLine(rectAreaPlayer.getCenter().x*sensorScale,
+				rectAreaPlayer.getCenter().y*sensorScale + 0.5*sensorWidth*(idController - 1)*sensorScale, //Auto Down draw Variable,
+				xPosBlob*sensorScale,
+				yPosBlob*sensorScale + sensorWidth*(idController - 1)*sensorScale);
 	
 	ofDisableAlphaBlending();
-	
+	ofPopStyle();
 	ofPopMatrix();
 }
 

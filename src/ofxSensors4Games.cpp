@@ -96,6 +96,78 @@ void ofxSensors4Games::exit() {
 	SensorManager::getInstance()->exit();
 }
 
+//-------------------------------------------------------------
+bool ofxSensors4Games::loadAllParamters() {
+
+	string filePath = "allMyParams.json";
+	ofxJSONElement jPreset = loadJSON(filePath);
+
+	/*
+	ofxJSONElement jElement;
+	for (int i = 0; i < thisPair.size(); i++) {
+	}
+
+	if (!checkIfSetExists(thisPair.first))
+	{
+		presetsBank.addSet(thisPair.first);
+	}
+
+	presetsBank.addPreset(thisPair.second, thisPair.first, jPreset);
+	*/
+
+	return true;
+}
+
+
+//-------------------------------------------------------------
+ofxJSONElement ofxSensors4Games::loadJSON(string filePathName)
+{
+	ofxJSONElement jElement;
+	bool parse = false;
+	ofLogVerbose() << "Trying to load config at: " + filePathName;
+	parse = jElement.open(filePathName);
+
+	ofLogVerbose() << "ConfigLoaded";
+	return jElement;
+}
+
+//------------------------------------------------------------
+bool ofxSensors4Games::saveAllParams() {
+
+	allParametersGui.clear();
+
+	
+
+	ofxJSONElement paramsRecognition1 = myControllerRecognition1.getParams();
+	ofxJSONElement paramsRecognition2 = myControllerRecognition2.getParams();
+	ofxJSONElement paramsSensor = SensorManager::getInstance()->getParams();
+
+	allParametersGui.append(paramsRecognition1);
+	allParametersGui.append(paramsRecognition2);
+	allParametersGui.append(paramsSensor);
+	/*
+	int j = 0;
+	for (auto it = paramsRecognition1.begin(); it != paramsRecognition1.end(); it++, j++){
+		allParametersGui[it->first] = it->second;
+	}
+
+	ofxJSONElement paramsRecognition2 = myControllerRecognition1.getParams();
+	j = 0;
+	for (auto it = paramsRecognition2.begin(); it != paramsRecognition2.end(); it++, j++) {
+		allParametersGui[it->first] = it->second;
+	}
+
+	ofxJSONElement paramsSensor = SensorManager::getInstance()->getParams();
+	j = 0;
+	for (auto it = paramsSensor.begin(); it != paramsSensor.end(); it++, j++) {
+		allParametersGui[it->first] = it->second;
+	}
+	*/
+	allParametersGui.save("allMyParams.json", true);
+
+	return true;
+}
+
 
 /* Save some data example with Json ( need addon ofxJson)
 //---------------------------------------------------------------------

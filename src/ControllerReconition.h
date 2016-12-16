@@ -12,7 +12,7 @@
 #include "ofxImGui.h"
 #include "statsRecorder.h"
 #include "SensorManager.h"
-
+#include "ofxJSON.h"
 
 
 //Status Regonition Controller Type
@@ -130,6 +130,10 @@ public:
 	bool bResetHostIp = false;
 	int PORT = 12345;
 	string HOST = "127.0.0.1";//MLP: "192.168.2.254";
-	
+
+	//////////////////////////////////////////
+	//Json save params
+	ofxJSONElement getParams();
+	bool setParams(ofxJSONElement myJson);
 	
 };

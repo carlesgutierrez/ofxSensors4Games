@@ -45,6 +45,48 @@ sensorMode SensorManager::getSensorMode(){
 	return modeSensor;
 }
 
+//-----------------------------------------
+ofxJSONElement SensorManager::getParams()
+{
+	ofxJSONElement jsonParams;
+	jsonParams.clear();
+
+	jsonParams["sensorParams"]["bArea1"] = ofToString(bArea1);
+	jsonParams["sensorParams"]["rectArea1X"] = ofToString(rectArea1.x);
+	jsonParams["sensorParams"]["rectArea1Y"] = ofToString(rectArea1.y);
+	jsonParams["sensorParams"]["rectArea1W"] = ofToString(rectArea1.width);
+	jsonParams["sensorParams"]["rectArea1H"] = ofToString(rectArea1.height);
+	
+
+	jsonParams["sensorParams"]["bArea2"] = ofToString(bArea2);
+	jsonParams["sensorParams"]["rectArea2X"] = ofToString(rectArea2.x);
+	jsonParams["sensorParams"]["rectArea2Y"] = ofToString(rectArea2.y);
+	jsonParams["sensorParams"]["rectArea2W"] = ofToString(rectArea2.width);
+	jsonParams["sensorParams"]["rectArea2H"] = ofToString(rectArea2.height);
+
+	return jsonParams;
+}
+
+//-------------------------------------------------------------------
+bool SensorManager::setParams(ofxJSONElement jsonFile)
+{
+	bool bLoaded = true;
+
+	bArea1 = ofToBool(jsonFile["sensorParams"]["bArea1"].asString());
+	rectArea1.x = ofToInt(jsonFile["sensorParams"]["rectArea1X"].asString());
+	rectArea1.y = ofToInt(jsonFile["sensorParams"]["rectArea1Y"].asString());
+	rectArea1.width = ofToInt(jsonFile["sensorParams"]["rectArea1W"].asString());
+	rectArea1.height = ofToInt(jsonFile["sensorParams"]["rectArea1H"].asString());
+
+	bArea2 = ofToBool(jsonFile["sensorParams"]["bArea2"].asString());
+	rectArea2.x = ofToInt(jsonFile["sensorParams"]["rectArea2X"].asString());
+	rectArea2.y = ofToInt(jsonFile["sensorParams"]["rectArea2Y"].asString());
+	rectArea2.width = ofToInt(jsonFile["sensorParams"]["rectArea2W"].asString());
+	rectArea2.height = ofToInt(jsonFile["sensorParams"]["rectArea2H"].asString());
+	
+	return bLoaded;
+}
+
 //Setters
 //-----------------------------------------
 void SensorManager::setSensorType(sensorType _type){
@@ -340,21 +382,27 @@ void SensorManager::draw(){
 
 	//last Draw if camera options for filtering image
 	if (typeSensor == cameraSensor) {
-		ofRectangle auxRectArea1 = rectArea1;
-		auxRectArea1.x = rectArea1.x * sensorDrawScale;
-		auxRectArea1.y = rectArea1.y *sensorDrawScale;
-		auxRectArea1.width = rectArea1.getWidth() * sensorDrawScale;
-		auxRectArea1.height = rectArea1.getHeight() *sensorDrawScale;
-
-		//Draw it
-		ofPushStyle();
-		ofNoFill();
-		ofSetColor(ofColor::red);
-		ofDrawRectangle(auxRectArea1);
-		ofPopStyle();
+		drawAreaRectangle(rectArea1, 1);
+		drawAreaRectangle(rectArea2, 2);
 	}
 
 	
+}
+
+//--------------------------------------------------------------------
+void SensorManager::drawAreaRectangle(ofRectangle _areaRect, int idSensor) {
+	ofRectangle auxRectArea1 = _areaRect;
+	auxRectArea1.x = _areaRect.x * sensorDrawScale;
+	auxRectArea1.y = _areaRect.y *sensorDrawScale + (idSensor-1)*sensorHeight *sensorDrawScale;//Auto Down Draw Sensor
+	auxRectArea1.width = _areaRect.getWidth() * sensorDrawScale;
+	auxRectArea1.height = _areaRect.getHeight() *sensorDrawScale;
+
+	//Draw it
+	ofPushStyle();
+	ofNoFill();
+	ofSetColor(ofColor::red);
+	ofDrawRectangle(auxRectArea1);
+	ofPopStyle();
 }
 
 //---------------------------------------------------------------------
