@@ -198,18 +198,18 @@ void ControllerReconition::calcMainBlobLocation(ofRectangle _rectAreaPlayer){
 	//cout << "xPosBlob = " << xPosBlob << endl;
 	//cout << " xPosBlob - _rectAreaPlayer.x = insideRectPosX = " << insideRectPosX << endl;
 
-	if (_rectAreaPlayer.inside(xPosBlob, yPosBlob)) {
-		xPosBlobFloatOsc = ofMap(insideRectPosX, 0, _rectAreaPlayer.width, 0, 1);
-		yPosBlobFloatOsc = ofMap(insideRectPosY, 0, _rectAreaPlayer.height, 0, 1);
+	//if (_rectAreaPlayer.inside(xPosBlob, yPosBlob)) {
+		xPosBlobFloatOsc = ofMap(insideRectPosX, 0, _rectAreaPlayer.width, 0, 1, true);
+		yPosBlobFloatOsc = ofMap(insideRectPosY, 0, _rectAreaPlayer.height, 0, 1, true);
 		if (bresumeBlob_inverX) {
 			xPosBlobFloatOsc = 1 - xPosBlobFloatOsc;
 		}
-	}
-	else {
+	//}
+	//else {
 		//xPosBlobFloatOsc = 0.5;
 		//yPosBlobFloatOsc = 0.5;
-		cout << "Error xPosBlob outside the area rectangle" << endl;
-	}
+	//	cout << "Error xPosBlob outside the area rectangle" << endl;
+	//}
 }
 
 //----------------------------------------------------------------
@@ -331,6 +331,8 @@ void ControllerReconition::sendOSCBlobData(){
 			m.setAddress("/GameBlob2");
 			m.addFloatArg(xPosBlobFloatOsc);
 			m.addFloatArg(yPosBlobFloatOsc);
+
+			//cout << "Sending OSC /GameBlob2 xPosBlobFloatOsc = " << xPosBlobFloatOsc << endl;
 
 			// sending float to be able to make more actions filtering in the client.
 			//Like Intenisty of the action
