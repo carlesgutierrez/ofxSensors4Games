@@ -294,39 +294,64 @@ void ControllerReconition::udpateRecognitionBlobAction(){
 //-----------------------------------------
 void ControllerReconition::sendOSCBlobData(){
 	
-	if(bSendOsc_fMiddleX_fMinY_fUP_fDOWN){
-	
-		ofxOscMessage m;
-		m.clear();
-		m.setAddress("/GameBlob");
-		m.addFloatArg(xPosBlobFloatOsc);
-		m.addFloatArg(yPosBlobFloatOsc);
-	
-		// sending float to be able to make more actions filtering in the client.
-		//Like Intenisty of the action
-		m.addFloatArg(fUpActionBlob_OSC);
-		m.addFloatArg(fDownActionBlob_OSC);
-	
-		sender.sendMessage(m, false);
+	if (idController == 1) {
+
+		if (bSendOsc_fMiddleX_fMinY_fUP_fDOWN) {
+
+			ofxOscMessage m;
+			m.clear();
+			m.setAddress("/GameBlob");
+			m.addFloatArg(xPosBlobFloatOsc);
+			m.addFloatArg(yPosBlobFloatOsc);
+
+			// sending float to be able to make more actions filtering in the client.
+			//Like Intenisty of the action
+			m.addFloatArg(fUpActionBlob_OSC);
+			m.addFloatArg(fDownActionBlob_OSC);
+
+			sender.sendMessage(m, false);
+		}
+
+		if (bSendUDP_fMiddleX_fMinY_fUP_fDOWN) {
+
+			string message = "/GameBlob ffff ";
+			message = message + ofToString(xPosBlobFloatOsc, 2) + " " + ofToString(yPosBlobFloatOsc, 2) + " " + ofToString(fUpActionBlob_OSC, 2) + " " + ofToString(fDownActionBlob_OSC, 2);
+			udpConnection.Send(message.c_str(), message.length());
+
+			//cout << "message UDP = " << message << endl;
+			//cout << "UPD properties GetTimeoutSend = " << udpConnection.GetTimeoutSend();
+
+		}
 	}
-	
-	if(bSendUDP_fMiddleX_fMinY_fUP_fDOWN){
-		
-		string message = "/GameBlob ffff ";
-		message = message + ofToString(xPosBlobFloatOsc,2) + " " + ofToString(yPosBlobFloatOsc,2) + " " + ofToString(fUpActionBlob_OSC,2) + " " + ofToString(fDownActionBlob_OSC,2);
-		udpConnection.Send(message.c_str(),message.length());
-		
-		//cout << "message UDP = " << message << endl;
-		//cout << "UPD properties GetTimeoutSend = " << udpConnection.GetTimeoutSend();
-	
+	else {
+		if (bSendOsc_fMiddleX_fMinY_fUP_fDOWN) {
+
+			ofxOscMessage m;
+			m.clear();
+			m.setAddress("/GameBlob2");
+			m.addFloatArg(xPosBlobFloatOsc);
+			m.addFloatArg(yPosBlobFloatOsc);
+
+			// sending float to be able to make more actions filtering in the client.
+			//Like Intenisty of the action
+			m.addFloatArg(fUpActionBlob_OSC);
+			m.addFloatArg(fDownActionBlob_OSC);
+
+			sender.sendMessage(m, false);
+		}
+
+		if (bSendUDP_fMiddleX_fMinY_fUP_fDOWN) {
+
+			string message = "/GameBlob2 ffff ";
+			message = message + ofToString(xPosBlobFloatOsc, 2) + " " + ofToString(yPosBlobFloatOsc, 2) + " " + ofToString(fUpActionBlob_OSC, 2) + " " + ofToString(fDownActionBlob_OSC, 2);
+			udpConnection.Send(message.c_str(), message.length());
+
+			//cout << "message UDP = " << message << endl;
+			//cout << "UPD properties GetTimeoutSend = " << udpConnection.GetTimeoutSend();
+
+		}
 	}
-	//TODO send here other data type
-	//for(areas)
-	//if(bSendOsc_fMiddleX_fMinY_fUP_fDOWN_Area1)
-	//if(bSendOsc_fMiddleX_fMinY_fUP_fDOWN_Area2)
-	//...
-	//if(bSendOsc_Recognized_MoveMent1)
-	//..
+
 	
 }
 
