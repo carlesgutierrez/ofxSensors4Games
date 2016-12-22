@@ -364,10 +364,11 @@ public:
 				bresetBackground = true;
 			}
 
+			string learningCameraTime = "Learning Time[" + ofToString(idSensorCV, 0) + "]";
 			if (bLearnBackground) {
 				ImGui::SameLine();
 				ImGui::PushItemWidth(100);
-				ImGui::SliderFloat("Learning Time", &learningTime, 0, 255);
+				ImGui::SliderFloat(learningCameraTime.c_str(), &learningTime, 0, 255);
 				ImGui::PopItemWidth();
 			}
 
