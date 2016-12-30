@@ -52,6 +52,7 @@ public:
 	void drawGui_ResumedBlob();
 	bool bSendOsc_fMiddleX_fMinY_fUP_fDOWN = false;
 	bool bresumeBlob_inverX = true;
+	bool bresumeBlob_inverY = false;
 	//bool bresumeBlob_maxX = true;
 	//bool bresumeBlob_minX = false;
 	//bool bresumeBlob_minY = true;

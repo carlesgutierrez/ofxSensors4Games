@@ -192,24 +192,23 @@ void ControllerReconition::calcMainBlobLocation(ofRectangle _rectAreaPlayer){
 	//Find the relative position indide the Rectangle
 	//and save it inside the OSC/UPD vars ready to send out
 	float insideRectPosX = xPosBlob - _rectAreaPlayer.x;
-	float insideRectPosY = _rectAreaPlayer.y - yPosBlob;
+	float insideRectPosY = yPosBlob - _rectAreaPlayer.y;
 
-	//cout << "_rectAreaPlayer.x = " << _rectAreaPlayer.x << endl;
-	//cout << "xPosBlob = " << xPosBlob << endl;
-	//cout << " xPosBlob - _rectAreaPlayer.x = insideRectPosX = " << insideRectPosX << endl;
+	//cout << "_rectAreaPlayer.y = " << _rectAreaPlayer.y << endl;
+	//cout << "yPosBlob = " << xPosBlob << endl;
+	//cout << " _rectAreaPlayer.y - yPosBlob = insideRectPosY = " << insideRectPosY << endl;
 
-	//if (_rectAreaPlayer.inside(xPosBlob, yPosBlob)) {
-		xPosBlobFloatOsc = ofMap(insideRectPosX, 0, _rectAreaPlayer.width, 0, 1, true);
-		yPosBlobFloatOsc = ofMap(insideRectPosY, 0, _rectAreaPlayer.height, 0, 1, true);
-		if (bresumeBlob_inverX) {
-			xPosBlobFloatOsc = 1 - xPosBlobFloatOsc;
-		}
-	//}
-	//else {
-		//xPosBlobFloatOsc = 0.5;
-		//yPosBlobFloatOsc = 0.5;
-	//	cout << "Error xPosBlob outside the area rectangle" << endl;
-	//}
+
+	xPosBlobFloatOsc = ofMap(insideRectPosX, 0, _rectAreaPlayer.width, 0, 1, true);
+	yPosBlobFloatOsc = ofMap(insideRectPosY, 0, _rectAreaPlayer.height, 0, 1, true);
+	if (bresumeBlob_inverX) {
+		xPosBlobFloatOsc = 1 - xPosBlobFloatOsc;
+	}
+	if (bresumeBlob_inverY) {
+		yPosBlobFloatOsc = 1 - yPosBlobFloatOsc;
+	}
+
+
 }
 
 //----------------------------------------------------------------
@@ -459,6 +458,7 @@ void ControllerReconition::drawGui_ResumedBlob(){
 		if(bSendUDP_fMiddleX_fMinY_fUP_fDOWN){
 			
 			ImGui::Checkbox("OSC Invert X", &bresumeBlob_inverX);
+			ImGui::Checkbox("OSC Invert Y", &bresumeBlob_inverY);
 			
 			ImGui::PushItemWidth(100);
 			ImGui::SliderFloat("(f0)##fMiddleX_fMinY_fUP_fDOWN", &xPosBlobFloatOsc, 0, 1);ImGui::SameLine();
@@ -480,6 +480,7 @@ void ControllerReconition::drawGui_ResumedBlob(){
 		if(bSendOsc_fMiddleX_fMinY_fUP_fDOWN){
 			
 			ImGui::Checkbox("Send Inverted X", &bresumeBlob_inverX);
+			ImGui::Checkbox("Send Inverted Y", &bresumeBlob_inverY);
 			
 			ImGui::PushItemWidth(100);
 			ImGui::SliderFloat("(f0)##fMiddleX_fMinY_fUP_fDOWN", &xPosBlobFloatOsc, 0, 1);ImGui::SameLine();
