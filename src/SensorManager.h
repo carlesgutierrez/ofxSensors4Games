@@ -16,6 +16,8 @@
 #include "SensorComputerVision.h"
 #define IM_ARRAYSIZE(_ARR)  ((int)(sizeof(_ARR)/sizeof(*_ARR)))
 
+#include "ofxJSON.h"
+
 //Uncomment this to get full access to DIRECTSHOW VIDEO INPUT library in OF
 //#define USE_FULL_DIRECTSHOW_ACCESS
 
@@ -59,6 +61,7 @@ public:
 	void setup(sensorType _sensorType, sensorMode _sensorMode);
 	void update();
 	void draw();
+	void drawAreaRectangle(ofRectangle _areaRect, int idSensorId);
 	void exit();
 	void keyReleased(ofKeyEventArgs & args);
 	void keyPressed(ofKeyEventArgs & args);
@@ -67,14 +70,14 @@ public:
 	int getHeight();
 	
 	void drawGuiSensorOptions(bool* opened);
-	//-----------------------------------------
 
-	void drawGuiSensorArea(int idArea);
-	
+	//-----------------------------------------
 	//Modes Set/Get setup
 	sensorType getSensorType();
 	void setSensorType(sensorType _type);
 	sensorMode getSensorMode();
+	ofxJSONElement getParams();
+	bool setParams(ofxJSONElement jsonFile);
 	void setSensorMode(sensorMode _mode);
 	bool isNewSensorFrame();
 

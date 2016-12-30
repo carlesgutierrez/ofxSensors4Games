@@ -12,7 +12,7 @@
 #include "ofxImGui.h"
 #include "statsRecorder.h"
 #include "SensorManager.h"
-
+#include "ofxJSON.h"
 
 
 //Status Regonition Controller Type
@@ -45,9 +45,7 @@ public:
 
 	//////////////////////////////
 	//RESUMED BLOB
-	//
 	void drawResumedBlob();
-	void drawPolylinesAreas();
 	void drawGui_Controller();
 	void drawGui_OSC_configurable();
 	bool isController_ResumedBlob = true;
@@ -73,21 +71,12 @@ public:
 	//Main Controller vars copied from Sensor to avoid very long names in code (multiple calls)
 	int sensorWidth, sensorHeight;
 	float sensorScale;
-	//std::vector<ofPolyline>  myUpdatedBlobs;
 	int numBlobsDetected = -1;
-	
 	int xPosBlob = -1;
 	int yPosBlob = -1;
 	int wBlob = -1;
 	int hBlob = -1;
-	////////////////////////////////
-	//Polyline areas recognition
-	/*
-	void updateRecognitionBlobsInsideAreas();
-	void updateQuadAreasRecognition();
-	*/
-	vector<ofPolyline> polylines;
-	int polylinesIndex = -1;
+	ofRectangle rectAreaPlayer;
 	
 	//Patch to save the right Working area position // TODO get this data from sourceSensor // Wait until is being done properly in the GUI
 	ofPoint imageRecognitionPosition;
@@ -141,6 +130,10 @@ public:
 	bool bResetHostIp = false;
 	int PORT = 12345;
 	string HOST = "127.0.0.1";//MLP: "192.168.2.254";
-	
+
+	//////////////////////////////////////////
+	//Json save params
+	ofxJSONElement getParams();
+	bool setParams(ofxJSONElement myJson);
 	
 };
