@@ -291,7 +291,8 @@ void SensorComputerVision::drawGui() {
 		string textBlobsFound = "#blobs = " + ofToString(contourFinder->size(), 0);
 		ImGui::Text(textBlobsFound.c_str());
 
-		ImGui::Checkbox("Do Learning Background", &bLearnBackground);
+		string doLearningBackgroundText = "Do Learning Background##" + ofToString(idSensorCV, 0);
+		ImGui::Checkbox(doLearningBackgroundText.c_str(), &bLearnBackground);
 
 		if (ImGui::Button("Reset Background")) {
 			bresetBackground = true;
@@ -306,22 +307,27 @@ void SensorComputerVision::drawGui() {
 			ImGui::PopItemWidth();
 		}
 
-		ImGui::Checkbox("Background Substraction", &bSimpleBackgroundSubstraction);
+		string BackgroundSubstractionText = "Background Substraction##" + ofToString(idSensorCV, 0);
+		ImGui::Checkbox(BackgroundSubstractionText.c_str(), &bSimpleBackgroundSubstraction);
 
 		if (bSimpleBackgroundSubstraction) {
 			ImGui::SameLine();
 			ImGui::Checkbox("Auto Threshold", &bAutoThreshold);
 		}
 
-		ImGui::Checkbox("ContoursFinder Options", &bContourFinderThreshold);
-		ImGui::Checkbox("Invert Threshold ContoursFinder", &bInvertContourFinderThreshold);
+		string contoursFinderOptionsText = "ContoursFinder Options##" + ofToString(idSensorCV, 0);
+		ImGui::Checkbox(contoursFinderOptionsText.c_str(), &bContourFinderThreshold);
+		string invertThresholdContoursFinderText = "Invert Threshold ContoursFinder##" + ofToString(idSensorCV, 0);
+		ImGui::Checkbox(invertThresholdContoursFinderText.c_str(), &bInvertContourFinderThreshold);
 
 		if (bContourFinderThreshold) {
 
-			ImGui::Checkbox("ContoursFinder Color Target", &bContourFinderColorThreshold);
+			string contoursFinderColorTargetText = "ContoursFinder Color Target##" + ofToString(idSensorCV, 0);
+			ImGui::Checkbox(contoursFinderColorTargetText.c_str(), &bContourFinderColorThreshold);
 			if (bContourFinderColorThreshold) {
 				ImVec4 colorTargetVec = colorTargetContourFinder;
-				ImGui::ColorEdit3("Color Target ContourFinder##ContourFinder", (float*)& colorTargetVec);
+				string colorTargetContourFinderText = "ContoursFinder Color Target##" + ofToString(idSensorCV, 0);
+				ImGui::ColorEdit3(colorTargetContourFinderText.c_str(), (float*)& colorTargetVec);
 
 				if (bContourFinderColorThreshold) {
 					colorTargetContourFinder.r = colorTargetVec.x * 255;
@@ -332,7 +338,8 @@ void SensorComputerVision::drawGui() {
 
 		}
 
-		ImGui::SliderFloat("Threshold Value", &thresholdValue, 0, 255);
+		string thresholdValueText = "Threshold Value##" + ofToString(idSensorCV, 0);
+		ImGui::SliderFloat(thresholdValueText.c_str(), &thresholdValue, 0, 255);
 
 		/*
 		ImGui::SliderInt("accuracyMaxSizeBlob", &maxBlobsAccuracyMaxValue, 0, cameraWidth *cameraHeight*sensorDrawScale);
