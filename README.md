@@ -1,4 +1,4 @@
-ofxSensors4Games
+ofxSensors4GamesofxSensors4Games
 ============
 
 ![ofxSensors4Games](header.png)
@@ -6,51 +6,28 @@ ofxSensors4Games
 Introduction
 ------------
 
-**!!! WARNING:** this addon uses oF v0.9.3 that is still in development.
+This addon provides a remote interface that aims to control games that can be controlled using simple button actions. 
+This it's possible by using external sensors such for example an Infrared Camera, then sending detected actions to external games by OSC / UPD.
 
-This addon provides a interface to control games from sensors ( Kienct, Camera, others...) 
+Infrared cameras are cheap and practical to use. But There are other powerfull sensors that can be also used. 
+For now we keep the posibility to add external sensors here and send data filtered to your game or App.  
 
+Internal Sensors allowed: 
+* Camera and Videoplayer for testing.
+* Kinect ( require specific installation ). In actual version has been disabled.
+* RadarGlxRss3 
+* LaserRange Sensor: Sick LMS1XX. 
+
+This addon is using the last v0.9.8 release but should work with others 0.9.x Of versions.
 
 
 Installation
 ------------
 
-Just copy the `ofxSensors4Games` folder into your `openFrameworks/addons/` folder.
+Copy the `ofxSensors4Games` folder into your `openFrameworks/addons/` folder.
+Use included Examples for testing: In ofApp.cpp at setup choose your sensor as realTime or Simulation mode.
 
-Usage
------
-
-
-Examples
---------
-
-myControllerOscServer sends different desired and selected data
-
-//ResumedBlob
-osc:/GameBlob
-*	- (float) x pos 	[0..1]
-*	- (float) y pos 	[0..1]
-*	- (float) UP mov 	[0..1]
-*	- (float) DOWN mov	[0..1]
-* (TODO)	- (int) Poligon Points	[0..1] //For now just 4 ( Quad )
-* (TODO)	- (float) Quad Area x0	[0..1]
-* (TODO)	- (float) Quad Area x1	[0..1]
-* (TODO)	- (float) Quad Area x2	[0..1]
-* (TODO)	- (float) Quad Area x3	[0..1]
-
-//Tracking Blobs (WIP)
-osc:/TrackingBlobs
-*	- (int) id
-*	- (float) pos
-*	- (float) vel
-*	- (int) detected action
-* (TODO)	- (int) Poligon Points	[0..1] //For now just 4 ( Quad )
-* (TODO)	- (float) Quad Area x0	[0..1]
-* (TODO)	- (float) Quad Area x1	[0..1]
-* (TODO)	- (float) Quad Area x2	[0..1]
-* (TODO)	- (float) Quad Area x3	[0..1]
-
-
+	
 Dependencies
 ------------
 Externals:
@@ -60,14 +37,50 @@ Internals:
 * ofxNetwork
 * ofxOsc
 * ofxOpencv
-* ofxKinect add this manually. !!! README  !!! ofxkinect README (usb libs install) 
+* //ofxKinect add this manually. !!! README  !!! ofxkinect README (usb libs install) 
 
 
 Compatibility
 ------------
-This addon uses oF v0.9.3 (still in development in OSX) 
+
+Tested with OF 0.9.x on
+
+	Ubuntu (Not tested)
+    Mac OS 10.11, Xcode 7 (Not tested)
+    Windows 7, QTcreator (Not tested)
+    Windows 7/10, Visual Studio 2015
+
+For dedicated camera uses. It's important to have full control of sensor. And  Windows drivers allow auto White Balance and Auto Exposition are required to allow a precise camera control.
+In linux or mac, we may use firewire or similar cameras that allow such kind of manual control. 
+
+Usage
+-----
+
+For now we can configure 2 different and selectables  areas.
+
+osc:/GameBlob
+*	- (float) x pos 	[0..1]
+*	- (float) y pos 	[0..1]
+*	- (float) UP mov 	[0..1]
+*	- (float) DOWN mov	[0..1]
+* (TODO)	
+* (TODO)	
+* (TODO)	
+* (TODO)	
 
 
+osc:/GameBlob2
+*	- (float) x pos 	[0..1]
+*	- (float) y pos 	[0..1]
+*	- (float) UP mov 	[0..1]
+*	- (float) DOWN mov	[0..1]
+* (TODO)	
+* (TODO)	
+* (TODO)	
+* (TODO)	
+
+
+ 
 <!-- TODO 
 
 -->
