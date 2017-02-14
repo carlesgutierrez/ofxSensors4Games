@@ -136,8 +136,6 @@ bool ofxSensors4Games::saveAllParams() {
 
 	allParametersGui.clear();
 
-	
-
 	ofxJSONElement paramsRecognition1 = myControllerRecognition1.getParams();
 	ofxJSONElement paramsRecognition2 = myControllerRecognition2.getParams();
 	ofxJSONElement paramsSensor = SensorManager::getInstance()->getParams();

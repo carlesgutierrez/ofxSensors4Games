@@ -60,23 +60,23 @@ ofxJSONElement ControllerReconition::getParams()
 
 	if (idController == 1) {
 		jsonParams["idController1"]["learningTime"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.learningTime);
-		jsonParams["idController1"]["thresholdValue"], ofToString(SensorManager::getInstance()->computerVisionSensor1.thresholdValue);
-		jsonParams["idController1"]["bSimpleBackgroundSubstraction"], ofToString(SensorManager::getInstance()->computerVisionSensor1.bSimpleBackgroundSubstraction);
-		jsonParams["idController1"]["bLearnBackground"], ofToString(SensorManager::getInstance()->computerVisionSensor1.bLearnBackground);
-		jsonParams["idController1"]["bAutoThreshold"], ofToString(SensorManager::getInstance()->computerVisionSensor1.bAutoThreshold);
-		jsonParams["idController1"]["thresholdValue"], ofToString(SensorManager::getInstance()->computerVisionSensor1.thresholdValue);
-		jsonParams["idController1"]["bContourFinderThreshold"], ofToString(SensorManager::getInstance()->computerVisionSensor1.bContourFinderThreshold);
-		jsonParams["idController1"]["bContourFinderColorThreshold"], ofToString(SensorManager::getInstance()->computerVisionSensor1.bContourFinderColorThreshold);
+		jsonParams["idController1"]["thresholdValue"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.thresholdValue);
+		jsonParams["idController1"]["bSimpleBackgroundSubstraction"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.bSimpleBackgroundSubstraction);
+		jsonParams["idController1"]["bLearnBackground"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.bLearnBackground);
+		jsonParams["idController1"]["bAutoThreshold"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.bAutoThreshold);
+		jsonParams["idController1"]["thresholdValue"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.thresholdValue);
+		jsonParams["idController1"]["bContourFinderThreshold"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.bContourFinderThreshold);
+		jsonParams["idController1"]["bContourFinderColorThreshold"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.bContourFinderColorThreshold);
 	}
-	else if(idController == 1) {
+	else if(idController == 2) {
 		jsonParams["idController2"]["learningTime"] = ofToString(SensorManager::getInstance()->computerVisionSensor2.learningTime);
-		jsonParams["idController2"]["thresholdValue"], ofToString(SensorManager::getInstance()->computerVisionSensor2.thresholdValue);
-		jsonParams["idController2"]["bSimpleBackgroundSubstraction"], ofToString(SensorManager::getInstance()->computerVisionSensor2.bSimpleBackgroundSubstraction);
-		jsonParams["idController2"]["bLearnBackground"], ofToString(SensorManager::getInstance()->computerVisionSensor2.bLearnBackground);
-		jsonParams["idController2"]["bAutoThreshold"], ofToString(SensorManager::getInstance()->computerVisionSensor2.bAutoThreshold);
-		jsonParams["idController2"]["thresholdValue"], ofToString(SensorManager::getInstance()->computerVisionSensor2.thresholdValue);
-		jsonParams["idController2"]["bContourFinderThreshold"], ofToString(SensorManager::getInstance()->computerVisionSensor2.bContourFinderThreshold);
-		jsonParams["idController2"]["bContourFinderColorThreshold"], ofToString(SensorManager::getInstance()->computerVisionSensor2.bContourFinderColorThreshold);
+		jsonParams["idController2"]["thresholdValue"] = ofToString(SensorManager::getInstance()->computerVisionSensor2.thresholdValue);
+		jsonParams["idController2"]["bSimpleBackgroundSubstraction"] = ofToString(SensorManager::getInstance()->computerVisionSensor2.bSimpleBackgroundSubstraction);
+		jsonParams["idController2"]["bLearnBackground"] = ofToString(SensorManager::getInstance()->computerVisionSensor2.bLearnBackground);
+		jsonParams["idController2"]["bAutoThreshold"] = ofToString(SensorManager::getInstance()->computerVisionSensor2.bAutoThreshold);
+		jsonParams["idController2"]["thresholdValue"] = ofToString(SensorManager::getInstance()->computerVisionSensor2.thresholdValue);
+		jsonParams["idController2"]["bContourFinderThreshold"] = ofToString(SensorManager::getInstance()->computerVisionSensor2.bContourFinderThreshold);
+		jsonParams["idController2"]["bContourFinderColorThreshold"] = ofToString(SensorManager::getInstance()->computerVisionSensor2.bContourFinderColorThreshold);
 
 	}
 	else cout << "Error Saving idController not recognized" << endl;
