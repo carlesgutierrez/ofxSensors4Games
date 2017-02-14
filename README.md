@@ -32,6 +32,8 @@ Dependencies
 ------------
 Externals:
 * ofxImgui (https://github.com/jvcleave/ofxImGui)
+* ofxJSON (https://github.com/jeffcrouse/ofxJSON)
+* ofxCv (https://github.com/kylemcdonald/ofxCv)
 
 Internals:
 * ofxNetwork

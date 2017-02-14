@@ -258,10 +258,10 @@ void SensorManager::applyMaskToImgVideoCam(ofRectangle _rectArea, ofImage & imag
 void SensorManager::updateSourceImageRaw(ofRectangle _rectArea, ofImage &image2Update) {
 	//get Pixels from sensor ( VideoPlayer or VideoCamera )
 	if (modeSensor == simulationMode) {
-		image2Update.setFromPixels(videoPlayerCam.getPixels(), videoPlayerCam.getWidth(), videoPlayerCam.getHeight(), OF_IMAGE_COLOR);
+		image2Update.setFromPixels(videoPlayerCam.getPixelsRef().getPixels(), videoPlayerCam.getWidth(), videoPlayerCam.getHeight(), OF_IMAGE_COLOR);
 	}
 	else if (modeSensor == realTimeMode) {
-		image2Update.setFromPixels(cam.getPixels(), videoPlayerCam.getWidth(), videoPlayerCam.getHeight(), OF_IMAGE_COLOR);
+		image2Update.setFromPixels(cam.getPixelsRef().getPixels(), videoPlayerCam.getWidth(), videoPlayerCam.getHeight(), OF_IMAGE_COLOR);
 	}
 
 	image2Update.update();
@@ -743,11 +743,11 @@ bool SensorManager::setupCameraSensor(){
 		}
 		else {
 			//second try
-			cout << "second try" << endl;
-			shared_ptr<ofDirectShowGrabber> auxGrabber = shared_ptr <OF_VID_GRABBER_TYPE>(new OF_VID_GRABBER_TYPE);
-			auxGrabber->VI.setupDevice(selectedCameraIndex, VI_USB);
-			cam.setGrabber(auxGrabber);
-			cam.setup(640, 480);
+			//cout << "second try" << endl;
+			//shared_ptr<ofDirectShowGrabber> auxGrabber = shared_ptr <OF_VID_GRABBER_TYPE>(new OF_VID_GRABBER_TYPE);
+			//auxGrabber->VI.setupDevice(selectedCameraIndex, VI_USB);
+			//cam.setGrabber(auxGrabber);
+			//cam.setup(640, 480);
 		}
 		
 	}else if(modeSensor == simulationMode){

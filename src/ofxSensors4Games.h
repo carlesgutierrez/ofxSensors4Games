@@ -50,7 +50,7 @@ public:
 	ControllerReconition myControllerRecognition2;
 	
 	//Gui interaction
-	ofxImGui gui;
+	ofxImGui::Gui gui;
 
 	//JSon Save Load all params in one
 	ofxJSONElement allParametersGui;

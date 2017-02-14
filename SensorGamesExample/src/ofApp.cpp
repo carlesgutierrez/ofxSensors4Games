@@ -3,7 +3,7 @@
 //--------------------------------------------------------------
 void ofApp::setup(){
 	ofSetFrameRate(60);
-	mySensorController.setup(cameraSensor, simulationMode, MaxMinsAllBlob);  //cameraSensor , kinectSensor// realTimeMode, simulationMode
+	mySensorController.setup(cameraSensor, realTimeMode, MaxMinsAllBlob);  //cameraSensor , kinectSensor// realTimeMode, simulationMode
 }
 
 //--------------------------------------------------------------

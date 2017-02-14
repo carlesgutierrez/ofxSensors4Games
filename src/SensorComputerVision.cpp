@@ -110,7 +110,7 @@ void SensorComputerVision::mainComputerVision(ofImage _image2Compute) {
 
 		   //Update Camera colors
 
-		computerVisionImage.setFromPixels(_image2Compute.getPixels(), cameraWidth, cameraHeight, OF_IMAGE_COLOR);
+		computerVisionImage.setFromPixels(_image2Compute.getPixelsRef().getPixels(), cameraWidth, cameraHeight, OF_IMAGE_COLOR);
 
 		computerVisionImage.update();
 
