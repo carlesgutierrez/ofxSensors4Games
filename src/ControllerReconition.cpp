@@ -90,29 +90,19 @@ bool ControllerReconition::setParams(ofxJSONElement jsonFile)
 {
 	bool bLoaded = true;
 
+	cout << "traying to get data from ControllerRecognition = " << ofToString(idController, 2) << endl;
+	cout << "Data JSon preview = " << jsonFile << endl;
 
-	if (idController == 1) {
+	SensorManager::getInstance()->computerVisionSensor1.learningTime = ofToFloat(jsonFile["ControllerReconition"][ofToString(idController, 2)]["learningTime"].asString());
+	SensorManager::getInstance()->computerVisionSensor1.thresholdValue = ofToFloat(jsonFile["ControllerReconition"][ofToString(idController, 2)]["thresholdValue"].asString());
+	SensorManager::getInstance()->computerVisionSensor1.bSimpleBackgroundSubstraction = ofToFloat(jsonFile["ControllerReconition"][ofToString(idController, 2)]["bSimpleBackgroundSubstraction"].asString());
+	SensorManager::getInstance()->computerVisionSensor1.bLearnBackground = ofToFloat(jsonFile["ControllerReconition"][ofToString(idController, 2)]["bLearnBackground"].asString());
+	SensorManager::getInstance()->computerVisionSensor1.bAutoThreshold = ofToFloat(jsonFile["ControllerReconition"][ofToString(idController, 2)]["bAutoThreshold"].asString());
+	SensorManager::getInstance()->computerVisionSensor1.thresholdValue = ofToFloat(jsonFile["ControllerReconition"][ofToString(idController, 2)]["thresholdValue"].asString());
+	SensorManager::getInstance()->computerVisionSensor1.bContourFinderThreshold = ofToFloat(jsonFile["ControllerReconition"][ofToString(idController, 2)]["bContourFinderThreshold"].asString());
+	SensorManager::getInstance()->computerVisionSensor1.bContourFinderColorThreshold = ofToFloat(jsonFile["ControllerReconition"][ofToString(idController, 2)]["bContourFinderColorThreshold"].asString());
 
-		SensorManager::getInstance()->computerVisionSensor1.learningTime = ofToFloat(jsonFile["idController1"]["learningTime"].asString());
-		SensorManager::getInstance()->computerVisionSensor1.thresholdValue = ofToFloat(jsonFile["idController1"]["thresholdValue"].asString());
-		SensorManager::getInstance()->computerVisionSensor1.bSimpleBackgroundSubstraction = ofToFloat(jsonFile["idController1"]["bSimpleBackgroundSubstraction"].asString());
-		SensorManager::getInstance()->computerVisionSensor1.bLearnBackground = ofToFloat(jsonFile["idController1"]["bLearnBackground"].asString());
-		SensorManager::getInstance()->computerVisionSensor1.bAutoThreshold = ofToFloat(jsonFile["idController1"]["bAutoThreshold"].asString());
-		SensorManager::getInstance()->computerVisionSensor1.thresholdValue = ofToFloat(jsonFile["idController1"]["thresholdValue"].asString());
-		SensorManager::getInstance()->computerVisionSensor1.bContourFinderThreshold = ofToFloat(jsonFile["idController1"]["bContourFinderThreshold"].asString());
-		SensorManager::getInstance()->computerVisionSensor1.bContourFinderColorThreshold = ofToFloat(jsonFile["idController1"]["bContourFinderColorThreshold"].asString());
-	}
-	else if (idController == 2) {
-		SensorManager::getInstance()->computerVisionSensor2.learningTime = ofToFloat(jsonFile["idController2"]["learningTime"].asString());
-		SensorManager::getInstance()->computerVisionSensor2.thresholdValue = ofToFloat(jsonFile["idController2"]["thresholdValue"].asString());
-		SensorManager::getInstance()->computerVisionSensor2.bSimpleBackgroundSubstraction = ofToFloat(jsonFile["idController2"]["bSimpleBackgroundSubstraction"].asString());
-		SensorManager::getInstance()->computerVisionSensor2.bLearnBackground = ofToFloat(jsonFile["idController2"]["bLearnBackground"].asString());
-		SensorManager::getInstance()->computerVisionSensor2.bAutoThreshold = ofToFloat(jsonFile["idController2"]["bAutoThreshold"].asString());
-		SensorManager::getInstance()->computerVisionSensor2.thresholdValue = ofToFloat(jsonFile["idController2"]["thresholdValue"].asString());
-		SensorManager::getInstance()->computerVisionSensor2.bContourFinderThreshold = ofToFloat(jsonFile["idController2"]["bContourFinderThreshold"].asString());
-		SensorManager::getInstance()->computerVisionSensor2.bContourFinderColorThreshold = ofToFloat(jsonFile["idController2"]["bContourFinderColorThreshold"].asString());
-	}
-	else cout << "Error setting idController not recognized" << endl;
+	
 
 	return bLoaded;
 }
@@ -329,70 +319,6 @@ void ControllerReconition::sendOSCBlobData(){
 	else if (idController == 2) {
 		send_OSC_UPD_Data("GameBlob2");
 	}
-
-/*
-	//Decrepated 
-	if (idController == 1) {
-
-		if (bSendOsc_fMiddleX_fMinY_fUP_fDOWN) {
-
-			ofxOscMessage m;
-			m.clear();
-			m.setAddress("/GameBlob");
-			m.addFloatArg(xPosBlobFloatOsc);
-			m.addFloatArg(yPosBlobFloatOsc);
-
-			// sending float to be able to make more actions filtering in the client.
-			//Like Intenisty of the action
-			m.addFloatArg(fUpActionBlob_OSC);
-			m.addFloatArg(fDownActionBlob_OSC);
-
-			sender.sendMessage(m, false);
-		}
-
-		if (bSendUDP_fMiddleX_fMinY_fUP_fDOWN) {
-
-			string message = "/GameBlob ffff ";
-			message = message + ofToString(xPosBlobFloatOsc, 2) + " " + ofToString(yPosBlobFloatOsc, 2) + " " + ofToString(fUpActionBlob_OSC, 2) + " " + ofToString(fDownActionBlob_OSC, 2);
-			udpConnection.Send(message.c_str(), message.length());
-
-			//cout << "message UDP = " << message << endl;
-			//cout << "UPD properties GetTimeoutSend = " << udpConnection.GetTimeoutSend();
-
-		}
-	}
-	else {
-		if (bSendOsc_fMiddleX_fMinY_fUP_fDOWN) {
-
-			ofxOscMessage m;
-			m.clear();
-			m.setAddress("/GameBlob2");
-			m.addFloatArg(xPosBlobFloatOsc);
-			m.addFloatArg(yPosBlobFloatOsc);
-
-			//cout << "Sending OSC /GameBlob2 xPosBlobFloatOsc = " << xPosBlobFloatOsc << endl;
-
-			// sending float to be able to make more actions filtering in the client.
-			//Like Intenisty of the action
-			m.addFloatArg(fUpActionBlob_OSC);
-			m.addFloatArg(fDownActionBlob_OSC);
-
-			sender.sendMessage(m, false);
-		}
-
-		if (bSendUDP_fMiddleX_fMinY_fUP_fDOWN) {
-
-			string message = "/GameBlob2 ffff ";
-			message = message + ofToString(xPosBlobFloatOsc, 2) + " " + ofToString(yPosBlobFloatOsc, 2) + " " + ofToString(fUpActionBlob_OSC, 2) + " " + ofToString(fDownActionBlob_OSC, 2);
-			udpConnection.Send(message.c_str(), message.length());
-
-			//cout << "message UDP = " << message << endl;
-			//cout << "UPD properties GetTimeoutSend = " << udpConnection.GetTimeoutSend();
-
-		}
-	}
-	*/
-
 	
 }
 
