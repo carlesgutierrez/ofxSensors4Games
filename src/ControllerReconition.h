@@ -63,6 +63,8 @@ public:
 	
 	void calcMainBlobLocation(ofRectangle _rectAreaPlayer);
 	
+	void send_OSC_UPD_Data(string nameTag);
+
 	//////////////////////////////
 	//OSC
 	void sendOSCBlobData();

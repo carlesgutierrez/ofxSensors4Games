@@ -51,18 +51,14 @@ ofxJSONElement SensorManager::getParams()
 	ofxJSONElement jsonParams;
 	jsonParams.clear();
 
-	jsonParams["sensorParams"]["bArea1"] = ofToString(bArea1);
-	jsonParams["sensorParams"]["rectArea1X"] = ofToString(rectArea1.x);
-	jsonParams["sensorParams"]["rectArea1Y"] = ofToString(rectArea1.y);
-	jsonParams["sensorParams"]["rectArea1W"] = ofToString(rectArea1.width);
-	jsonParams["sensorParams"]["rectArea1H"] = ofToString(rectArea1.height);
-	
+	for (int i = 0; i < playerAreas.size(); i++) {
+		jsonParams["sensorParams"][ofToString(i+1,2)]["bAreaActive"] = ofToString(playerAreas[i].bAreaActive);
+		jsonParams["sensorParams"][ofToString(i+1,2)]["rectAreaX"] = ofToString(playerAreas[i].rectArea.x);
+		jsonParams["sensorParams"][ofToString(i+1,2)]["rectAreaY"] = ofToString(playerAreas[i].rectArea.y);
+		jsonParams["sensorParams"][ofToString(i+1,2)]["rectAreaW"] = ofToString(playerAreas[i].rectArea.width);
+		jsonParams["sensorParams"][ofToString(i+1,2)]["rectAreaH"] = ofToString(playerAreas[i].rectArea.height);
+	}
 
-	jsonParams["sensorParams"]["bArea2"] = ofToString(bArea2);
-	jsonParams["sensorParams"]["rectArea2X"] = ofToString(rectArea2.x);
-	jsonParams["sensorParams"]["rectArea2Y"] = ofToString(rectArea2.y);
-	jsonParams["sensorParams"]["rectArea2W"] = ofToString(rectArea2.width);
-	jsonParams["sensorParams"]["rectArea2H"] = ofToString(rectArea2.height);
 
 	return jsonParams;
 }
@@ -72,6 +68,7 @@ bool SensorManager::setParams(ofxJSONElement jsonFile)
 {
 	bool bLoaded = true;
 
+	/*/
 	bArea1 = ofToBool(jsonFile["sensorParams"]["bArea1"].asString());
 	rectArea1.x = ofToInt(jsonFile["sensorParams"]["rectArea1X"].asString());
 	rectArea1.y = ofToInt(jsonFile["sensorParams"]["rectArea1Y"].asString());
@@ -83,7 +80,7 @@ bool SensorManager::setParams(ofxJSONElement jsonFile)
 	rectArea2.y = ofToInt(jsonFile["sensorParams"]["rectArea2Y"].asString());
 	rectArea2.width = ofToInt(jsonFile["sensorParams"]["rectArea2W"].asString());
 	rectArea2.height = ofToInt(jsonFile["sensorParams"]["rectArea2H"].asString());
-	
+	*/
 	return bLoaded;
 }
 
@@ -132,7 +129,19 @@ void SensorManager::setup(sensorType _sensorType, sensorMode _sensorMode){
 	mySourcedSensorFbo.allocate(getWidth(), getHeight(), GL_RGB);
 	//sensorImage2.allocate(cam.getWidth(), cam.getHeight(), OF_IMAGE_COLOR);
 	//sourceImageRaw.allocate(cam.getWidth(), cam.getHeight(), OF_IMAGE_COLOR);
+
+	//setup default number of player areas
+	for (int i = 0; i < numPlayersAreas; i++) {
+		//Add Default playerAreas into vector 
+		PlayerArea auxPlayerArea;
+		auxPlayerArea.bAreaActive = true;
+		auxPlayerArea.rectArea.setWidth(sensorWidth);
+		auxPlayerArea.rectArea.setHeight(sensorHeight);
+		playerAreas.push_back(auxPlayerArea);
+	}
 	
+
+	//Mouse and Keyboard Events
 	ofRegisterKeyEvents(this);
 	
 }
@@ -193,33 +202,34 @@ void SensorManager::update(){
 			bNewSensorFrame = cam.isFrameNew();
 		}
 		
-		if (bArea1)computerVisionSensor1.udpateBackground();
-		if (bArea2)computerVisionSensor2.udpateBackground();
-		
-		if(bNewSensorFrame) {
+		if (bNewSensorFrame) {
+
+		//Diferent computer vision for All PlayerAreas
+			for (int i = 0; i < playerAreas.size(); i++) {
 			
-			if (bArea1) {
-				updateSourceImageRaw(rectArea1, sensorImage1);
-				computerVisionSensor1.mainComputerVision(sensorImage1);
+				if (playerAreas[i].bAreaActive) {
+					if (i == 0) {
+						computerVisionSensor1.udpateBackground();
+						updateSourceImageRaw(playerAreas[i].rectArea, sensorImage1);
+						computerVisionSensor1.mainComputerVision(sensorImage1);
+					}
+					else if (i == 1) {
+						computerVisionSensor2.udpateBackground();
+						updateSourceImageRaw(playerAreas[i].rectArea, sensorImage2);
+						computerVisionSensor2.mainComputerVision(sensorImage2);
+					}
+				}
+
 			}
-			
-			if (bArea2) {
-				/*WIP*/
-				updateSourceImageRaw(rectArea2, sensorImage2);
-				computerVisionSensor2.mainComputerVision(sensorImage2);
-			}
+
 		}
-		
 	}
 	else if (typeSensor == externalSickSensor){
-		
 		//This updates osc data that contains all Blobs
 		bNewSensorFrame = updateExternalSickSensor();
-
 	}
 	
-	
-	
+
 	//Some extra Operation at the end of sensor Dection ?
 	//use  isNewSensorFrame for Lattely actions in other parts of code
 	if(bNewSensorFrame){
@@ -351,21 +361,20 @@ void SensorManager::draw(){
 		//if (modeSensor == simulationMode && bArea1) computerVisionSensor1.computerVisionImage.draw(marginDraw, marginDraw, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
 		//if (modeSensor == simulationMode && bArea2) computerVisionSensor2.computerVisionImage.draw(marginDraw, marginDraw, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
 
+		for (int i = 0; i < playerAreas.size(); i++) {
 
-		if (bArea1) {
-			computerVisionSensor1.computerVisionImage.draw(marginDraw, marginDraw, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
-			computerVisionSensor1.draw(sensorDrawScale, marginDraw);
-		}
-		if (bArea2) {
-			//TODO draw this in a different place
-			computerVisionSensor2.computerVisionImage.draw(marginDraw, marginDraw + sensorHeight*sensorDrawScale, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
-			computerVisionSensor2.draw(sensorDrawScale, marginDraw + sensorHeight*sensorDrawScale);
-		}
+			if (playerAreas[i].bAreaActive) {
+				if (i == 0) {
+					computerVisionSensor1.computerVisionImage.draw(marginDraw, marginDraw + i*sensorHeight*sensorDrawScale, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
+					computerVisionSensor1.draw(sensorDrawScale, marginDraw + i*sensorHeight*sensorDrawScale);
+				}
+				else if (i == 1) {
+					computerVisionSensor2.computerVisionImage.draw(marginDraw, marginDraw + i*sensorHeight*sensorDrawScale, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
+					computerVisionSensor2.draw(sensorDrawScale, marginDraw + i*sensorHeight*sensorDrawScale);
+				}
+			}
 
-		
-	
-
-	
+		}	
 	}
 	else if(typeSensor == externalSickSensor){
 		
@@ -382,10 +391,13 @@ void SensorManager::draw(){
 
 	//last Draw if camera options for filtering image
 	if (typeSensor == cameraSensor) {
-		drawAreaRectangle(rectArea1, 1);
-		drawAreaRectangle(rectArea2, 2);
+		for (int i = 0; i < playerAreas.size(); i++) {
+			drawAreaRectangle(playerAreas[i].rectArea, i + 1);
+		}
 	}
 
+	//drawAreaRectangle(rectArea1, 1);
+	//drawAreaRectangle(rectArea2, 2);
 	
 }
 
@@ -558,37 +570,48 @@ void SensorManager::drawGuiSensorOptions(bool* opened){
 			}
 		}
 
-		
+		//Selectable Areas to Do Computer Vision separately. TODO : set this into modulable Array of playersAreas Array
+		ImGui::SliderInt("Num Player Areas", &numPlayersAreas, 0, 2);
+		if (playerAreas.size() != numPlayersAreas) {
+			if (playerAreas.size() < numPlayersAreas) {
+				//Add Default playerAreas into vector 
+				PlayerArea auxPlayerArea;
+				auxPlayerArea.bAreaActive = true;
+				auxPlayerArea.rectArea.setWidth(sensorWidth);
+				auxPlayerArea.rectArea.setHeight(sensorHeight);
 
-		if (ImGui::CollapsingHeader("Area Sensor 1")) {
-			ImGui::Checkbox("Active Area 1", &bArea1);
-			ImGui::PushItemWidth(100);
-			ImGui::SliderFloat("X Rect Sensor 1 ", &rectArea1.x, 0, getWidth());//TODO limit this until (getWidth() -rectArea1.width). Check how to do it dynamic slider ImGui
-			ImGui::SliderFloat("Y Rect Sensor 1 ", &rectArea1.y, 0, getHeight());
-			ImGui::SliderFloat("W Rect Sensor 1 ", &rectArea1.width, 0, getWidth());
-			ImGui::SliderFloat("H Rect Sensor 1 ", &rectArea1.height, 0, getHeight());
-
-			//ImGui::SliderFloat("X posDrawArea1 ", &posDrawArea1.x, 0, getWidth());
-			//ImGui::SliderFloat("Y posDrawArea1 ", &posDrawArea1.y, 0, getHeight());
-			ImGui::PopItemWidth();
+				playerAreas.push_back(auxPlayerArea);
+			}
+			else {
+				//TODO Remove last vector pos until get equal
+				playerAreas.pop_back();//Test
+			}
 		}
 
-		if (ImGui::CollapsingHeader("Area Sensor 2")) {
-			ImGui::Checkbox("Active Area 2", &bArea2);
-			ImGui::PushItemWidth(100);
-			ImGui::SliderFloat("X Rect Sensor 2 ", &rectArea2.x, 0, getWidth());
-			ImGui::SliderFloat("Y Rect Sensor 2 ", &rectArea2.y, 0, getHeight());
-			ImGui::SliderFloat("W Rect Sensor 2 ", &rectArea2.width, 0, getWidth());
-			ImGui::SliderFloat("H Rect Sensor 2 ", &rectArea2.height, 0, getHeight());
+		for (int i = 0; i < playerAreas.size(); i++) {
+			string textAreaSensor_collapsing = "Area " + ofToString(i+1, 0);
+			string textAreaSensor_bActive = "Active?##" + ofToString(i + 1, 0);
+			string textAreaSensor_x = "X##" + ofToString(i + 1, 2);
+			string textAreaSensor_y = "Y##" + ofToString(i + 1, 2);
+			string textAreaSensor_w = "W##" + ofToString(i + 1, 2);
+			string textAreaSensor_h = "H##" + ofToString(i + 1, 2);
 
-			//ImGui::SliderFloat("X posDrawArea2 ", &posDrawArea2.x, 0, getWidth());
-			//ImGui::SliderFloat("Y posDrawArea2 ", &posDrawArea2.y, 0, getHeight());
-			ImGui::PopItemWidth();
-		}
-		
+			if (ImGui::CollapsingHeader(textAreaSensor_collapsing.c_str())) {
+				ImGui::Checkbox(textAreaSensor_bActive.c_str(), &playerAreas[i].bAreaActive);
+				ImGui::PushItemWidth(100);
+				ImGui::SliderFloat(textAreaSensor_x.c_str(), &playerAreas[i].rectArea.x, 0, getWidth());//TODO? limit this until (getWidth() -rectArea1.width). Check how to do it dynamic slider ImGui
+				ImGui::SliderFloat(textAreaSensor_y.c_str(), &playerAreas[i].rectArea.y, 0, getHeight());
+				ImGui::SliderFloat(textAreaSensor_w.c_str(), &playerAreas[i].rectArea.width, 0, getWidth());
+				ImGui::SliderFloat(textAreaSensor_h.c_str(), &playerAreas[i].rectArea.height, 0, getHeight());
+				ImGui::PopItemWidth();
+			}
 
-		if(bArea1)computerVisionSensor1.drawGui();
-		if(bArea2)computerVisionSensor2.drawGui();
+			//TODO improve this manual mode
+			if (i == 0 && playerAreas[i].bAreaActive)computerVisionSensor1.drawGui();
+			if (i == 1 && playerAreas[i].bAreaActive)computerVisionSensor2.drawGui();
+		}		
+
+
 		
 	}
 	else if(typeSensor == externalSickSensor){
@@ -733,7 +756,11 @@ bool SensorManager::setupCameraSensor(){
 		cam.setDeviceID(selectedCameraIndex);
 		cam.setup(640, 480);
 
-		rectArea1.set(0, 0, cam.getWidth(), cam.getHeight());
+		//rectArea1.set(0, 0, cam.getWidth(), cam.getHeight());
+		//TODO load Json pre values
+		for (int i = 0; i < playerAreas.size(); i++) {
+			playerAreas[i].rectArea.set(0, 0, cam.getWidth(), cam.getHeight());
+		}
 
 		sensorWidth = cam.getWidth();
 		sensorHeight = cam.getHeight();

@@ -59,24 +59,25 @@ ofxJSONElement ControllerReconition::getParams()
 	jsonParams.clear();
 
 	if (idController == 1) {
-		jsonParams["idController1"]["learningTime"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.learningTime);
-		jsonParams["idController1"]["thresholdValue"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.thresholdValue);
-		jsonParams["idController1"]["bSimpleBackgroundSubstraction"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.bSimpleBackgroundSubstraction);
-		jsonParams["idController1"]["bLearnBackground"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.bLearnBackground);
-		jsonParams["idController1"]["bAutoThreshold"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.bAutoThreshold);
-		jsonParams["idController1"]["thresholdValue"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.thresholdValue);
-		jsonParams["idController1"]["bContourFinderThreshold"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.bContourFinderThreshold);
-		jsonParams["idController1"]["bContourFinderColorThreshold"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.bContourFinderColorThreshold);
+		jsonParams["ControllerReconition"][ofToString(idController, 2)]["learningTime"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.learningTime);
+		jsonParams["ControllerReconition"][ofToString(idController, 2)]["thresholdValue"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.thresholdValue);
+		jsonParams["ControllerReconition"][ofToString(idController, 2)]["bSimpleBackgroundSubstraction"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.bSimpleBackgroundSubstraction);
+		jsonParams["ControllerReconition"][ofToString(idController, 2)]["bLearnBackground"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.bLearnBackground);
+		jsonParams["ControllerReconition"][ofToString(idController, 2)]["bAutoThreshold"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.bAutoThreshold);
+		jsonParams["ControllerReconition"][ofToString(idController, 2)]["thresholdValue"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.thresholdValue);
+		jsonParams["ControllerReconition"][ofToString(idController, 2)]["bContourFinderThreshold"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.bContourFinderThreshold);
+		jsonParams["ControllerReconition"][ofToString(idController, 2)]["bContourFinderColorThreshold"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.bContourFinderColorThreshold);
+		//jsonParams["ControllerReconition"][ofToString(idController, 2)]["bContourFinderColorThreshold"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.bContourFinderColorThreshold);
 	}
 	else if(idController == 2) {
-		jsonParams["idController2"]["learningTime"] = ofToString(SensorManager::getInstance()->computerVisionSensor2.learningTime);
-		jsonParams["idController2"]["thresholdValue"] = ofToString(SensorManager::getInstance()->computerVisionSensor2.thresholdValue);
-		jsonParams["idController2"]["bSimpleBackgroundSubstraction"] = ofToString(SensorManager::getInstance()->computerVisionSensor2.bSimpleBackgroundSubstraction);
-		jsonParams["idController2"]["bLearnBackground"] = ofToString(SensorManager::getInstance()->computerVisionSensor2.bLearnBackground);
-		jsonParams["idController2"]["bAutoThreshold"] = ofToString(SensorManager::getInstance()->computerVisionSensor2.bAutoThreshold);
-		jsonParams["idController2"]["thresholdValue"] = ofToString(SensorManager::getInstance()->computerVisionSensor2.thresholdValue);
-		jsonParams["idController2"]["bContourFinderThreshold"] = ofToString(SensorManager::getInstance()->computerVisionSensor2.bContourFinderThreshold);
-		jsonParams["idController2"]["bContourFinderColorThreshold"] = ofToString(SensorManager::getInstance()->computerVisionSensor2.bContourFinderColorThreshold);
+		jsonParams["ControllerReconition"][ofToString(idController, 2)]["learningTime"] = ofToString(SensorManager::getInstance()->computerVisionSensor2.learningTime);
+		jsonParams["ControllerReconition"][ofToString(idController, 2)]["thresholdValue"] = ofToString(SensorManager::getInstance()->computerVisionSensor2.thresholdValue);
+		jsonParams["ControllerReconition"][ofToString(idController, 2)]["bSimpleBackgroundSubstraction"] = ofToString(SensorManager::getInstance()->computerVisionSensor2.bSimpleBackgroundSubstraction);
+		jsonParams["ControllerReconition"][ofToString(idController, 2)]["bLearnBackground"] = ofToString(SensorManager::getInstance()->computerVisionSensor2.bLearnBackground);
+		jsonParams["ControllerReconition"][ofToString(idController, 2)]["bAutoThreshold"] = ofToString(SensorManager::getInstance()->computerVisionSensor2.bAutoThreshold);
+		jsonParams["ControllerReconition"][ofToString(idController, 2)]["thresholdValue"] = ofToString(SensorManager::getInstance()->computerVisionSensor2.thresholdValue);
+		jsonParams["ControllerReconition"][ofToString(idController, 2)]["bContourFinderThreshold"] = ofToString(SensorManager::getInstance()->computerVisionSensor2.bContourFinderThreshold);
+		jsonParams["ControllerReconition"][ofToString(idController, 2)]["bContourFinderColorThreshold"] = ofToString(SensorManager::getInstance()->computerVisionSensor2.bContourFinderColorThreshold);
 
 	}
 	else cout << "Error Saving idController not recognized" << endl;
@@ -289,10 +290,48 @@ void ControllerReconition::udpateRecognitionBlobAction(){
 }
 
 
+//-----------------------------------------
+void ControllerReconition::send_OSC_UPD_Data(string nameTag) {
+	if (bSendOsc_fMiddleX_fMinY_fUP_fDOWN) {
+
+		ofxOscMessage m;
+		m.clear();
+		m.setAddress("/"+ nameTag);
+		m.addFloatArg(xPosBlobFloatOsc);
+		m.addFloatArg(yPosBlobFloatOsc);
+
+		// sending float to be able to make more actions filtering in the client.
+		//Like Intenisty of the action
+		m.addFloatArg(fUpActionBlob_OSC);
+		m.addFloatArg(fDownActionBlob_OSC);
+
+		sender.sendMessage(m, false);
+	}
+
+	if (bSendUDP_fMiddleX_fMinY_fUP_fDOWN) {
+
+		string message = "/"+nameTag+" ffff ";
+		message = message + ofToString(xPosBlobFloatOsc, 2) + " " + ofToString(yPosBlobFloatOsc, 2) + " " + ofToString(fUpActionBlob_OSC, 2) + " " + ofToString(fDownActionBlob_OSC, 2);
+		udpConnection.Send(message.c_str(), message.length());
+
+		//cout << "message UDP = " << message << endl;
+		//cout << "UPD properties GetTimeoutSend = " << udpConnection.GetTimeoutSend();
+
+	}
+}
 
 //-----------------------------------------
 void ControllerReconition::sendOSCBlobData(){
 	
+	if (idController == 1) {
+		send_OSC_UPD_Data("GameBlob");
+	}
+	else if (idController == 2) {
+		send_OSC_UPD_Data("GameBlob2");
+	}
+
+/*
+	//Decrepated 
 	if (idController == 1) {
 
 		if (bSendOsc_fMiddleX_fMinY_fUP_fDOWN) {
@@ -352,6 +391,7 @@ void ControllerReconition::sendOSCBlobData(){
 
 		}
 	}
+	*/
 
 	
 }

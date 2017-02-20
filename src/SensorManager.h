@@ -18,6 +18,11 @@
 
 #include "ofxJSON.h"
 
+struct PlayerArea {
+	ofRectangle rectArea;
+	bool bAreaActive = false;
+};
+
 //Uncomment this to get full access to DIRECTSHOW VIDEO INPUT library in OF
 //#define USE_FULL_DIRECTSHOW_ACCESS
 
@@ -127,10 +132,10 @@ public:
 	int marginDraw = 0;
 
 	//TODO set shit rect at Gui 
-	ofRectangle rectArea1;
-	ofRectangle rectArea2;
-	bool bArea1 = true;
-	bool bArea2 = false;
+	int numPlayersAreas = 1; //Minimum Areas Editables. This Can grow for now until 2. TODO extend to N
+	vector<PlayerArea> playerAreas;
+
+	//bool bArea2 = false;
 	
 private:
 	

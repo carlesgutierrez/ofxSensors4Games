@@ -46,11 +46,12 @@ void ofxSensors4Games::update() {
 	
 	SensorManager::getInstance()->update();
 	
-	if (SensorManager::getInstance()->bArea1) {
-		myControllerRecognition1.update(SensorManager::getInstance()->rectArea1);
-	}
-	if (SensorManager::getInstance()->bArea2) {
-		myControllerRecognition2.update(SensorManager::getInstance()->rectArea2);
+	for (int i = 0; i < SensorManager::getInstance()->playerAreas.size(); i++) {
+		ofRectangle auxArea = SensorManager::getInstance()->playerAreas[i].rectArea;
+		if (SensorManager::getInstance()->playerAreas[i].bAreaActive){
+			if (i == 0)myControllerRecognition1.update(auxArea);
+			else if(i == 1)myControllerRecognition2.update(auxArea);
+		}
 	}
 }
 
@@ -76,11 +77,10 @@ void ofxSensors4Games::draw() {
 	//General Draws with possibles Guis windows
 	SensorManager::getInstance()->draw();
 	
-	if (SensorManager::getInstance()->bArea1)
-	myControllerRecognition1.draw();
-	
-	if (SensorManager::getInstance()->bArea2)
-	myControllerRecognition2.draw();
+	for (int i = 0; i < SensorManager::getInstance()->playerAreas.size(); i++) {
+		if (i == 0 && SensorManager::getInstance()->playerAreas[i].bAreaActive)myControllerRecognition1.draw();
+		if (i == 1 && SensorManager::getInstance()->playerAreas[i].bAreaActive)myControllerRecognition2.draw();
+	}
 	
 	//required to call this at end
 	gui.end();
