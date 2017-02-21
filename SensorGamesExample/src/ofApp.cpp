@@ -4,6 +4,9 @@
 void ofApp::setup(){
 	ofSetFrameRate(60);
 	mySensorController.setup(cameraSensor, realTimeMode, MaxMinsAllBlob);  //cameraSensor , kinectSensor// realTimeMode, simulationMode
+	
+	//by default load All Saved Parameters
+	mySensorController.loadAllParamters();
 }
 
 //--------------------------------------------------------------
@@ -18,7 +21,14 @@ void ofApp::draw(){
 
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){
-
+	if (key == 'S') {
+		mySensorController.saveAllParams();
+		cout << "Save all Params here" << endl;
+	}
+	if (key == 'L') {
+		mySensorController.loadAllParamters();
+		cout << "Load all Params here" << endl;
+	}
 }
 
 //--------------------------------------------------------------
