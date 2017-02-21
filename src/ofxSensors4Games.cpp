@@ -21,9 +21,22 @@ void ofxSensors4Games::setup(sensorType _myType, sensorMode _modeSensor, Recogni
 	//setups managers with selected SensorType
 	
 	SensorManager::getInstance()->setup(_myType, _modeSensor);
-	myControllerRecognition.setup(SensorManager::getInstance()->getWidth(),
-								  SensorManager::getInstance()->getHeight(),
-								  _myComputeBlobType);
+
+	myControllerRecognition1.setup(
+								SensorManager::getInstance()->getWidth(),
+								SensorManager::getInstance()->getHeight(),
+								_myComputeBlobType,
+								SensorManager::getInstance()->computerVisionSensor1.contourFinder,
+								1
+								);
+
+	myControllerRecognition2.setup(
+								SensorManager::getInstance()->getWidth(),
+								SensorManager::getInstance()->getHeight(),
+								_myComputeBlobType,
+								SensorManager::getInstance()->computerVisionSensor2.contourFinder,
+								2
+								);
 	
 	
 }
@@ -32,7 +45,14 @@ void ofxSensors4Games::setup(sensorType _myType, sensorMode _modeSensor, Recogni
 void ofxSensors4Games::update() {
 	
 	SensorManager::getInstance()->update();
-	myControllerRecognition.update();
+	
+	for (int i = 0; i < SensorManager::getInstance()->playerAreas.size(); i++) {
+		ofRectangle auxArea = SensorManager::getInstance()->playerAreas[i].rectArea;
+		if (SensorManager::getInstance()->playerAreas[i].bAreaActive){
+			if (i == 0)myControllerRecognition1.update(auxArea);
+			else if(i == 1)myControllerRecognition2.update(auxArea);
+		}
+	}
 }
 
 //--------------------------------------------------------------
@@ -56,7 +76,11 @@ void ofxSensors4Games::draw() {
 	
 	//General Draws with possibles Guis windows
 	SensorManager::getInstance()->draw();
-	myControllerRecognition.draw();
+	
+	for (int i = 0; i < SensorManager::getInstance()->playerAreas.size(); i++) {
+		if (i == 0 && SensorManager::getInstance()->playerAreas[i].bAreaActive)myControllerRecognition1.draw();
+		if (i == 1 && SensorManager::getInstance()->playerAreas[i].bAreaActive)myControllerRecognition2.draw();
+	}
 	
 	//required to call this at end
 	gui.end();
@@ -67,8 +91,53 @@ void ofxSensors4Games::draw() {
 
 //--------------------------------------------------------------
 void ofxSensors4Games::exit() {
-	myControllerRecognition.exit();
+	myControllerRecognition1.exit();
+	myControllerRecognition2.exit();
 	SensorManager::getInstance()->exit();
+}
+
+//-------------------------------------------------------------
+bool ofxSensors4Games::loadAllParamters() {
+
+	string filePath = "allMyParams.json";
+	ofxJSONElement jPreset = loadJSON(filePath);
+
+	myControllerRecognition1.setParams(jPreset);
+	myControllerRecognition2.setParams(jPreset);
+	SensorManager::getInstance()->setParams(jPreset);
+
+	return true;
+}
+
+
+//-------------------------------------------------------------
+ofxJSONElement ofxSensors4Games::loadJSON(string filePathName)
+{
+	ofxJSONElement jElement;
+	bool parse = false;
+	ofLogVerbose() << "Trying to load config at: " + filePathName;
+	parse = jElement.open(filePathName);
+
+	ofLogVerbose() << "ConfigLoaded";
+	return jElement;
+}
+
+//------------------------------------------------------------
+bool ofxSensors4Games::saveAllParams() {
+
+	allParametersGui.clear();
+
+	ofxJSONElement paramsRecognition1 = myControllerRecognition1.getParams();
+	ofxJSONElement paramsRecognition2 = myControllerRecognition2.getParams();
+	ofxJSONElement paramsSensor = SensorManager::getInstance()->getParams();
+
+	allParametersGui.append(paramsRecognition1);
+	allParametersGui.append(paramsRecognition2);
+	allParametersGui.append(paramsSensor);
+
+	allParametersGui.save("allMyParams.json", true);
+
+	return true;
 }
 
 

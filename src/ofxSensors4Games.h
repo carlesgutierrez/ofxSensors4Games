@@ -21,12 +21,13 @@
 
 #include "ofMain.h"
 
+
 //#define USE_SENSOR_KINECT // comment this to avoid Kinect issues Lib and not use it
 
 #include "SensorManager.h"
 #include "ControllerReconition.h"
 #include "ofxImGui.h"
-
+#include "ofxJSON.h"
 
 class ofxSensors4Games {
 public:
@@ -35,6 +36,10 @@ public:
 	void update();
 	void draw();
 	void exit();
+
+	bool loadAllParamters();
+	ofxJSONElement loadJSON(string filePathName);
+	bool saveAllParams();
 	//void keyPressed(int key);
 	//void mouseReleased (int x, int y, int button);
 
@@ -42,8 +47,12 @@ public:
 	//SensorManager mySensor;
 	
 	//Computer Visition
-	ControllerReconition myControllerRecognition;
+	ControllerReconition myControllerRecognition1;
+	ControllerReconition myControllerRecognition2;
 	
 	//Gui interaction
-	ofxImGui gui;
+	ofxImGui::Gui gui;
+
+	//JSon Save Load all params in one
+	ofxJSONElement allParametersGui;
 };

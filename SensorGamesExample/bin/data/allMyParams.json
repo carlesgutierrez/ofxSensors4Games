@@ -1,0 +1,47 @@
+[
+   {
+      "ControllerReconition" : {
+         "1" : {
+            "bAutoThreshold" : "0",
+            "bContourFinderColorThreshold" : "0",
+            "bContourFinderThreshold" : "0",
+            "bLearnBackground" : "1",
+            "bSimpleBackgroundSubstraction" : "1",
+            "learningTime" : "85.988",
+            "thresholdValue" : "18.412"
+         }
+      }
+   },
+   {
+      "ControllerReconition" : {
+         "2" : {
+            "bAutoThreshold" : "0",
+            "bContourFinderColorThreshold" : "0",
+            "bContourFinderThreshold" : "0",
+            "bLearnBackground" : "1",
+            "bSimpleBackgroundSubstraction" : "1",
+            "learningTime" : "5.93",
+            "thresholdValue" : "17.491"
+         }
+      }
+   },
+   {
+      "sensorParams" : {
+         "1" : {
+            "bAreaActive" : "1",
+            "rectAreaH" : "111.628",
+            "rectAreaW" : "357.209",
+            "rectAreaX" : "111.628",
+            "rectAreaY" : "156.279"
+         },
+         "2" : {
+            "bAreaActive" : "1",
+            "rectAreaH" : "106.047",
+            "rectAreaW" : "126.512",
+            "rectAreaX" : "208.372",
+            "rectAreaY" : "189.767"
+         }
+      }
+   }
+]
+

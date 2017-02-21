@@ -12,7 +12,12 @@
 // Set borders
 
 //-----------------------------------------
-void ControllerReconition::setup(int w, int h, RecognitionMethod _myComputeBlobType){
+void ControllerReconition::setup(int w, int h, RecognitionMethod _myComputeBlobType, ofxCv::ContourFinder * _contourFinder, int _idCntroller){
+
+	idController = _idCntroller;
+
+	myContourFinder = _contourFinder;//Copy Adress 
+
 	sensorWidth = w;
 	sensorHeight = h;
 	sensorScale = SensorManager::getInstance()->sensorDrawScale;
@@ -27,16 +32,9 @@ void ControllerReconition::setup(int w, int h, RecognitionMethod _myComputeBlobT
 	
 	myComputeBlobType = _myComputeBlobType;
 	
-	//polyline
-	polylinesIndex = -1;
-	
-	//ofRectangle rec1 = ofRectangle(0, 0, 0, 0);
-	ofPolyline pol1;
-	pol1.clear();
-	polylines.push_back(pol1);
-	ofPolyline pol2;
-	pol2.clear();
-	polylines.push_back(pol2);
+	//Area ref tranking
+	rectAreaPlayer.set(0, 0, sensorWidth*sensorScale, sensorHeight*sensorScale);
+
 	
 	imageRecognitionPosition = ofPoint(sensorWidth*sensorScale, SensorManager::getInstance()->marginDraw);
 	imageRecognitionW = sensorWidth*sensorScale;
@@ -55,44 +53,106 @@ void ControllerReconition::setupUDP(string _ip, int _port){
 
 }
 
-//-----------------------------------------
-void ControllerReconition::updateQuadAreasRecognition(){
-	updateRecognitionBlobsInsideAreas();
+ofxJSONElement ControllerReconition::getParams()
+{
+	ofxJSONElement jsonParams;
+	jsonParams.clear();
+
+	if (idController == 1) {
+		jsonParams["ControllerReconition"][ofToString(idController, 2)]["learningTime"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.learningTime);
+		jsonParams["ControllerReconition"][ofToString(idController, 2)]["thresholdValue"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.thresholdValue);
+		jsonParams["ControllerReconition"][ofToString(idController, 2)]["bSimpleBackgroundSubstraction"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.bSimpleBackgroundSubstraction);
+		jsonParams["ControllerReconition"][ofToString(idController, 2)]["bLearnBackground"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.bLearnBackground);
+		jsonParams["ControllerReconition"][ofToString(idController, 2)]["bAutoThreshold"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.bAutoThreshold);
+		jsonParams["ControllerReconition"][ofToString(idController, 2)]["thresholdValue"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.thresholdValue);
+		jsonParams["ControllerReconition"][ofToString(idController, 2)]["bContourFinderThreshold"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.bContourFinderThreshold);
+		jsonParams["ControllerReconition"][ofToString(idController, 2)]["bContourFinderColorThreshold"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.bContourFinderColorThreshold);
+		//jsonParams["ControllerReconition"][ofToString(idController, 2)]["bContourFinderColorThreshold"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.bContourFinderColorThreshold);
+	}
+	else if(idController == 2) {
+		jsonParams["ControllerReconition"][ofToString(idController, 2)]["learningTime"] = ofToString(SensorManager::getInstance()->computerVisionSensor2.learningTime);
+		jsonParams["ControllerReconition"][ofToString(idController, 2)]["thresholdValue"] = ofToString(SensorManager::getInstance()->computerVisionSensor2.thresholdValue);
+		jsonParams["ControllerReconition"][ofToString(idController, 2)]["bSimpleBackgroundSubstraction"] = ofToString(SensorManager::getInstance()->computerVisionSensor2.bSimpleBackgroundSubstraction);
+		jsonParams["ControllerReconition"][ofToString(idController, 2)]["bLearnBackground"] = ofToString(SensorManager::getInstance()->computerVisionSensor2.bLearnBackground);
+		jsonParams["ControllerReconition"][ofToString(idController, 2)]["bAutoThreshold"] = ofToString(SensorManager::getInstance()->computerVisionSensor2.bAutoThreshold);
+		jsonParams["ControllerReconition"][ofToString(idController, 2)]["thresholdValue"] = ofToString(SensorManager::getInstance()->computerVisionSensor2.thresholdValue);
+		jsonParams["ControllerReconition"][ofToString(idController, 2)]["bContourFinderThreshold"] = ofToString(SensorManager::getInstance()->computerVisionSensor2.bContourFinderThreshold);
+		jsonParams["ControllerReconition"][ofToString(idController, 2)]["bContourFinderColorThreshold"] = ofToString(SensorManager::getInstance()->computerVisionSensor2.bContourFinderColorThreshold);
+
+	}
+	else cout << "Error Saving idController not recognized" << endl;
+
+	return jsonParams;
 }
 
-//-----------------------------------------
-void ControllerReconition::updateRecognitionBlobsInsideAreas(){
-	
-	for (int i = 0; i < SensorManager::getInstance()->contourFinder.size(); i++)
-	{
-		
-		ofPoint tmpPos = ofxCv::toOf(SensorManager::getInstance()->contourFinder.getCentroid(i));
-		
-		//Get if this Blob Point is Inside Area 1
-		//cout << "polylines.size() " << polylines.size() << endl;
-		for(int j = 0; j < polylines.size(); j++){
-			if(polylines[j].isClosed()){
-				if(polylines[j].inside(tmpPos*sensorScale)){
-					int label = SensorManager::getInstance()->contourFinder.getLabel(i);
-					//cout << "Inside this Poline " << j << " Blob # " <<  ofToString(label,0) << endl;
-					//TODO Send or add This "Label inside area X" recognition with the polinie points too
+//-------------------------------------------------------------------
+bool ControllerReconition::setParams(ofxJSONElement jsonFile)
+{
+	bool bLoaded = true;
+
+	//cout << "traying to get data from ControllerRecognition = " << ofToString(idController, 0) << endl;
+	//cout << "Data JSon preview = " << jsonFile << endl;
+	//cout << "Data JSon Size = " << jsonFile.size() << endl;
+
+	for (int i = 0; i < jsonFile.size(); i++) {
+		if (jsonFile[i]["ControllerReconition"].size() > 0) {
+			if (jsonFile[i]["ControllerReconition"][ofToString(idController, 0)].size() > 0) {
+				//cout << "jsonFile[i][ControllerReconition][x] =" << jsonFile[i]["ControllerReconition"]["1"] << endl;
+				
+				if (idController == 1) {
+					SensorManager::getInstance()->computerVisionSensor1.learningTime = ofToFloat(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["learningTime"].asString());
+					SensorManager::getInstance()->computerVisionSensor1.thresholdValue = ofToFloat(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["thresholdValue"].asString());
+					SensorManager::getInstance()->computerVisionSensor1.bSimpleBackgroundSubstraction = ofToFloat(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["bSimpleBackgroundSubstraction"].asString());
+					SensorManager::getInstance()->computerVisionSensor1.bLearnBackground = ofToFloat(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["bLearnBackground"].asString());
+					SensorManager::getInstance()->computerVisionSensor1.bAutoThreshold = ofToFloat(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["bAutoThreshold"].asString());
+					SensorManager::getInstance()->computerVisionSensor1.thresholdValue = ofToFloat(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["thresholdValue"].asString());
+					SensorManager::getInstance()->computerVisionSensor1.bContourFinderThreshold = ofToFloat(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["bContourFinderThreshold"].asString());
+					SensorManager::getInstance()->computerVisionSensor1.bContourFinderColorThreshold = ofToFloat(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["bContourFinderColorThreshold"].asString());
 				}
+				else if (idController == 2) {
+					SensorManager::getInstance()->computerVisionSensor2.learningTime = ofToFloat(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["learningTime"].asString());
+					SensorManager::getInstance()->computerVisionSensor2.thresholdValue = ofToFloat(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["thresholdValue"].asString());
+					SensorManager::getInstance()->computerVisionSensor2.bSimpleBackgroundSubstraction = ofToFloat(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["bSimpleBackgroundSubstraction"].asString());
+					SensorManager::getInstance()->computerVisionSensor2.bLearnBackground = ofToFloat(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["bLearnBackground"].asString());
+					SensorManager::getInstance()->computerVisionSensor2.bAutoThreshold = ofToFloat(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["bAutoThreshold"].asString());
+					SensorManager::getInstance()->computerVisionSensor2.thresholdValue = ofToFloat(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["thresholdValue"].asString());
+					SensorManager::getInstance()->computerVisionSensor2.bContourFinderThreshold = ofToFloat(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["bContourFinderThreshold"].asString());
+					SensorManager::getInstance()->computerVisionSensor2.bContourFinderColorThreshold = ofToFloat(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["bContourFinderColorThreshold"].asString());
+				}
+
+				/*
+				SensorManager::getInstance()->computerVisionSensor1.learningTime = ofToFloat(jsonFile["ControllerReconition"][ofToString(idController, 2)]["learningTime"].asString());
+				SensorManager::getInstance()->computerVisionSensor1.thresholdValue = ofToFloat(jsonFile["ControllerReconition"][ofToString(idController, 2)]["thresholdValue"].asString());
+				SensorManager::getInstance()->computerVisionSensor1.bSimpleBackgroundSubstraction = ofToFloat(jsonFile["ControllerReconition"][ofToString(idController, 2)]["bSimpleBackgroundSubstraction"].asString());
+				SensorManager::getInstance()->computerVisionSensor1.bLearnBackground = ofToFloat(jsonFile["ControllerReconition"][ofToString(idController, 2)]["bLearnBackground"].asString());
+				SensorManager::getInstance()->computerVisionSensor1.bAutoThreshold = ofToFloat(jsonFile["ControllerReconition"][ofToString(idController, 2)]["bAutoThreshold"].asString());
+				SensorManager::getInstance()->computerVisionSensor1.thresholdValue = ofToFloat(jsonFile["ControllerReconition"][ofToString(idController, 2)]["thresholdValue"].asString());
+				SensorManager::getInstance()->computerVisionSensor1.bContourFinderThreshold = ofToFloat(jsonFile["ControllerReconition"][ofToString(idController, 2)]["bContourFinderThreshold"].asString());
+				SensorManager::getInstance()->computerVisionSensor1.bContourFinderColorThreshold = ofToFloat(jsonFile["ControllerReconition"][ofToString(idController, 2)]["bContourFinderColorThreshold"].asString());
+				*/
 			}
 		}
-		//Get if this Blob Point is Inside Area 2
-		   //idem ...
 	}
+
+
+	
+
+	return bLoaded;
 }
 
-
 //-----------------------------------------
-void ControllerReconition::update(){
-	
+void ControllerReconition::update(ofRectangle rectAreaPlayer){
+
+	/*
 	updateQuadAreasRecognition();
+	*/
+	updateRecognitionSystem(rectAreaPlayer);
 	
-	updateRecognitionSystem();
-	
-	sendOSCBlobData();
+	if (numBlobsDetected > 0) {
+		sendOSCBlobData();
+	}else{
+		//do nothing
+	}
 	
 	if(bResetHostIp){
 		sender.setup(HOST, PORT);
@@ -103,14 +163,16 @@ void ControllerReconition::update(){
 
 
 //-----------------------------------------
-void ControllerReconition::updateRecognitionSystem(){
+void ControllerReconition::updateRecognitionSystem(ofRectangle _rectAreaPlayer){
 	
+	rectAreaPlayer = _rectAreaPlayer;
+
 	//If new SensorFrame
 	if (SensorManager::getInstance()->isNewSensorFrame()) {
 	
 		if(myComputeBlobType == MaxMinsAllBlob){
 			//Calc Max Mins and get the relative position to the Camera. //TODO get relative pos to the area1,2,n
-			calcMainBlobLocation();
+			calcMainBlobLocation(_rectAreaPlayer);
 			//WIP Calc some average to detect UP or Down Sudden movemnts.
 			udpateRecognitionBlobAction();
 
@@ -125,17 +187,20 @@ void ControllerReconition::updateRecognitionSystem(){
 			//  - then find wich blob is in a populated area
 			// Etc...
 		}
+		//TODO try to detect vector direction actions
+		//else if (myComputeBlobType == KalmanVectorDirDetection) {
+		//}
 		else {
 			cout << "Controller Error:: Update Recognition needs to know the Type of Data to process from SensorManager" << endl;
-	}
+		}
 	}
 
 }
 
 //-----------------------------------------
-void ControllerReconition::calcMainBlobLocation(){
+void ControllerReconition::calcMainBlobLocation(ofRectangle _rectAreaPlayer){
 	//Udpate here desired values
-	numBlobsDetected = SensorManager::getInstance()->contourFinder.getContours().size();
+	numBlobsDetected = myContourFinder->getContours().size();
 	
 	calculateMaxMin();
 	
@@ -148,43 +213,47 @@ void ControllerReconition::calcMainBlobLocation(){
 	else if(item_resumedBlob_Y == 1)yPosBlob = yMin.y;//idem Y
 	else if(item_resumedBlob_Y == 2)yPosBlob = yMin.y + yDiff*0.5;//middle pos Y of all contourns blobs detected
 	
-	//if(bresumeBlob_minY)yPosBlob = yMin.y;
-	//else if(bresumeBlob_maxY)yPosBlob = yMax.x;
-	
-	//OP2 Used max min calculated
-	//xPosBlob = xMax.x;
-	//xPosBlob = xMin.x + xDiff*0.5;//middle pos
-	//yPosBlob = yMin.y;
-	
-	//Filtered for OSC and Gui Controller
-	if(bresumeBlob_inverX){
-		xPosBlobFloatOsc = (float)(sensorWidth - xPosBlob) / (float)sensorWidth; //Middle pos
-		
-	}else{
-		xPosBlobFloatOsc = (float)(xPosBlob) / (float)sensorWidth;
+	//Find the relative position indide the Rectangle
+	//and save it inside the OSC/UPD vars ready to send out
+	float insideRectPosX = xPosBlob - _rectAreaPlayer.x;
+	float insideRectPosY = yPosBlob - _rectAreaPlayer.y;
+
+	//cout << "_rectAreaPlayer.y = " << _rectAreaPlayer.y << endl;
+	//cout << "yPosBlob = " << xPosBlob << endl;
+	//cout << " _rectAreaPlayer.y - yPosBlob = insideRectPosY = " << insideRectPosY << endl;
+
+
+	xPosBlobFloatOsc = ofMap(insideRectPosX, 0, _rectAreaPlayer.width, 0, 1, true);
+	yPosBlobFloatOsc = ofMap(insideRectPosY, 0, _rectAreaPlayer.height, 0, 1, true);
+	if (bresumeBlob_inverX) {
+		xPosBlobFloatOsc = 1 - xPosBlobFloatOsc;
 	}
-	yPosBlobFloatOsc = (float)(yPosBlob) / (float)sensorHeight;
+	if (bresumeBlob_inverY) {
+		yPosBlobFloatOsc = 1 - yPosBlobFloatOsc;
+	}
+
+
 }
 
 //----------------------------------------------------------------
 void ControllerReconition::calculateMaxMin(){
 	
-	if( SensorManager::getInstance()->contourFinder.getPolylines().size() > 0 ){
+	if( myContourFinder->getPolylines().size() > 0 ){
 		xMin.x=sensorWidth,
 		xMax.x=0.0,
 		yMin.y=sensorHeight,
 		yMax.y=0.0;
 	
 	
-		for (int i = 0; i < SensorManager::getInstance()->contourFinder.getPolylines().size(); i++)
+		for (int i = 0; i < myContourFinder->getPolylines().size(); i++)
 		{
 		
-			int length_of_contour = SensorManager::getInstance()->contourFinder.getPolylines()[i].getVertices().size();
+			int length_of_contour = myContourFinder->getPolylines()[i].getVertices().size();
 		
 			//for Each blob seach Max Mins
 			for(int j = 0; j < length_of_contour; j++){
 			
-				ofVec2f tmpPos = SensorManager::getInstance()->contourFinder.getPolylines()[i].getVertices()[j];
+				ofVec2f tmpPos = myContourFinder->getPolylines()[i].getVertices()[j];
 			
 				if( tmpPos.x > xMax.x){
 					xMax.x=tmpPos.x;
@@ -244,42 +313,45 @@ void ControllerReconition::udpateRecognitionBlobAction(){
 }
 
 
-
 //-----------------------------------------
-void ControllerReconition::sendOSCBlobData(){
-	
-	if(bSendOsc_fMiddleX_fMinY_fUP_fDOWN){
-	
+void ControllerReconition::send_OSC_UPD_Data(string nameTag) {
+	if (bSendOsc_fMiddleX_fMinY_fUP_fDOWN) {
+
 		ofxOscMessage m;
 		m.clear();
-		m.setAddress("/GameBlob");
+		m.setAddress("/"+ nameTag);
 		m.addFloatArg(xPosBlobFloatOsc);
 		m.addFloatArg(yPosBlobFloatOsc);
-	
+
 		// sending float to be able to make more actions filtering in the client.
 		//Like Intenisty of the action
 		m.addFloatArg(fUpActionBlob_OSC);
 		m.addFloatArg(fDownActionBlob_OSC);
-	
+
 		sender.sendMessage(m, false);
 	}
-	
-	if(bSendUDP_fMiddleX_fMinY_fUP_fDOWN){
-		
-		string message = "/GameBlob ffff ";
-		message = message + ofToString(xPosBlobFloatOsc,2) + " " + ofToString(yPosBlobFloatOsc,2) + " " + ofToString(fUpActionBlob_OSC,2) + " " + ofToString(fDownActionBlob_OSC,2);
-		udpConnection.Send(message.c_str(),message.length());
-		
-		cout << "message UDP = " << message << endl;
-	
+
+	if (bSendUDP_fMiddleX_fMinY_fUP_fDOWN) {
+
+		string message = "/"+nameTag+" ffff ";
+		message = message + ofToString(xPosBlobFloatOsc, 2) + " " + ofToString(yPosBlobFloatOsc, 2) + " " + ofToString(fUpActionBlob_OSC, 2) + " " + ofToString(fDownActionBlob_OSC, 2);
+		udpConnection.Send(message.c_str(), message.length());
+
+		//cout << "message UDP = " << message << endl;
+		//cout << "UPD properties GetTimeoutSend = " << udpConnection.GetTimeoutSend();
+
 	}
-	//TODO send here other data type
-	//for(areas)
-	//if(bSendOsc_fMiddleX_fMinY_fUP_fDOWN_Area1)
-	//if(bSendOsc_fMiddleX_fMinY_fUP_fDOWN_Area2)
-	//...
-	//if(bSendOsc_Recognized_MoveMent1)
-	//..
+}
+
+//-----------------------------------------
+void ControllerReconition::sendOSCBlobData(){
+	
+	if (idController == 1) {
+		send_OSC_UPD_Data("GameBlob");
+	}
+	else if (idController == 2) {
+		send_OSC_UPD_Data("GameBlob2");
+	}
 	
 }
 
@@ -290,36 +362,10 @@ void ControllerReconition::draw(){
 	
 	drawGui_Controller();
 	
-	drawPolylinesAreas();
+	//drawPolylinesAreas();
 	
 }
 
-//-------------------------------------------------
-void ControllerReconition::drawPolylinesAreas(){
-	if(polylines.size() > 1){
-		//Draw polyline Areas
-		ofPushMatrix();
-		
-		ofTranslate(imageRecognitionPosition.x, imageRecognitionPosition.y, 0);
-		
-		ofSetColor(ofColor::yellowGreen);
-		polylines[0].draw();
-		vector<ofPoint> vertexes0 = polylines[0].getVertices();
-		for(int i = 0; i < vertexes0.size(); i++){
-			ofDrawBitmapString("x0 = "+ ofToString(vertexes0[i].x, 0), vertexes0[i].x, vertexes0[i].y);
-			ofDrawBitmapString("y0 = "+ ofToString(vertexes0[i].y, 0), vertexes0[i].x, vertexes0[i].y+10);
-		}
-		
-		ofSetColor(ofColor::royalBlue);
-		polylines[1].draw();
-		vector<ofPoint> vertexes1 = polylines[1].getVertices();
-		for(int i = 0; i < vertexes1.size(); i++){
-			ofDrawBitmapString("x1 = "+ ofToString(vertexes1[i].x, 0), vertexes1[i].x, vertexes1[i].y);
-			ofDrawBitmapString("y1 = "+ ofToString(vertexes1[i].y, 0), vertexes1[i].x, vertexes1[i].y+10);
-		}
-		ofPopMatrix();
-	}
-}
 
 //-------------------------------------------------
 void ControllerReconition::drawGui_OSC_configurable(){
@@ -347,46 +393,40 @@ void ControllerReconition::drawGui_OSC_configurable(){
 
 //-------------------------------------------------
 void ControllerReconition::drawGui_Controller(){
-	ImGui::SetNextWindowSize(ImVec2(300, 200), ImGuiSetCond_FirstUseEver);
+	ImGui::SetNextWindowSize(ImVec2(300, 200));
 	
-
+	//cout << "Check this Out PreVious window" << endl;
 	//bool wopen = true;
-	if (ImGui::Begin("Controller Window")) {
+	string myControlerIdText = "ControllerRecognition Ctrl" + ofToString(idController);
+	
+	ImGui::Begin(myControlerIdText.c_str());
 		
-		ImGui::Checkbox("MultiTracking Blob Detection", &isController_trackingMode);
-		ImGui::Checkbox("Resumed Blob Detection", &isController_ResumedBlob);
+	drawGui_ResumedBlob();
+
+	ImGui::Separator();
+	ImGui::Separator();
+	ImGui::Separator();
+	ImGui::Separator();
+	ImGui::Separator();
+	ImGui::Separator();
+
+	//Draw and Edit OSC info
+	drawGui_OSC_configurable();
 		
-		if (isController_ResumedBlob) {
-			drawGui_ResumedBlob(&isController_ResumedBlob);
-		}
-		
-		if(isController_ResumedBlob) {
-			
-		}
-		
-		ImGui::Separator();
-		ImGui::Separator();
-		ImGui::Separator();
-		ImGui::Separator();
-		ImGui::Separator();
-		ImGui::Separator();
-		
-		
-		//Draw and Edit OSC info
-		drawGui_OSC_configurable();
-		
-		ImGui::End();
-	}
+	ImGui::End();
+	
 
 }
 
 //-------------------------------------------------
-void ControllerReconition::drawGui_ResumedBlob(bool* opened){
+void ControllerReconition::drawGui_ResumedBlob(){
 	
 	
 	ImGui::SetNextWindowSize(ImVec2(300, 200), ImGuiSetCond_FirstUseEver);
 	
-	if (ImGui::Begin("p & Down + MaxMin Recognition", opened)) {
+	string myControlerIdText = "MaxMins CtrlRecognition " + ofToString(idController);
+
+	if (ImGui::Begin(myControlerIdText.c_str())) {
 		
 		
 		string recognitionTextType = "Configure Up&Down Values";
@@ -417,6 +457,7 @@ void ControllerReconition::drawGui_ResumedBlob(bool* opened){
 		if(bSendUDP_fMiddleX_fMinY_fUP_fDOWN){
 			
 			ImGui::Checkbox("OSC Invert X", &bresumeBlob_inverX);
+			ImGui::Checkbox("OSC Invert Y", &bresumeBlob_inverY);
 			
 			ImGui::PushItemWidth(100);
 			ImGui::SliderFloat("(f0)##fMiddleX_fMinY_fUP_fDOWN", &xPosBlobFloatOsc, 0, 1);ImGui::SameLine();
@@ -438,6 +479,7 @@ void ControllerReconition::drawGui_ResumedBlob(bool* opened){
 		if(bSendOsc_fMiddleX_fMinY_fUP_fDOWN){
 			
 			ImGui::Checkbox("Send Inverted X", &bresumeBlob_inverX);
+			ImGui::Checkbox("Send Inverted Y", &bresumeBlob_inverY);
 			
 			ImGui::PushItemWidth(100);
 			ImGui::SliderFloat("(f0)##fMiddleX_fMinY_fUP_fDOWN", &xPosBlobFloatOsc, 0, 1);ImGui::SameLine();
@@ -473,64 +515,37 @@ void ControllerReconition::drawResumedBlob(/*int transX ,int transY, int winW, i
 	ofPushMatrix();
 	ofTranslate(sensorWidth*sensorScale, SensorManager::getInstance()->marginDraw);
 	
-	ofColor myMaxMinPointColor = ofColor::green;
-	ofSetColor(myMaxMinPointColor.r, myMaxMinPointColor.g, myMaxMinPointColor.b, 150);
-	
 	ofEnableAlphaBlending();
 	
-	ofDrawCircle(xPosBlob*sensorScale,
-				 yPosBlob*sensorScale,
-				 10*sensorScale);//Painting blob result over the Kinect Blob Drawer
-	
 	//Draw Vector Interaction for Jostick Mode
-	//If no polyline Area, then use middle point sensor
-	ofColor myLineColor = ofColor::green;
+	ofPushStyle();
+	ofColor myLineColor;
+	if(idController == 1)myLineColor = ofColor::green;
+	else if(idController == 2)myLineColor = ofColor::pink;
+	else myLineColor = ofColor::orangeRed; //Error color line not definet yet
+
 	ofSetColor(myLineColor.r, myLineColor.g, myLineColor.b, 150);
-	ofDrawLine(sensorWidth*sensorScale*0.5, sensorHeight*sensorScale*0.5, xPosBlob*sensorScale, yPosBlob*sensorScale);
+
+	ofDrawCircle(xPosBlob*sensorScale,
+		yPosBlob*sensorScale + sensorWidth*(idController-1)*sensorScale, //Auto Down draw Variable
+		10 * sensorScale);//Painting blob result over the Kinect Blob Drawer
+
+	ofSetLineWidth(2);
+	ofSetColor(myLineColor.r, myLineColor.g, myLineColor.b, 150);
+	ofDrawLine(rectAreaPlayer.getCenter().x*sensorScale,
+				rectAreaPlayer.getCenter().y*sensorScale + 0.5*sensorWidth*(idController - 1)*sensorScale, //Auto Down draw Variable,
+				xPosBlob*sensorScale,
+				yPosBlob*sensorScale + sensorWidth*(idController - 1)*sensorScale);
 	
 	ofDisableAlphaBlending();
-	
+	ofPopStyle();
 	ofPopMatrix();
 }
 
 
 //-----------------------------------------
 void ControllerReconition::keyReleased(ofKeyEventArgs & args){}
-void ControllerReconition::keyPressed(ofKeyEventArgs & args){
-	
-	//	cout << "polylinesIndex = " << polylinesIndex << endl;
-	
-	if(args.key == '1'){
-		polylinesIndex = 0;
-		polylines[polylinesIndex].clear();
-	}
-	else if(args.key == '2'){
-		polylinesIndex = 1;
-		polylines[polylinesIndex].clear();
-	}else if(args.key == OF_KEY_RETURN){
-		if(polylines.size() > 0 && polylinesIndex < polylines.size() && polylines[polylinesIndex].size() > 0){
-			polylines[polylinesIndex].close();
-		}
-	}
-	else if(args.key == OF_KEY_BACKSPACE){
-		
-		//TESTING OSC
-		
-		ofxOscMessage m;
-		m.clear();
-		m.setAddress("/GameBlob");
-		m.addFloatArg(ofGetMouseX()/ofGetWidth()); // 0 .. 1 segun Mouse X
-		m.addFloatArg(0); // 0 .. 1 segun Mouse Y
-		
-		// sending float to be able to make more actions filtering in the client.
-		//Like Intenisty of the action
-		m.addFloatArg(1 - (ofGetMouseY()/ofGetHeight())); //Jump Action!
-		m.addFloatArg(1);
-		
-		sender.sendMessage(m, false);
-	}
-
-}
+void ControllerReconition::keyPressed(ofKeyEventArgs & args){}
 
 //-----------------------------------------
 //void ControllerReconition::mouseMoved(ofMouseEventArgs & args){}
@@ -539,25 +554,7 @@ void ControllerReconition::keyPressed(ofKeyEventArgs & args){
 void ControllerReconition::mouseScrolled(ofMouseEventArgs & args){}
 void ControllerReconition::mouseEntered(ofMouseEventArgs & args){}
 void ControllerReconition::mouseExited(ofMouseEventArgs & args){}
-void ControllerReconition::mouseReleased (ofMouseEventArgs & args){
-	
-	//cout << "args.x = " << args.x << endl;
-	//cout << "args.y = " << args.y << endl;
-
-	//cout << "imageRecognitionPosition.x = " << imageRecognitionPosition.x << endl;
-	//cout << "imageRecognitionPosition.y = " << imageRecognitionPosition.y << endl;
-	
-	if(args.x > imageRecognitionPosition.x && args.x < imageRecognitionPosition.x+imageRecognitionW){
-		if(args.y > imageRecognitionPosition.y && args.y < imageRecognitionPosition.y+imageRecognitionH){
-
-			if(polylines.size() > 0 && polylinesIndex < polylines.size()){
-				polylines[polylinesIndex].addVertex(ofPoint(args.x- imageRecognitionPosition.x, args.y - imageRecognitionPosition.y));
-			}
-			
-		}
-	}
-	
-}
+void ControllerReconition::mouseReleased (ofMouseEventArgs & args){}
 
 //-----------------------------------------
 void ControllerReconition::exit(){

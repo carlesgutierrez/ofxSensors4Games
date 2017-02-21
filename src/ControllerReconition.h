@@ -12,7 +12,7 @@
 #include "ofxImGui.h"
 #include "statsRecorder.h"
 #include "SensorManager.h"
-
+#include "ofxJSON.h"
 
 
 //Status Regonition Controller Type
@@ -21,9 +21,9 @@ enum ActionRecognitionType { GoUpAction, GoDownAction }; //Up and Down from medi
 
 class ControllerReconition {
 public:
-	
-	void setup(int w, int h, RecognitionMethod _myComputeBlobType);
-	void update();
+	int idController = -1;
+	void setup(int w, int h, RecognitionMethod _myComputeBlobType, ofxCv::ContourFinder * _contourFinder, int idControll);
+	void update(ofRectangle _rectAreaPlayer);
 	void draw();
 	void exit();
 	
@@ -38,18 +38,19 @@ public:
 	void mouseEntered (ofMouseEventArgs & args);
 	void mouseExited (ofMouseEventArgs & args);
 	
-	
+	/////////////////////
+	//Udpated from Camera
+	ofxCv::ContourFinder * myContourFinder;
+
+
 	//////////////////////////////
 	//RESUMED BLOB
-	//
 	void drawResumedBlob();
-	void drawPolylinesAreas();
 	void drawGui_Controller();
 	void drawGui_OSC_configurable();
 	bool isController_ResumedBlob = true;
-	void drawGui_ResumedBlob(bool* opened);
-	bool bSendOsc_fMiddleX_fMinY_fUP_fDOWN = false;
-	bool bresumeBlob_inverX = true;
+	void drawGui_ResumedBlob();
+
 	//bool bresumeBlob_maxX = true;
 	//bool bresumeBlob_minX = false;
 	//bool bresumeBlob_minY = true;
@@ -58,8 +59,10 @@ public:
 	
 	int item_resumedBlob_Y = 1;
 	
-	void calcMainBlobLocation();
+	void calcMainBlobLocation(ofRectangle _rectAreaPlayer);
 	
+	void send_OSC_UPD_Data(string nameTag);
+
 	//////////////////////////////
 	//OSC
 	void sendOSCBlobData();
@@ -69,19 +72,12 @@ public:
 	//Main Controller vars copied from Sensor to avoid very long names in code (multiple calls)
 	int sensorWidth, sensorHeight;
 	float sensorScale;
-	//std::vector<ofPolyline>  myUpdatedBlobs;
 	int numBlobsDetected = -1;
-	
 	int xPosBlob = -1;
 	int yPosBlob = -1;
 	int wBlob = -1;
 	int hBlob = -1;
-	////////////////////////////////
-	//Polyline areas recognition
-	void updateRecognitionBlobsInsideAreas();
-	void updateQuadAreasRecognition();
-	vector<ofPolyline> polylines;
-	int polylinesIndex = -1;
+	ofRectangle rectAreaPlayer;
 	
 	//Patch to save the right Working area position // TODO get this data from sourceSensor // Wait until is being done properly in the GUI
 	ofPoint imageRecognitionPosition;
@@ -102,7 +98,7 @@ public:
 	//Advanced Filtered Blob Data
 	//median stat value
 	RecognitionMethod myComputeBlobType;
-	void updateRecognitionSystem();
+	void updateRecognitionSystem(ofRectangle _rectAreaPlayer);
 	void udpateRecognitionBlobAction();
 	
 	//int numFramesStates = 100; //TODO Addd to gui
@@ -121,12 +117,14 @@ public:
 	
 	
 	///////////////////////////////
-	////OSC
-	
+	////OSC VARS
+	bool bSendOsc_fMiddleX_fMinY_fUP_fDOWN = true;
+	bool bresumeBlob_inverX = true;
+	bool bresumeBlob_inverY = false;
 	//Sender
 	void setupUDP(string _ip, int _port);
 	ofxUDPManager udpConnection;
-	bool bSendUDP_fMiddleX_fMinY_fUP_fDOWN = false;
+	bool bSendUDP_fMiddleX_fMinY_fUP_fDOWN = true;
 	
 	//OSC filterd data
 	ofxOscSender sender;
@@ -135,6 +133,10 @@ public:
 	bool bResetHostIp = false;
 	int PORT = 12345;
 	string HOST = "127.0.0.1";//MLP: "192.168.2.254";
-	
+
+	//////////////////////////////////////////
+	//Json save params
+	ofxJSONElement getParams();
+	bool setParams(ofxJSONElement myJson);
 	
 };

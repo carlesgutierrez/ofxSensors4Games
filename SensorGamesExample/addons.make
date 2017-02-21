@@ -1,5 +1,6 @@
 ofxCv
 ofxImGui
+ofxJSON
 ofxNetwork
 ofxOpenCv
 ofxOsc

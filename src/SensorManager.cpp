@@ -45,6 +45,51 @@ sensorMode SensorManager::getSensorMode(){
 	return modeSensor;
 }
 
+//-----------------------------------------
+ofxJSONElement SensorManager::getParams()
+{
+	ofxJSONElement jsonParams;
+	jsonParams.clear();
+
+	for (int i = 0; i < playerAreas.size(); i++) {
+		jsonParams["sensorParams"][ofToString(i+1,2)]["bAreaActive"] = ofToString(playerAreas[i].bAreaActive);
+		jsonParams["sensorParams"][ofToString(i+1,2)]["rectAreaX"] = ofToString(playerAreas[i].rectArea.x);
+		jsonParams["sensorParams"][ofToString(i+1,2)]["rectAreaY"] = ofToString(playerAreas[i].rectArea.y);
+		jsonParams["sensorParams"][ofToString(i+1,2)]["rectAreaW"] = ofToString(playerAreas[i].rectArea.width);
+		jsonParams["sensorParams"][ofToString(i+1,2)]["rectAreaH"] = ofToString(playerAreas[i].rectArea.height);
+	}
+
+
+	return jsonParams;
+}
+
+//-------------------------------------------------------------------
+bool SensorManager::setParams(ofxJSONElement jsonFile)
+{
+	bool bLoaded = true;
+
+	cout << "SensorManager Params, jsonFile = " << jsonFile << endl;
+
+	for (int j = 0; j < jsonFile.size(); j++) {
+		if (jsonFile[j]["sensorParams"].size() > 0) {
+			cout << "SensorManager player = " << jsonFile[j]["sensorParams"] << endl;
+				
+			bLoaded = bLoaded + true;
+			for (int i = 0; i < playerAreas.size(); i++) {
+				playerAreas[i].bAreaActive = ofToBool(jsonFile[j]["sensorParams"][ofToString(i + 1, 2)]["bAreaActive"].asString());
+				playerAreas[i].rectArea.x = ofToFloat(jsonFile[j]["sensorParams"][ofToString(i + 1, 2)]["rectAreaX"].asString());
+				playerAreas[i].rectArea.y = ofToFloat(jsonFile[j]["sensorParams"][ofToString(i + 1, 2)]["rectAreaY"].asString());
+				playerAreas[i].rectArea.width = ofToFloat(jsonFile[j]["sensorParams"][ofToString(i + 1, 2)]["rectAreaW"].asString());
+				playerAreas[i].rectArea.height = ofToFloat(jsonFile[j]["sensorParams"][ofToString(i + 1, 2)]["rectAreaH"].asString());
+			}
+		}
+	}
+
+
+	
+	return bLoaded;
+}
+
 //Setters
 //-----------------------------------------
 void SensorManager::setSensorType(sensorType _type){
@@ -72,6 +117,9 @@ void SensorManager::setup(sensorType _sensorType, sensorMode _sensorMode){
 #endif
 	}else if (typeSensor == cameraSensor){
 		bSensorReady = setupCameraSensor();
+		//Setup CV
+		computerVisionSensor1.setup(1, 640, 480); //TODO Change this to JSon params loaded at a config file
+		computerVisionSensor2.setup(2, 640, 480); //TODO Change this to JSon params loaded at a config file
 		
 	}else if(typeSensor == externalSickSensor){
 		bSensorReady = setupExternalSickSensor();
@@ -81,7 +129,25 @@ void SensorManager::setup(sensorType _sensorType, sensorMode _sensorMode){
 		cout << "//*///*/*/*/*/*/*/* Error sensor setup **/*/*/*////**///" << endl;
 		ofExit(0);
 	}
+
+	//For Computer Vision Setup some general vars
+	sensorImage1.allocate(getWidth(), getHeight(), OF_IMAGE_COLOR);
+	mySourcedSensorFbo.allocate(getWidth(), getHeight(), GL_RGB);
+	//sensorImage2.allocate(cam.getWidth(), cam.getHeight(), OF_IMAGE_COLOR);
+	//sourceImageRaw.allocate(cam.getWidth(), cam.getHeight(), OF_IMAGE_COLOR);
+
+	//setup default number of player areas
+	for (int i = 0; i < numPlayersAreas; i++) {
+		//Add Default playerAreas into vector 
+		PlayerArea auxPlayerArea;
+		auxPlayerArea.bAreaActive = true;
+		auxPlayerArea.rectArea.setWidth(sensorWidth);
+		auxPlayerArea.rectArea.setHeight(sensorHeight);
+		playerAreas.push_back(auxPlayerArea);
+	}
 	
+
+	//Mouse and Keyboard Events
 	ofRegisterKeyEvents(this);
 	
 }
@@ -118,14 +184,16 @@ void SensorManager::update(){
 			
 			//Set pixels back to main cv image
 			computerVisionImage.setFromPixels(pix);
+
+			// find contours which are between the size of 20 pixels and 1/3 the w*h pixels.
+			// also, find holes is set to true so we will get interior contours as well....
+			//contourFinder.findContours(grayImage, minSizeBlob, maxSizeBlob, numBlobs, false);
+			contourFinder.findContours(computerVisionImage);
+			bNewSensorFrame = true;
 		}
 
 		
-		// find contours which are between the size of 20 pixels and 1/3 the w*h pixels.
-		// also, find holes is set to true so we will get interior contours as well....
-		//contourFinder.findContours(grayImage, minSizeBlob, maxSizeBlob, numBlobs, false);
-		contourFinder.findContours(computerVisionImage);
-		bNewSensorFrame = true;
+
 #endif
 
 	}
@@ -140,145 +208,34 @@ void SensorManager::update(){
 			bNewSensorFrame = cam.isFrameNew();
 		}
 		
-		if(bLearnBackground){
-			if(bresetBackground) {
-				background.reset();
-				bresetBackground = false;
-			}
-		}
-		
-		if(bNewSensorFrame) {
-			
-			//blur(movie, 10);//TODO This! easy and fast. Add slider options
-			
-			//TODO FIX THIS bLearnBackground to not apply really a Learning background if its not active.
-			if(bLearnBackground){
-				
+		if (bNewSensorFrame) {
 
-				
-				background.setLearningTime(learningTime);
-				background.setThresholdValue(thresholdValue);
-				//Camera Image to Gray
-				if(modeSensor == simulationMode) background.update(videoPlayerCam, computerVisionImage);
-				else if(modeSensor == realTimeMode) background.update(cam, computerVisionImage);
-				computerVisionImage.update();
-				
-				contourFinder.findContours(computerVisionImage);
-			}
-			else if(bSimpleBackgroundSubstraction){
-				
-				//Camera Image to Gray
-				if(modeSensor == simulationMode) ofxCv::convertColor(videoPlayerCam, computerVisionImage, CV_RGB2GRAY);
-				else if(modeSensor == realTimeMode) ofxCv::convertColor(cam, computerVisionImage, CV_RGB2GRAY);
-				
-				
-				computerVisionImage.update();
-				
-				//Save Background Frame
-				if(bresetBackground){
-					backGroundCam = computerVisionImage;
-					backGroundCam.update();
-					bresetBackground = false;
-				}
-				
-				
-				//then background substraction //TODO check diferent methods
-				ofxCv::absdiff(computerVisionImage, backGroundCam, diffCam);
-				
-				//Apply invert Threshold
-				if(bInvertContourFinderThreshold)contourFinder.setInvert(true);
-				else contourFinder.setInvert(false);
-				
-				if(bContourFinderThreshold){
-					//FindContours Threshold
-					contourFinder.setThreshold(thresholdValue);
-					contourFinder.findContours(diffCam);
-				}else if(bAutoThreshold){
-					//Automatic Thresholding
-					ofxCv::autothreshold(diffCam);
-					contourFinder.findContours(diffCam);
-				}
-				else{
-					//Regular Threshold
-					ofxCv::threshold(diffCam, thresholdValue);
-					contourFinder.findContours(diffCam);
-				}
-				
-				diffCam.update();
-				
-			}
-			else{ //ContourFinder Methods
-				
-				//Update Camera colors
-				if(modeSensor == simulationMode){
-					computerVisionImage.setFromPixels(videoPlayerCam.getPixels(), sensorWidth, sensorHeight, OF_IMAGE_COLOR);
-				}
-				else if(modeSensor == realTimeMode){
-					computerVisionImage.setFromPixels(cam.getPixels(), sensorWidth, sensorHeight, OF_IMAGE_COLOR);
-				}
-				
-				computerVisionImage.update();
-				
-				//Threshold
-				
-				if(bContourFinderThreshold){
-					
-					contourFinder.setAutoThreshold(true);
-					
-					if(bContourFinderColorThreshold){
-						//FindContours Threshold
-						contourFinder.setUseTargetColor(true);
-						contourFinder.setTargetColor(colorTargetContourFinder);
-						//TODO ADD Color Picker From Camera.
+		//Diferent computer vision for All PlayerAreas
+			for (int i = 0; i < playerAreas.size(); i++) {
+			
+				if (playerAreas[i].bAreaActive) {
+					if (i == 0) {
+						computerVisionSensor1.udpateBackground();
+						updateSourceImageRaw(playerAreas[i].rectArea, sensorImage1);
+						computerVisionSensor1.mainComputerVision(sensorImage1);
 					}
-				
-				}else{
-					//Default Threshold Method
-					/*
-					 ContourFinder::ContourFinder()
-					 :autoThreshold(true)
-					 ,invert(false)
-					 ,simplify(true)
-					 ,thresholdValue(128.)
-					 ,useTargetColor(false)
-					 ,contourFindingMode(CV_RETR_EXTERNAL)
-					 ,sortBySize(false) {
-						resetMinArea();
-						resetMaxArea();
-					 }*/
-					
-					contourFinder.setAutoThreshold(true);
-					contourFinder.setInvert(false);
-					contourFinder.setUseTargetColor(false);
-					contourFinder.setThreshold(thresholdValue);
+					else if (i == 1) {
+						computerVisionSensor2.udpateBackground();
+						updateSourceImageRaw(playerAreas[i].rectArea, sensorImage2);
+						computerVisionSensor2.mainComputerVision(sensorImage2);
+					}
 				}
-				
-				
-				//Apply invert Threshold
-				if(bInvertContourFinderThreshold)contourFinder.setInvert(true);
-				else contourFinder.setInvert(false);
-				
-				
-				//Apply Configured Thresdhold
-				contourFinder.setThreshold(thresholdValue);
-				
-				//Find Countours
-				contourFinder.findContours(computerVisionImage);
 
 			}
 
 		}
-		
 	}
 	else if (typeSensor == externalSickSensor){
-		
 		//This updates osc data that contains all Blobs
 		bNewSensorFrame = updateExternalSickSensor();
-
 	}
 	
-	
-	
+
 	//Some extra Operation at the end of sensor Dection ?
 	//use  isNewSensorFrame for Lattely actions in other parts of code
 	if(bNewSensorFrame){
@@ -287,7 +244,46 @@ void SensorManager::update(){
 
 }
 
+//-----------------------------------------
+void SensorManager::applyMaskToImgVideoCam(ofRectangle _rectArea, ofImage & imageToMask) {
 
+	mySourcedSensorFbo.begin();
+	// Cleaning everthing with alpha mask on 0 in order to make it transparent for default
+	ofClear(0, 0, 0, 0);
+
+	//ofSetColor(0);
+	//ofDrawRectangle(0,0, getWidth(), getHeight());
+
+	//Draw Subsection
+	ofSetColor(255);
+	imageToMask.drawSubsection(_rectArea.x, _rectArea.y, _rectArea.width, _rectArea.height, _rectArea.x, _rectArea.y);
+
+	
+	mySourcedSensorFbo.end();
+
+	//baseImageToMask.cropFrom(imageToMask, _rectArea.x, _rectArea.y, _rectArea.width, _rectArea.height);
+	//baseImageToMask.update();
+	ofPixels auxPixels;
+	mySourcedSensorFbo.readToPixels(auxPixels);
+
+	imageToMask.setFromPixels(auxPixels);
+
+}
+
+//-----------------------------------------
+void SensorManager::updateSourceImageRaw(ofRectangle _rectArea, ofImage &image2Update) {
+	//get Pixels from sensor ( VideoPlayer or VideoCamera )
+	if (modeSensor == simulationMode) {
+		image2Update.setFromPixels(videoPlayerCam.getPixelsRef().getPixels(), videoPlayerCam.getWidth(), videoPlayerCam.getHeight(), OF_IMAGE_COLOR);
+	}
+	else if (modeSensor == realTimeMode) {
+		image2Update.setFromPixels(cam.getPixelsRef().getPixels(), videoPlayerCam.getWidth(), videoPlayerCam.getHeight(), OF_IMAGE_COLOR);
+	}
+
+	image2Update.update();
+	//Update this sensorImage and Crop desired Arae inside sensorImage1
+	applyMaskToImgVideoCam(_rectArea, image2Update);
+}
 
 //-----------------------------------------
 bool SensorManager::isNewSensorFrame(){
@@ -296,7 +292,20 @@ bool SensorManager::isNewSensorFrame(){
 
 //-----------------------------------------
 void SensorManager::draw(){
+
+	//TODO , Contour Finder not drawing now, and Second Image paint in red.
+
+	//Draw GUI Sensors
 	
+	ofSetColor(255, 255, 255);
+	//Draw some Sensor Option
+	static bool isSensorWindow = true;//TODO may be hide this in a regular bool loaded from json config file
+	if (isSensorWindow) {
+		this->drawGuiSensorOptions(&isSensorWindow);
+	}
+
+
+	//Draw Sensors
 	if(typeSensor == kinectSensor){
 		
 #ifdef USE_SENSOR_KINECT
@@ -350,125 +359,28 @@ void SensorManager::draw(){
 	}
 	else if (typeSensor == cameraSensor){
 		
-		if(computerVisionImage.isAllocated()) {
-			
-			ofSetColor(255, 255, 255);
-			
-			//--------------------------------------
-			//Draw Raw Sensor images
-			if(modeSensor == simulationMode) computerVisionImage.draw(marginDraw, marginDraw, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
-			else if(modeSensor == realTimeMode) cam.draw(marginDraw, marginDraw, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
-			
-			
-			if(bLearnBackground){
-				computerVisionImage.draw(sensorWidth*sensorDrawScale, marginDraw, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
-				ofxCv::toOf(background.getBackground(), backGroundCam);
-				backGroundCam.draw(2*sensorWidth*sensorDrawScale, marginDraw, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
-				
-			}
-			else if(bSimpleBackgroundSubstraction){
-				diffCam.draw(sensorWidth*sensorDrawScale, marginDraw, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
-				backGroundCam.draw(2*sensorWidth*sensorDrawScale, marginDraw, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
-			}
-			else{
-				computerVisionImage.draw(sensorWidth*sensorDrawScale, marginDraw, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
-			}
-			
-			
-			//---------------------------------------
-			//Kyle Mcdonnal - Blob Tracker Visualization
-			if(bTrackgingActive){
-				
-				//TODO To acces this from outside may be neceseary to clean
-				ofxCv::RectTracker& tracker = contourFinder.getTracker();
-			
-			
-				if(showLabels) {
-					
-					for(int i = 0; i < contourFinder.size(); i++) {
-						ofPoint center = ofxCv::toOf(contourFinder.getCentroid(i));
-						ofPushMatrix();
-						ofTranslate(sensorWidth*sensorDrawScale, marginDraw);
-						ofTranslate(center.x*sensorDrawScale, center.y*sensorDrawScale);
-						int label = contourFinder.getLabel(i);
-						string msg = ofToString(label) + ":" + ofToString(tracker.getAge(label));
-						ofDrawBitmapString(msg, 0, 0);
-						ofVec2f velocity = ofxCv::toOf(contourFinder.getVelocity(i));
-						ofDrawLine(0, 0, velocity.x*sensorDrawScale, velocity.y*sensorDrawScale);
-						ofPopMatrix();
-						
-					}
-					
+		ofSetColor(255, 255, 255);
+
+		//--------------------------------------
+		//Draw Raw Sensor images
+		//if (modeSensor == realTimeMode) cam.draw(marginDraw, marginDraw, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
+		//if (modeSensor == simulationMode && bArea1) computerVisionSensor1.computerVisionImage.draw(marginDraw, marginDraw, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
+		//if (modeSensor == simulationMode && bArea2) computerVisionSensor2.computerVisionImage.draw(marginDraw, marginDraw, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
+
+		for (int i = 0; i < playerAreas.size(); i++) {
+
+			if (playerAreas[i].bAreaActive) {
+				if (i == 0) {
+					computerVisionSensor1.computerVisionImage.draw(marginDraw, marginDraw + i*sensorHeight*sensorDrawScale, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
+					computerVisionSensor1.draw(sensorDrawScale, marginDraw + i*sensorHeight*sensorDrawScale);
 				}
-				else {
-					
-					ofPushMatrix();
-					ofTranslate(sensorWidth*sensorDrawScale, marginDraw);
-					ofScale(sensorDrawScale, sensorDrawScale);
-					
-					for(int i = 0; i < contourFinder.size(); i++) {
-						unsigned int label = contourFinder.getLabel(i);
-						// only draw a line if this is not a new label
-						if(tracker.existsPrevious(label)) {
-							// use the label to pick a random color
-							ofSeedRandom(label << 24);
-							ofSetColor(ofColor::fromHsb(ofRandom(255), 255, 255));
-							// get the tracked object (cv::Rect) at current and previous position
-							const cv::Rect& previous = tracker.getPrevious(label);
-							const cv::Rect& current = tracker.getCurrent(label);
-							// get the centers of the rectangles
-							ofVec2f previousPosition(previous.x + previous.width / 2, previous.y + previous.height / 2);
-							ofVec2f currentPosition(current.x + current.width / 2, current.y + current.height / 2);
-							ofDrawLine(previousPosition, currentPosition);
-						}
-					}
-					
-					ofPopMatrix();
+				else if (i == 1) {
+					computerVisionSensor2.computerVisionImage.draw(marginDraw, marginDraw + i*sensorHeight*sensorDrawScale, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
+					computerVisionSensor2.draw(sensorDrawScale, marginDraw + i*sensorHeight*sensorDrawScale);
 				}
-				
-			
-				
-				// this chunk of code visualizes the creation and destruction of labels
-				const vector<unsigned int>& currentLabels = tracker.getCurrentLabels();
-				const vector<unsigned int>& previousLabels = tracker.getPreviousLabels();
-				const vector<unsigned int>& newLabels = tracker.getNewLabels();
-				const vector<unsigned int>& deadLabels = tracker.getDeadLabels();
-				
-				ofSetColor(ofxCv::cyanPrint);
-				for(int i = 0; i < currentLabels.size(); i++) {
-					int j = currentLabels[i];
-					ofDrawLine(j, 0, j, 4);
-				}
-				ofSetColor(ofxCv::magentaPrint);
-				for(int i = 0; i < previousLabels.size(); i++) {
-					int j = previousLabels[i];
-					ofDrawLine(j, 4, j, 8);
-				}
-				ofSetColor(ofxCv::yellowPrint);
-				for(int i = 0; i < newLabels.size(); i++) {
-					int j = newLabels[i];
-					ofDrawLine(j, 8, j, 12);
-				}
-				ofSetColor(ofColor::white);
-				for(int i = 0; i < deadLabels.size(); i++) {
-					int j = deadLabels[i];
-					ofDrawLine(j, 12, j, 16);
-				}
-			
-				
 			}
 
-		}
-		
-		ofSetColor(255, 0, 0);
-		
-		ofPushMatrix();
-		ofTranslate(sensorWidth*sensorDrawScale, marginDraw); //TODO change sensorDrawScale as int sensorScale var
-		ofScale(sensorDrawScale, sensorDrawScale);
-		contourFinder.draw();
-		ofPopMatrix();
-
-	
+		}	
 	}
 	else if(typeSensor == externalSickSensor){
 		
@@ -483,15 +395,32 @@ void SensorManager::draw(){
 		}
 	}
 
-	ofSetColor(255, 255, 255);
-	//Draw some Sensor Option
-	bool isSensorWindow = true;
-	if (isSensorWindow) {
-		this->drawGuiSensorOptions(&isSensorWindow);
+	//last Draw if camera options for filtering image
+	if (typeSensor == cameraSensor) {
+		for (int i = 0; i < playerAreas.size(); i++) {
+			drawAreaRectangle(playerAreas[i].rectArea, i + 1);
+		}
 	}
 
-
+	//drawAreaRectangle(rectArea1, 1);
+	//drawAreaRectangle(rectArea2, 2);
 	
+}
+
+//--------------------------------------------------------------------
+void SensorManager::drawAreaRectangle(ofRectangle _areaRect, int idSensor) {
+	ofRectangle auxRectArea1 = _areaRect;
+	auxRectArea1.x = _areaRect.x * sensorDrawScale;
+	auxRectArea1.y = _areaRect.y *sensorDrawScale + (idSensor-1)*sensorHeight *sensorDrawScale;//Auto Down Draw Sensor
+	auxRectArea1.width = _areaRect.getWidth() * sensorDrawScale;
+	auxRectArea1.height = _areaRect.getHeight() *sensorDrawScale;
+
+	//Draw it
+	ofPushStyle();
+	ofNoFill();
+	ofSetColor(ofColor::red);
+	ofDrawRectangle(auxRectArea1);
+	ofPopStyle();
 }
 
 //---------------------------------------------------------------------
@@ -543,10 +472,6 @@ void SensorManager::resetSimpleSensorCamera() {
 //-----------------------------------------
 void SensorManager::drawGuiSensorOptions(bool* opened){
 	
-	string textBlobsFound = "#blobs = "+ofToString(contourFinder.size(), 0);
-	ImGui::Text(textBlobsFound.c_str());
-	
-	
 	string sensorTextType = "Not configured Yet";
 	if(typeSensor == kinectSensor){
 
@@ -594,21 +519,18 @@ void SensorManager::drawGuiSensorOptions(bool* opened){
 			ImGui::PopItemWidth();
 
 #ifdef OF_VIDEO_CAPTURE_DIRECTSHOW
-/* 
-//WIP. This require public access to VI (Directshow)
-			static bool bCameraComposite = false;
-			if (ImGui::Checkbox("SET COMPOSITE", &bCameraComposite)) {
-				if (bCameraComposite) {
-					shared_ptr<ofDirectShowGrabber> auxGrabber = shared_ptr <OF_VID_GRABBER_TYPE>(new OF_VID_GRABBER_TYPE);
-					auxGrabber->VI.setupDevice(selectedCameraIndex, VI_COMPOSITE);
-					cam.setGrabber(auxGrabber);
+	#ifdef USE_FULL_DIRECTSHOW_ACCESS
+				//WIP. This require public access to VI (Directshow) at OF
+				static bool bCameraComposite = false;
+				if (ImGui::Checkbox("WIP - RESET TO COMPOSITE", &bCameraComposite)) {
+					if (bCameraComposite) {
+						shared_ptr<ofDirectShowGrabber> auxGrabber = shared_ptr <OF_VID_GRABBER_TYPE>(new OF_VID_GRABBER_TYPE);
+						auxGrabber->VI.setupDevice(selectedCameraIndex, VI_COMPOSITE);
+						cam.setGrabber(auxGrabber);
+						ofExit();
+					}				
 				}
-				else {
-					resetSimpleSensorCamera();
-				}
-				
-			}
-*/
+	#endif
 #endif
 			if (ImGui::Button("Reset Camera", ImVec2(150, 20))) {
 				resetSimpleSensorCamera();
@@ -653,66 +575,49 @@ void SensorManager::drawGuiSensorOptions(bool* opened){
 				videoPlayerCam.setPosition(videoPlayerCam_pos);
 			}
 		}
-		
-		ImGui::Checkbox("Do Learning Background", &bLearnBackground);
-		
-		if(ImGui::Button("Reset Background")){
-			bresetBackground = true;
-		}
-		
-		if(bLearnBackground){
-			ImGui::SameLine();
-			ImGui::PushItemWidth(100);
-			ImGui::SliderFloat("Learning Time", &learningTime, 0, 255);
-			ImGui::PopItemWidth();
-		}
-		
-		ImGui::Checkbox("Background Substraction", &bSimpleBackgroundSubstraction);
-		
-		if(bSimpleBackgroundSubstraction){
-			ImGui::SameLine();
-			ImGui::Checkbox("Auto Threshold", &bAutoThreshold);
-		}
-		
-		ImGui::Checkbox("ContoursFinder Options", &bContourFinderThreshold);
-		ImGui::Checkbox("Invert Threshold ContoursFinder", &bInvertContourFinderThreshold);
-	
-		if(bContourFinderThreshold){
-			
-			ImGui::Checkbox("ContoursFinder Color Target", &bContourFinderColorThreshold);
-			if(bContourFinderColorThreshold){
-				ImVec4 colorTargetVec = colorTargetContourFinder;
-				ImGui::ColorEdit3("Color Target ContourFinder##ContourFinder", (float*)& colorTargetVec);
-				
-				if(bContourFinderColorThreshold){
-					colorTargetContourFinder.r = colorTargetVec.x*255;
-					colorTargetContourFinder.g = colorTargetVec.y*255;
-					colorTargetContourFinder.b = colorTargetVec.z*255;
-				}
+
+		//Selectable Areas to Do Computer Vision separately. TODO : set this into modulable Array of playersAreas Array
+		ImGui::SliderInt("Num Player Areas", &numPlayersAreas, 0, 2);
+		if (playerAreas.size() != numPlayersAreas) {
+			if (playerAreas.size() < numPlayersAreas) {
+				//Add Default playerAreas into vector 
+				PlayerArea auxPlayerArea;
+				auxPlayerArea.bAreaActive = true;
+				auxPlayerArea.rectArea.setWidth(sensorWidth);
+				auxPlayerArea.rectArea.setHeight(sensorHeight);
+
+				playerAreas.push_back(auxPlayerArea);
 			}
-				
+			else {
+				//TODO Remove last vector pos until get equal
+				playerAreas.pop_back();//Test
+			}
 		}
 
-		ImGui::SliderFloat("Threshold Value", &thresholdValue, 0, 255);
-		
-		ImGui::SliderInt("accuracyMaxSizeBlob", &maxBlobsAccuracyMaxValue, 0, sensorWidth *sensorHeight*sensorDrawScale);
-		
-		if(ImGui::SliderInt("min Area Blob", &minSizeBlob, marginDraw, maxBlobsAccuracyMaxValue)){
-			contourFinder.setMinAreaRadius(minSizeBlob);
-		}
-		if(ImGui::SliderInt("max Area Blob", &maxSizeBlob, marginDraw, maxBlobsAccuracyMaxValue)){
-			contourFinder.setMaxAreaRadius(maxSizeBlob);
-		}
-		
-		ImGui::Separator();
-		
-		ImGui::Checkbox("Activate Tracking", &bTrackgingActive);
-		
-		if(bTrackgingActive){
-			ImGui::SliderInt("Max Persistance", &maxPersistenceTracking, 5, 100);
-			ImGui::SliderInt("Max Distance", &maxDistanceTracking, 10, 100);
-			ImGui::Checkbox("Show Labels", &showLabels);
-		}
+		for (int i = 0; i < playerAreas.size(); i++) {
+			string textAreaSensor_collapsing = "Area " + ofToString(i+1, 0);
+			string textAreaSensor_bActive = "Active?##" + ofToString(i + 1, 0);
+			string textAreaSensor_x = "X##" + ofToString(i + 1, 2);
+			string textAreaSensor_y = "Y##" + ofToString(i + 1, 2);
+			string textAreaSensor_w = "W##" + ofToString(i + 1, 2);
+			string textAreaSensor_h = "H##" + ofToString(i + 1, 2);
+
+			if (ImGui::CollapsingHeader(textAreaSensor_collapsing.c_str())) {
+				ImGui::Checkbox(textAreaSensor_bActive.c_str(), &playerAreas[i].bAreaActive);
+				ImGui::PushItemWidth(100);
+				ImGui::SliderFloat(textAreaSensor_x.c_str(), &playerAreas[i].rectArea.x, 0, getWidth());//TODO? limit this until (getWidth() -rectArea1.width). Check how to do it dynamic slider ImGui
+				ImGui::SliderFloat(textAreaSensor_y.c_str(), &playerAreas[i].rectArea.y, 0, getHeight());
+				ImGui::SliderFloat(textAreaSensor_w.c_str(), &playerAreas[i].rectArea.width, 0, getWidth());
+				ImGui::SliderFloat(textAreaSensor_h.c_str(), &playerAreas[i].rectArea.height, 0, getHeight());
+				ImGui::PopItemWidth();
+			}
+
+			//TODO improve this manual mode
+			if (i == 0 && playerAreas[i].bAreaActive)computerVisionSensor1.drawGui();
+			if (i == 1 && playerAreas[i].bAreaActive)computerVisionSensor2.drawGui();
+		}		
+
+
 		
 	}
 	else if(typeSensor == externalSickSensor){
@@ -844,11 +749,6 @@ void SensorManager::keyPressed(ofKeyEventArgs & args){
 	}
 }
 
-//----------------------------------------
-void SensorManager::setTrackingMode(bool _status){
-	bTrackgingActive = _status;
-}
-
 
 //-----------------------------------------
 bool SensorManager::setupCameraSensor(){
@@ -861,14 +761,26 @@ bool SensorManager::setupCameraSensor(){
 		cam.listDevices();
 		cam.setDeviceID(selectedCameraIndex);
 		cam.setup(640, 480);
-		
-		computerVisionImage.allocate(cam.getWidth(), cam.getHeight(), OF_IMAGE_GRAYSCALE);
+
+		//rectArea1.set(0, 0, cam.getWidth(), cam.getHeight());
+		//TODO load Json pre values
+		for (int i = 0; i < playerAreas.size(); i++) {
+			playerAreas[i].rectArea.set(0, 0, cam.getWidth(), cam.getHeight());
+		}
 
 		sensorWidth = cam.getWidth();
 		sensorHeight = cam.getHeight();
 		
 		if(cam.isInitialized()){
 			bConnected = true;
+		}
+		else {
+			//second try
+			//cout << "second try" << endl;
+			//shared_ptr<ofDirectShowGrabber> auxGrabber = shared_ptr <OF_VID_GRABBER_TYPE>(new OF_VID_GRABBER_TYPE);
+			//auxGrabber->VI.setupDevice(selectedCameraIndex, VI_USB);
+			//cam.setGrabber(auxGrabber);
+			//cam.setup(640, 480);
 		}
 		
 	}else if(modeSensor == simulationMode){
@@ -882,21 +794,6 @@ bool SensorManager::setupCameraSensor(){
 		selectedMovieIndex = 0; //Default Index
 		bConnected = updateVideoFolderComboSelections(svideosDirPath);
 
-	}
-	
-	
-	//filter minSizeBlob, maxSizeBlob, numBlobs
-	contourFinder.setMinAreaRadius(minSizeBlob);
-	contourFinder.setMaxAreaRadius(maxSizeBlob);
-	contourFinder.setThreshold(numBlobs);
-	
-	///Tracker
-	if(bTrackgingActive){
-		// wait for half a frame before forgetting something
-		contourFinder.getTracker().setPersistence(maxPersistenceTracking);
-		// an object can move up to 32 pixels per frame
-		contourFinder.getTracker().setMaximumDistance(maxDistanceTracking);
-		showLabels = true;
 	}
 	
 	return bConnected;
@@ -1014,6 +911,8 @@ bool SensorManager::updateExternalSickSensor(){
 		
 		
 	}
+
+	return hasReceivedSomeThing;
 }
 
 

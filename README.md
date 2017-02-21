@@ -6,12 +6,18 @@ ofxSensors4Games
 Introduction
 ------------
 
-This addon provides a interface to control games by sending detected actions to external games by OSC / UPD.
-Infrared cameras are the most cheap to use. But There are other powerfull sensors that can be also used. 
-For now I keep the posibility external sensors by OSC protocol sending kind of blob data. 
+This addon provides a remote interface that aims to control games that can be controlled using simple button actions. 
+This it's possible by using external sensors such for example an Infrared Camera, then sending detected actions to external games by OSC / UPD.
 
-Internal Sensors allowed: Camera and Videoplayer for testing. Kinect ( require specific installation ).
-External sensors tested are: RadarGlxRss3 and LaserRange Sick LMS1XX. 
+Infrared cameras are cheap and practical to use. But There are other powerfull sensors that can be also used. 
+For now we keep the posibility to add external sensors here and send data filtered to your game or App.  
+
+Internal Sensors allowed: 
+* Camera and Videoplayer for testing.
+* Kinect ( require specific installation ). In actual version has been disabled.
+* RadarGlxRss3 
+* LaserRange Sensor: Sick LMS1XX. 
+
 
 This addon is using the last v0.9.8 release but should work with others 0.9.x Of versions.
 
@@ -19,20 +25,22 @@ This addon is using the last v0.9.8 release but should work with others 0.9.x Of
 Installation
 ------------
 
-Copy the `ofxSensors4Games` folder into your `openFrameworks/addons/` folder.
-Use included Examples for testing: In ofApp.cpp at setup choose your sensor / simulation mode.
+Copy the `ofxSensors4Games` folder into your `openFrameworks/addons/` folder.  Modify setup in order to select you sensor (Now only available cameraSensor) and running mode ( realtime or simulation) ( life videoCamera or just play a video located at bin/data )
 
 	
 Dependencies
 ------------
 Externals:
 * ofxImgui (https://github.com/jvcleave/ofxImGui)
-
+* ofxJSON (https://github.com/jeffcrouse/ofxJSON)
+* ofxCv (https://github.com/kylemcdonald/ofxCv)
+    
+ 
 Internals:
 * ofxNetwork
 * ofxOsc
 * ofxOpencv
-* ofxKinect add this manually. !!! README  !!! ofxkinect README (usb libs install) 
+* //ofxKinect add this manually. !!! README  !!! ofxkinect README (usb libs install) 
 
 
 Compatibility
@@ -40,61 +48,34 @@ Compatibility
 
 Tested with OF 0.9.x on
 
-    Mac OS 10.11, Xcode 7 (WIP)
-    Windows 7, QTcreator (WIP)
-    Windows 7/10, Visual Studio 2015
-
-For dedicated camera uses. It's important to have full control of sensor: 
- - For webcam cameras: Auto White Balance and Auto Exposition are required to allow a precise camera control.
+    Windows 7/10, Visual Studio 2015. Require full install (http://openframeworks.cc/setup/vs/)
 
 
-Usage
+For camera sensor: 
+ Sometimes it's important to have full control of sensor: Check camera properties: To set Auto White Balance and Auto Exposition are required to allow a precise camera control.
+
+
+Usage 
 -----
-
-myControllerOscServer sends different desired and selected data
+Your App or Game will receive at "127.0.0.1" by port 12342 (OSC) or UPD (29095)
+If sends different desired and selected data
 
 //ResumedBlob
+
 osc:/GameBlob
 *	- (float) x pos 	[0..1]
 *	- (float) y pos 	[0..1]
 *	- (float) UP mov 	[0..1]
 *	- (float) DOWN mov	[0..1]
-* (TODO)	- (int) Poligon Points	[0..1] //For now just 4 ( Quad )
-* (TODO)	- (float) Quad Area x0	[0..1]
-* (TODO)	- (float) Quad Area x1	[0..1]
-* (TODO)	- (float) Quad Area x2	[0..1]
-* (TODO)	- (float) Quad Area x3	[0..1]
+
 
 //Tracking Blobs (WIP)
-osc:/TrackingBlobs
-*	- (int) id
-*	- (float) pos
-*	- (float) vel
-*	- (int) detected action
-* (TODO)	- (int) Poligon Points	[0..1] //For now just 4 ( Quad )
-* (TODO)	- (float) Quad Area x0	[0..1]
-* (TODO)	- (float) Quad Area x1	[0..1]
-* (TODO)	- (float) Quad Area x2	[0..1]
-* (TODO)	- (float) Quad Area x3	[0..1]
+osc:/GameBlob2
+*	- (float) x pos 	[0..1]
+*	- (float) y pos 	[0..1]
+*	- (float) UP mov 	[0..1]
+*	- (float) DOWN mov	[0..1]
 
-
- 
-<!-- TODO 
-
--->
-
-<!--Known issues
--------------->
-
-
-<!--Version history
--------------->
-
-<!-- It make sense to include a version history here (newest releases first), describing new features and changes to the addon. Use [git tags](http://learn.github.com/p/tagging.html) to mark release points in your repo, too! -->
-
-<!-- 
-### Version 0.1 (Date):
-Describe relevant changes etc. -->
 
 License
 -------
