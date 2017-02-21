@@ -50,9 +50,7 @@ public:
 	void drawGui_OSC_configurable();
 	bool isController_ResumedBlob = true;
 	void drawGui_ResumedBlob();
-	bool bSendOsc_fMiddleX_fMinY_fUP_fDOWN = false;
-	bool bresumeBlob_inverX = true;
-	bool bresumeBlob_inverY = false;
+
 	//bool bresumeBlob_maxX = true;
 	//bool bresumeBlob_minX = false;
 	//bool bresumeBlob_minY = true;
@@ -119,12 +117,14 @@ public:
 	
 	
 	///////////////////////////////
-	////OSC
-	
+	////OSC VARS
+	bool bSendOsc_fMiddleX_fMinY_fUP_fDOWN = true;
+	bool bresumeBlob_inverX = true;
+	bool bresumeBlob_inverY = false;
 	//Sender
 	void setupUDP(string _ip, int _port);
 	ofxUDPManager udpConnection;
-	bool bSendUDP_fMiddleX_fMinY_fUP_fDOWN = false;
+	bool bSendUDP_fMiddleX_fMinY_fUP_fDOWN = true;
 	
 	//OSC filterd data
 	ofxOscSender sender;

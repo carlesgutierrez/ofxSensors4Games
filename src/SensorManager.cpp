@@ -68,19 +68,25 @@ bool SensorManager::setParams(ofxJSONElement jsonFile)
 {
 	bool bLoaded = true;
 
-	/*/
-	bArea1 = ofToBool(jsonFile["sensorParams"]["bArea1"].asString());
-	rectArea1.x = ofToInt(jsonFile["sensorParams"]["rectArea1X"].asString());
-	rectArea1.y = ofToInt(jsonFile["sensorParams"]["rectArea1Y"].asString());
-	rectArea1.width = ofToInt(jsonFile["sensorParams"]["rectArea1W"].asString());
-	rectArea1.height = ofToInt(jsonFile["sensorParams"]["rectArea1H"].asString());
+	cout << "SensorManager Params, jsonFile = " << jsonFile << endl;
 
-	bArea2 = ofToBool(jsonFile["sensorParams"]["bArea2"].asString());
-	rectArea2.x = ofToInt(jsonFile["sensorParams"]["rectArea2X"].asString());
-	rectArea2.y = ofToInt(jsonFile["sensorParams"]["rectArea2Y"].asString());
-	rectArea2.width = ofToInt(jsonFile["sensorParams"]["rectArea2W"].asString());
-	rectArea2.height = ofToInt(jsonFile["sensorParams"]["rectArea2H"].asString());
-	*/
+	for (int j = 0; j < jsonFile.size(); j++) {
+		if (jsonFile[j]["sensorParams"].size() > 0) {
+			cout << "SensorManager player = " << jsonFile[j]["sensorParams"] << endl;
+				
+			bLoaded = bLoaded + true;
+			for (int i = 0; i < playerAreas.size(); i++) {
+				playerAreas[i].bAreaActive = ofToBool(jsonFile[j]["sensorParams"][ofToString(i + 1, 2)]["bAreaActive"].asString());
+				playerAreas[i].rectArea.x = ofToFloat(jsonFile[j]["sensorParams"][ofToString(i + 1, 2)]["rectAreaX"].asString());
+				playerAreas[i].rectArea.y = ofToFloat(jsonFile[j]["sensorParams"][ofToString(i + 1, 2)]["rectAreaY"].asString());
+				playerAreas[i].rectArea.width = ofToFloat(jsonFile[j]["sensorParams"][ofToString(i + 1, 2)]["rectAreaW"].asString());
+				playerAreas[i].rectArea.height = ofToFloat(jsonFile[j]["sensorParams"][ofToString(i + 1, 2)]["rectAreaH"].asString());
+			}
+		}
+	}
+
+
+	
 	return bLoaded;
 }
 

@@ -36,6 +36,7 @@ public:
 	void update();
 	void draw();
 	void exit();
+
 	bool loadAllParamters();
 	ofxJSONElement loadJSON(string filePathName);
 	bool saveAllParams();

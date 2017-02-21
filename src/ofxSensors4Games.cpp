@@ -102,18 +102,9 @@ bool ofxSensors4Games::loadAllParamters() {
 	string filePath = "allMyParams.json";
 	ofxJSONElement jPreset = loadJSON(filePath);
 
-	/*
-	ofxJSONElement jElement;
-	for (int i = 0; i < thisPair.size(); i++) {
-	}
-
-	if (!checkIfSetExists(thisPair.first))
-	{
-		presetsBank.addSet(thisPair.first);
-	}
-
-	presetsBank.addPreset(thisPair.second, thisPair.first, jPreset);
-	*/
+	myControllerRecognition1.setParams(jPreset);
+	myControllerRecognition2.setParams(jPreset);
+	SensorManager::getInstance()->setParams(jPreset);
 
 	return true;
 }
@@ -143,24 +134,7 @@ bool ofxSensors4Games::saveAllParams() {
 	allParametersGui.append(paramsRecognition1);
 	allParametersGui.append(paramsRecognition2);
 	allParametersGui.append(paramsSensor);
-	/*
-	int j = 0;
-	for (auto it = paramsRecognition1.begin(); it != paramsRecognition1.end(); it++, j++){
-		allParametersGui[it->first] = it->second;
-	}
 
-	ofxJSONElement paramsRecognition2 = myControllerRecognition1.getParams();
-	j = 0;
-	for (auto it = paramsRecognition2.begin(); it != paramsRecognition2.end(); it++, j++) {
-		allParametersGui[it->first] = it->second;
-	}
-
-	ofxJSONElement paramsSensor = SensorManager::getInstance()->getParams();
-	j = 0;
-	for (auto it = paramsSensor.begin(); it != paramsSensor.end(); it++, j++) {
-		allParametersGui[it->first] = it->second;
-	}
-	*/
 	allParametersGui.save("allMyParams.json", true);
 
 	return true;

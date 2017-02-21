@@ -132,7 +132,7 @@ public:
 	int marginDraw = 0;
 
 	//TODO set shit rect at Gui 
-	int numPlayersAreas = 1; //Minimum Areas Editables. This Can grow for now until 2. TODO extend to N
+	int numPlayersAreas = 2; //Minimum Areas Editables. This Can grow for now until 2. TODO extend to N
 	vector<PlayerArea> playerAreas;
 
 	//bool bArea2 = false;
