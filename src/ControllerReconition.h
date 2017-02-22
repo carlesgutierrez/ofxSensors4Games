@@ -121,7 +121,7 @@ public:
 	bool bSendOsc_fMiddleX_fMinY_fUP_fDOWN = true;
 	bool bresumeBlob_inverX = true;
 	bool bresumeBlob_inverY = false;
-	//Sender
+	//Sender	
 	void setupUDP(string _ip, int _port);
 	ofxUDPManager udpConnection;
 	bool bSendUDP_fMiddleX_fMinY_fUP_fDOWN = true;

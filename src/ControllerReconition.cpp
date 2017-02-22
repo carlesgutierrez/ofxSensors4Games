@@ -143,17 +143,11 @@ bool ControllerReconition::setParams(ofxJSONElement jsonFile)
 //-----------------------------------------
 void ControllerReconition::update(ofRectangle rectAreaPlayer){
 
-	/*
-	updateQuadAreasRecognition();
-	*/
+	//Update high level data to detect desired Players Actions
 	updateRecognitionSystem(rectAreaPlayer);
 	
-	if (numBlobsDetected > 0) {
-		sendOSCBlobData();
-	}else{
-		//do nothing
-	}
-	
+	//OSC
+	sendOSCBlobData();
 	if(bResetHostIp){
 		sender.setup(HOST, PORT);
 		setupUDP(HOST, 29095); // 29095 port is used in GODOT (game engine) software.
@@ -169,6 +163,9 @@ void ControllerReconition::updateRecognitionSystem(ofRectangle _rectAreaPlayer){
 
 	//If new SensorFrame
 	if (SensorManager::getInstance()->isNewSensorFrame()) {
+
+		//update the num of blobs found in this Controller / Area
+		numBlobsDetected = myContourFinder->getContours().size();
 	
 		if(myComputeBlobType == MaxMinsAllBlob){
 			//Calc Max Mins and get the relative position to the Camera. //TODO get relative pos to the area1,2,n
@@ -199,8 +196,7 @@ void ControllerReconition::updateRecognitionSystem(ofRectangle _rectAreaPlayer){
 
 //-----------------------------------------
 void ControllerReconition::calcMainBlobLocation(ofRectangle _rectAreaPlayer){
-	//Udpate here desired values
-	numBlobsDetected = myContourFinder->getContours().size();
+
 	
 	calculateMaxMin();
 	
@@ -315,6 +311,8 @@ void ControllerReconition::udpateRecognitionBlobAction(){
 
 //-----------------------------------------
 void ControllerReconition::send_OSC_UPD_Data(string nameTag) {
+	
+	
 	if (bSendOsc_fMiddleX_fMinY_fUP_fDOWN) {
 
 		ofxOscMessage m;
@@ -345,12 +343,26 @@ void ControllerReconition::send_OSC_UPD_Data(string nameTag) {
 
 //-----------------------------------------
 void ControllerReconition::sendOSCBlobData(){
-	
-	if (idController == 1) {
-		send_OSC_UPD_Data("GameBlob");
+
+	if (numBlobsDetected > 0) {
+		if (myComputeBlobType == MaxMinsAllBlob) {
+			//working at selected Areas. Finding the proper XY related and Sending to a Client the results
+			//TODO Convert this into dynamic controlers
+			if (idController == 1) {
+				send_OSC_UPD_Data("GameBlob");
+			}
+			else if (idController == 2) {
+				send_OSC_UPD_Data("GameBlob2");
+			}
+		}
+		else if (myComputeBlobType == TrackingBlobs) {
+			//TODO Decide desired data and parameters to send
+		}
+
+
 	}
-	else if (idController == 2) {
-		send_OSC_UPD_Data("GameBlob2");
+	else {
+		//do nothing
 	}
 	
 }
@@ -482,17 +494,16 @@ void ControllerReconition::drawGui_ResumedBlob(){
 			ImGui::Checkbox("Send Inverted Y", &bresumeBlob_inverY);
 			
 			ImGui::PushItemWidth(100);
-			ImGui::SliderFloat("(f0)##fMiddleX_fMinY_fUP_fDOWN", &xPosBlobFloatOsc, 0, 1);ImGui::SameLine();
-			ImGui::VSliderFloat("(f1)##fMiddleX_fMinY_fUP_fDOWN", ImVec2(20, 50),&yPosBlobFloatOsc, 0, 1);ImGui::SameLine();
-			ImGui::VSliderFloat("(f2)##fMiddleX_fMinY_fUP_fDOWN", ImVec2(20, 50), &fUpActionBlob_OSC, 0, 1);ImGui::SameLine();
-			ImGui::VSliderFloat("(f3)##fMiddleX_fMinY_fUP_fDOWN", ImVec2(20, 50), &fDownActionBlob_OSC, 0, 1);
+			ImGui::SliderFloat("(f0)##Send OSC", &xPosBlobFloatOsc, 0, 1);ImGui::SameLine();
+			ImGui::VSliderFloat("(f1)##Send OSC", ImVec2(20, 50),&yPosBlobFloatOsc, 0, 1);ImGui::SameLine();
+			ImGui::VSliderFloat("(f2)##Send OSC", ImVec2(20, 50), &fUpActionBlob_OSC, 0, 1);ImGui::SameLine();
+			ImGui::VSliderFloat("(f3)##Send OSC", ImVec2(20, 50), &fDownActionBlob_OSC, 0, 1);
 			//ImGui::SliderFloat("(f2) fUpActionBlobOSC", &fUpActionBlob_OSC, 0, 1);
 			//ImGui::SameLine();
 			//ImGui::SliderFloat("(f3) fDownActionBlobOSC", &fDownActionBlob_OSC, 0, 1);
-			string dataDescription1 = "(f0) xOSCBlob - (f1) yOSCBlob ";
-			string dataDescription2 = "(f2) fUpActionBlobOSC - (f3) fDownActionBlobOSC";
+			string dataDescription1 = "/(f0) X / (f1) Y / (f2) UP / (f3) DOWN /";
 			ImGui::Text(dataDescription1.c_str());
-			ImGui::Text(dataDescription2.c_str());
+
 
 			ImGui::PopItemWidth();
 		}
