@@ -47,7 +47,7 @@ public:
 	//RESUMED BLOB
 	void drawResumedBlob();
 	void drawGui_Controller();
-	void drawGui_OSC_configurable();
+	void drawGui_HostIP_configurable();
 	bool isController_ResumedBlob = true;
 	void drawGui_ResumedBlob();
 
@@ -99,12 +99,12 @@ public:
 	//median stat value
 	RecognitionMethod myComputeBlobType;
 	void updateRecognitionSystem(ofRectangle _rectAreaPlayer);
-	void udpateRecognitionBlobAction();
+	void udpate_MaxMins_Recognition_UpDown_Actions(float _value, statsRecorder & _stats);
 	
 	//int numFramesStates = 100; //TODO Addd to gui
 	int numAverageFrammes;
-	statsRecorder medianBlobHeightValue;
-	float medianHeightBlob;
+	statsRecorder medianNormValue;
+	float medianResult;
 	
 	float fUpActionBlob = 0;
 	float fDownActionBlob = 0;

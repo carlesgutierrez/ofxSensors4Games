@@ -23,7 +23,7 @@ void ControllerReconition::setup(int w, int h, RecognitionMethod _myComputeBlobT
 	sensorScale = SensorManager::getInstance()->sensorDrawScale;
 	
 	numAverageFrammes = 100;
-	medianBlobHeightValue.setup(numAverageFrammes, 0, sensorHeight);
+	medianNormValue.setup(numAverageFrammes, 0, 1);
 	
 	// open an outgoing connection to HOST:PORT
 	sender.setup(HOST, PORT);
@@ -171,7 +171,7 @@ void ControllerReconition::updateRecognitionSystem(ofRectangle _rectAreaPlayer){
 			//Calc Max Mins and get the relative position to the Camera. //TODO get relative pos to the area1,2,n
 			calcMainBlobLocation(_rectAreaPlayer);
 			//WIP Calc some average to detect UP or Down Sudden movemnts.
-			udpateRecognitionBlobAction();
+			udpate_MaxMins_Recognition_UpDown_Actions(yPosBlobFloatOsc, medianNormValue); //yPosBlobFloatOsc or another value
 
 		}
 		else if(myComputeBlobType == TrackingBlobs){
@@ -286,26 +286,24 @@ void ControllerReconition::calculateMaxMin(){
 }
 
 //-----------------------------------------
-void ControllerReconition::udpateRecognitionBlobAction(){
+//MaxMinsAllBlob Calcs
+void ControllerReconition::udpate_MaxMins_Recognition_UpDown_Actions(float _value, statsRecorder & _stats){
 	
 	//Udpate stats
-	medianBlobHeightValue.update(yPosBlob);
-	
-	//Check yPosBlob is > medianBlobHeightValue
-	medianHeightBlob = medianBlobHeightValue.getAverage(numAverageFrammes);
-	
+	_stats.update(_value);
+	medianResult = _stats.getAverage(numAverageFrammes);//Check yPosBlob is > medianBlobHeightValue ?¿?¿
 	
 	//Means Last Values are smaller than the average, so , This is DOWN DIR
-	if(medianBlobHeightValue.getLastValueNormal() - medianHeightBlob < 0){
-		fUpActionBlob = medianHeightBlob - medianBlobHeightValue.getLastValueNormal();
+	if(_stats.getLastValueNormal() - medianResult < 0){
+		fUpActionBlob = medianResult - _stats.getLastValueNormal();
 		fUpActionBlob_OSC = ofMap(fUpActionBlob, 0, 1, 0, 1);
 	}
 	else {
-		fDownActionBlob = medianBlobHeightValue.getLastValueNormal() - medianHeightBlob;
+		fDownActionBlob = _stats.getLastValueNormal() - medianResult;
 		fDownActionBlob_OSC = ofMap(fDownActionBlob, 0, 1, 0, 1);
 	}
 	
-	//Check yPosBlob is < medianBlobHeightValue
+	//Check yPosBlob is < medianBlobHeightValue ¿?¿
 }
 
 
@@ -380,50 +378,48 @@ void ControllerReconition::draw(){
 
 
 //-------------------------------------------------
-void ControllerReconition::drawGui_OSC_configurable(){
+void ControllerReconition::drawGui_HostIP_configurable(){
 	
-	//if (ImGui::Begin("OSC Window")) {
-		ImGui::Text("Sending OSC data to ");
+		ImGui::Text("Sending Data to Host: ");
 		ImGui::Text(ofToString(PORT,0).c_str());
 		ImGui::Text(HOST.c_str());
 		
 		//TODO InputTextFilterCharacter
 		static char buf1[16] = "127.0.0.1";
+		ImGui::SameLine();
 		ImGui::PushItemWidth(90);
-		ImGui::InputText("WIP Edit Host", buf1, 16);ImGui::SameLine();
-		ImGui::Checkbox("Reset HOST IP", &bResetHostIp);
+		ImGui::InputText("Edit", buf1, 16);ImGui::SameLine();
+		ImGui::Checkbox("Reset", &bResetHostIp);
 		ImGui::PopItemWidth();
 		
 		if(bResetHostIp){
 			HOST = std::string(buf1);
 			cout << "Lets reset HOST IP" << endl;
 		}
-		
-		//ImGui::End();
-	//}
+
+		ImGui::Text("-------------------------");
 }
 
 //-------------------------------------------------
 void ControllerReconition::drawGui_Controller(){
-	ImGui::SetNextWindowSize(ImVec2(300, 200));
+	ImGui::SetNextWindowSize(ImVec2(310, 350));
 	
 	//cout << "Check this Out PreVious window" << endl;
 	//bool wopen = true;
 	string myControlerIdText = "ControllerRecognition Ctrl" + ofToString(idController);
 	
 	ImGui::Begin(myControlerIdText.c_str());
-		
+	
+	//Draw and Edit OSC info
+	drawGui_HostIP_configurable();
+	
 	drawGui_ResumedBlob();
 
-	ImGui::Separator();
-	ImGui::Separator();
-	ImGui::Separator();
-	ImGui::Separator();
-	ImGui::Separator();
-	ImGui::Separator();
+	//TODO Add This to plot gui
+	//medianBlobHeightValue.draw(500 , 500, sensorWidth, 100, 100, "medianBlobHeightValue", true, 150);
 
-	//Draw and Edit OSC info
-	drawGui_OSC_configurable();
+	drawResumedBlob();
+
 		
 	ImGui::End();
 	
@@ -433,91 +429,70 @@ void ControllerReconition::drawGui_Controller(){
 //-------------------------------------------------
 void ControllerReconition::drawGui_ResumedBlob(){
 	
-	
-	ImGui::SetNextWindowSize(ImVec2(300, 200), ImGuiSetCond_FirstUseEver);
-	
 	string myControlerIdText = "MaxMins CtrlRecognition " + ofToString(idController);
 
-	if (ImGui::Begin(myControlerIdText.c_str())) {
+	ImGui::Text(myControlerIdText.c_str());
 		
-		
-		string recognitionTextType = "Configure Up&Down Values";
-		
-		ImGui::Text(recognitionTextType.c_str());
-		
-		ImGui::Separator();
-		ImGui::Text("Up&Down Detection config:");
-		
-		if(ImGui::Button("Reset Averega", ImVec2(120,20))){
-			medianBlobHeightValue.reset();
-			medianBlobHeightValue.setup(numAverageFrammes, 0, sensorHeight);
-		}
+		ImGui::PushItemWidth(160);
 
-		ImGui::SliderInt("Frames used", &numAverageFrammes, 0, 100);
-		ImGui::SliderFloat("medianHeightBlob", &medianHeightBlob, 0, 1);
-		
-		ImGui::Separator();
-
+		//// X Y 
 		const char* combo_resumedBlob_X[] = { "bresumeBlob_maxX", "bresumeBlob_minX", "bresumeBlob_middleX" };
 		const char* combo_resumedBlob_Y[] = { "bresumeBlob_maxY", "bresumeBlob_minY", "bresumeBlob_middleY" };
+
+		ImGui::Combo("MaxMin X type", &item_resumedBlob_X, combo_resumedBlob_X, IM_ARRAYSIZE(combo_resumedBlob_X));
+		ImGui::Combo("MaxMin Y type", &item_resumedBlob_Y, combo_resumedBlob_Y, IM_ARRAYSIZE(combo_resumedBlob_Y));
+
+		ImGui::PopItemWidth();
+
+		ImGui::PushItemWidth(50);
+
 		
-		ImGui::Combo("ResumeBlob X type", &item_resumedBlob_X, combo_resumedBlob_X, IM_ARRAYSIZE(combo_resumedBlob_X));
-		ImGui::Combo("ResumeBlob Y type", &item_resumedBlob_Y, combo_resumedBlob_Y, IM_ARRAYSIZE(combo_resumedBlob_Y));
-		
-		ImGui::Checkbox("Send UDP", &bSendUDP_fMiddleX_fMinY_fUP_fDOWN);
-		
-		if(bSendUDP_fMiddleX_fMinY_fUP_fDOWN){
-			
-			ImGui::Checkbox("OSC Invert X", &bresumeBlob_inverX);
-			ImGui::Checkbox("OSC Invert Y", &bresumeBlob_inverY);
-			
-			ImGui::PushItemWidth(100);
-			ImGui::SliderFloat("(f0)##fMiddleX_fMinY_fUP_fDOWN", &xPosBlobFloatOsc, 0, 1);ImGui::SameLine();
-			ImGui::VSliderFloat("(f1)##fMiddleX_fMinY_fUP_fDOWN", ImVec2(20, 50),&yPosBlobFloatOsc, 0, 1);ImGui::SameLine();
-			ImGui::VSliderFloat("(f2)##fMiddleX_fMinY_fUP_fDOWN", ImVec2(20, 50), &fUpActionBlob_OSC, 0, 1);ImGui::SameLine();
-			ImGui::VSliderFloat("(f3)##fMiddleX_fMinY_fUP_fDOWN", ImVec2(20, 50), &fDownActionBlob_OSC, 0, 1);
-			//ImGui::SliderFloat("(f2) fUpActionBlobOSC", &fUpActionBlob_OSC, 0, 1);
-			//ImGui::SameLine();
-			//ImGui::SliderFloat("(f3) fDownActionBlobOSC", &fDownActionBlob_OSC, 0, 1);
-			string dataDescription1 = "(f0) xOSCBlob - (f1) yOSCBlob ";
-			string dataDescription2 = "(f2) fUpActionBlobOSC - (f3) fDownActionBlobOSC";
-			ImGui::Text(dataDescription1.c_str());
-			ImGui::Text(dataDescription2.c_str());
-			
-			ImGui::PopItemWidth();
+		ImGui::Text("Invert:"); ImGui::SameLine();
+		ImGui::Checkbox("X", &bresumeBlob_inverX); ImGui::SameLine();
+		ImGui::Checkbox("Y", &bresumeBlob_inverY);
+
+		ImGui::Separator();
+		//// UP DOWN
+
+		ImGui::Text("AVG of: Y"); ImGui::SameLine();
+		if (ImGui::SliderInt("#AVG", &numAverageFrammes, 0, 100)) {
+			medianNormValue.reset();
+			medianNormValue.setup(numAverageFrammes, 0, 1);
 		}
+		ImGui::SameLine();
+
+		ImGui::SameLine();
+		ImGui::Text(" = "); ImGui::SameLine();
+		ImGui::SliderFloat("##medianResult", &medianResult, 0, 1);
 		
-		ImGui::Checkbox("Send OSC", &bSendOsc_fMiddleX_fMinY_fUP_fDOWN);
+		ImGui::PopItemWidth();
+		ImGui::Separator();
+		
+		/////SEND OSC / UPD
+
+		string dataDescription1 = "SEND ffff f0(X)  f1(Y)  f2(UP)  f3(DOWN)";
+		ImGui::Text(dataDescription1.c_str());
+
+		ImGui::PushItemWidth(50);
+		ImGui::Checkbox("UDP:29095", &bSendUDP_fMiddleX_fMinY_fUP_fDOWN); ImGui::SameLine();
+
+		if(bSendUDP_fMiddleX_fMinY_fUP_fDOWN){		
+			ImGui::SliderFloat("##(f0)UPD", &xPosBlobFloatOsc, 0, 1);ImGui::SameLine();
+			ImGui::SliderFloat("##(f1)UPD", &yPosBlobFloatOsc, 0, 1);ImGui::SameLine();
+			ImGui::VSliderFloat("##(f2)UPD", ImVec2(20, 50), &fUpActionBlob_OSC, 0, 1);ImGui::SameLine();
+			ImGui::VSliderFloat("##(f3)UPD", ImVec2(20, 50), &fDownActionBlob_OSC, 0, 1);		
+		}
+		ImGui::Separator();
+
+		ImGui::Checkbox("OSC:12345", &bSendOsc_fMiddleX_fMinY_fUP_fDOWN); ImGui::SameLine();
 		if(bSendOsc_fMiddleX_fMinY_fUP_fDOWN){
-			
-			ImGui::Checkbox("Send Inverted X", &bresumeBlob_inverX);
-			ImGui::Checkbox("Send Inverted Y", &bresumeBlob_inverY);
-			
-			ImGui::PushItemWidth(100);
-			ImGui::SliderFloat("(f0)##Send OSC", &xPosBlobFloatOsc, 0, 1);ImGui::SameLine();
-			ImGui::VSliderFloat("(f1)##Send OSC", ImVec2(20, 50),&yPosBlobFloatOsc, 0, 1);ImGui::SameLine();
-			ImGui::VSliderFloat("(f2)##Send OSC", ImVec2(20, 50), &fUpActionBlob_OSC, 0, 1);ImGui::SameLine();
-			ImGui::VSliderFloat("(f3)##Send OSC", ImVec2(20, 50), &fDownActionBlob_OSC, 0, 1);
-			//ImGui::SliderFloat("(f2) fUpActionBlobOSC", &fUpActionBlob_OSC, 0, 1);
-			//ImGui::SameLine();
-			//ImGui::SliderFloat("(f3) fDownActionBlobOSC", &fDownActionBlob_OSC, 0, 1);
-			string dataDescription1 = "/(f0) X / (f1) Y / (f2) UP / (f3) DOWN /";
-			ImGui::Text(dataDescription1.c_str());
-
-
-			ImGui::PopItemWidth();
+			ImGui::SliderFloat("##(f0)OSC", &xPosBlobFloatOsc, 0, 1);ImGui::SameLine();
+			ImGui::VSliderFloat("##(f1)OSC", ImVec2(20, 50),&yPosBlobFloatOsc, 0, 1);ImGui::SameLine();
+			ImGui::VSliderFloat("##(f2)OSC", ImVec2(20, 50), &fUpActionBlob_OSC, 0, 1);ImGui::SameLine();
+			ImGui::VSliderFloat("##(f3)OSC", ImVec2(20, 50), &fDownActionBlob_OSC, 0, 1);
 		}
 		
-		//TODO Add This to plot gui
-		//medianBlobHeightValue.draw(500 , 500, sensorWidth, 100, 100, "medianBlobHeightValue", true, 150);
-		
-		ImGui::End();
-		
-		
-		//Draw Detected Resumed Point
-		drawResumedBlob();
-
-	}
+		ImGui::PopItemWidth();
 }
 
 void ControllerReconition::drawResumedBlob(/*int transX ,int transY, int winW, int winH*/){
