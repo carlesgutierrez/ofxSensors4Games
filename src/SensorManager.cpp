@@ -134,7 +134,7 @@ void SensorManager::setup(sensorType _sensorType, sensorMode _sensorMode){
 	sensorImage1.allocate(getWidth(), getHeight(), OF_IMAGE_COLOR);
 	mySourcedSensorFbo.allocate(getWidth(), getHeight(), GL_RGB);
 	//sensorImage2.allocate(cam.getWidth(), cam.getHeight(), OF_IMAGE_COLOR);
-	//sourceImageRaw.allocate(cam.getWidth(), cam.getHeight(), OF_IMAGE_COLOR);
+	sourceImageRaw.allocate(getWidth(), getHeight(), OF_IMAGE_COLOR);
 
 	//setup default number of player areas
 	for (int i = 0; i < numPlayersAreas; i++) {
@@ -210,7 +210,15 @@ void SensorManager::update(){
 		
 		if (bNewSensorFrame) {
 
-		//Diferent computer vision for All PlayerAreas
+			//Save the Camera Image. If not for now for other porpouses
+			if (modeSensor == simulationMode) {
+				sourceImageRaw.setFromPixels(videoPlayerCam.getPixelsRef().getPixels(), videoPlayerCam.getWidth(), videoPlayerCam.getHeight(), OF_IMAGE_COLOR);
+			}
+			else if (modeSensor == realTimeMode) {
+				sourceImageRaw.setFromPixels(cam.getPixelsRef().getPixels(), videoPlayerCam.getWidth(), videoPlayerCam.getHeight(), OF_IMAGE_COLOR);
+			}
+
+			//Diferent computer vision for All PlayerAreas
 			for (int i = 0; i < playerAreas.size(); i++) {
 			
 				if (playerAreas[i].bAreaActive) {
@@ -361,26 +369,63 @@ void SensorManager::draw(){
 		
 		ofSetColor(255, 255, 255);
 
-		//--------------------------------------
-		//Draw Raw Sensor images
-		//if (modeSensor == realTimeMode) cam.draw(marginDraw, marginDraw, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
-		//if (modeSensor == simulationMode && bArea1) computerVisionSensor1.computerVisionImage.draw(marginDraw, marginDraw, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
-		//if (modeSensor == simulationMode && bArea2) computerVisionSensor2.computerVisionImage.draw(marginDraw, marginDraw, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
-
+		///
 		for (int i = 0; i < playerAreas.size(); i++) {
 
 			if (playerAreas[i].bAreaActive) {
 				if (i == 0) {
 					computerVisionSensor1.computerVisionImage.draw(marginDraw, marginDraw + i*sensorHeight*sensorDrawScale, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
-					computerVisionSensor1.draw(sensorDrawScale, marginDraw + i*sensorHeight*sensorDrawScale);
+					computerVisionSensor1.draw(sensorDrawScale, marginDraw + i*sensorHeight*sensorDrawScale);//TODO FIX THIS WAY TO DRAW ! TOO DIFICULT
+
+					ofEnableAlphaBlending();
+					ofSetColor(255, 255, 255, 100);
+					sourceImageRaw.draw(marginDraw, marginDraw + i*sensorHeight*sensorDrawScale, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
+					ofDisableAlphaBlending();
+					ofSetColor(255, 255, 255);
 				}
 				else if (i == 1) {
 					computerVisionSensor2.computerVisionImage.draw(marginDraw, marginDraw + i*sensorHeight*sensorDrawScale, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
 					computerVisionSensor2.draw(sensorDrawScale, marginDraw + i*sensorHeight*sensorDrawScale);
+
+					ofEnableAlphaBlending();
+					ofSetColor(255, 255, 255, 100);
+					sourceImageRaw.draw(marginDraw, marginDraw + i*sensorHeight*sensorDrawScale, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
+					ofDisableAlphaBlending();
+					ofSetColor(255, 255, 255);
 				}
 			}
 
-		}	
+		}
+		//--------------------------------------
+
+		/*
+		for (int i = 0; i < playerAreas.size(); i++) {
+
+			if (playerAreas[i].bAreaActive) {
+				if (i == 0) {
+					//Draw Raw Sensor images
+					computerVisionSensor1.computerVisionImage.draw(marginDraw, marginDraw + i*sensorHeight*sensorDrawScale, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
+					computerVisionSensor1.draw(sensorDrawScale, marginDraw + i*sensorHeight*sensorDrawScale);
+				
+					ofEnableAlphaBlending();
+					ofSetColor(255, 255, 255, 100);
+					sourceImageRaw.draw(sensorDrawScale, marginDraw + i*sensorHeight*sensorDrawScale, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
+					ofDisableAlphaBlending();
+					ofSetColor(255, 255, 255);
+				}
+				else if (i == 1) {
+					sourceImageRaw.draw(sensorDrawScale, marginDraw + i*sensorHeight*sensorDrawScale, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
+					computerVisionSensor2.computerVisionImage.draw(marginDraw, marginDraw + i*sensorHeight*sensorDrawScale, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
+					
+					ofEnableAlphaBlending();
+					ofSetColor(255, 255, 255, 100);
+					sourceImageRaw.draw(sensorDrawScale, marginDraw + i*sensorHeight*sensorDrawScale, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
+					ofDisableAlphaBlending();
+					ofSetColor(255, 255, 255);
+				}
+			}
+
+		}	*/
 	}
 	else if(typeSensor == externalSickSensor){
 		
@@ -540,6 +585,11 @@ void SensorManager::drawGuiSensorOptions(bool* opened){
 				cam.videoSettings();
 			}
 
+			//Spout
+#if defined(TARGET_WIN32)
+			ImGui::Checkbox("SPOUT the Camera", &bSpoutCameraActive);
+			if(bSpoutCameraActive)sender.sendTexture(sourceImageRaw.getTexture(), "Camera");
+#endif
 
 		
 		}

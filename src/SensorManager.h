@@ -18,6 +18,10 @@
 
 #include "ofxJSON.h"
 
+#if defined(TARGET_WIN32)
+#include "ofxSpout2Sender.h"
+#endif
+
 struct PlayerArea {
 	ofRectangle rectArea;
 	bool bAreaActive = false;
@@ -135,7 +139,7 @@ public:
 	int numPlayersAreas = 2; //Minimum Areas Editables. This Can grow for now until 2. TODO extend to N
 	vector<PlayerArea> playerAreas;
 
-	//bool bArea2 = false;
+	
 	
 private:
 	
@@ -146,7 +150,6 @@ private:
 	ofFbo mySourcedSensorFbo;
 	ofImage sensorImage1;
 	ofImage sensorImage2;
-
 
 
 	//-----------------------
@@ -161,5 +164,10 @@ private:
 	const int PortRecvExt = 4000; //Default value
 	ofxOscReceiver receiverExt;
 	bool bResetHostIp = false;
+
+#if defined(TARGET_WIN32)
+	bool bSpoutCameraActive = false;
+	ofxSpout2::Sender sender;
+#endif
 
 };

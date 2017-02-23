@@ -454,7 +454,7 @@ void ControllerReconition::drawGui_ResumedBlob(){
 		ImGui::Separator();
 		//// UP DOWN
 
-		ImGui::Text("AVG of: Y"); ImGui::SameLine();
+		ImGui::Text("AVG of: Y"); ImGui::SameLine(); //TODO COMBO SELECTABLE VAR...x, y, ... mode to study about?
 		if (ImGui::SliderInt("#AVG", &numAverageFrammes, 0, 100)) {
 			medianNormValue.reset();
 			medianNormValue.setup(numAverageFrammes, 0, 1);
