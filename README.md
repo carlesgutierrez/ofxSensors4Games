@@ -34,6 +34,10 @@ Externals:
 * ofxImgui (https://github.com/jvcleave/ofxImGui)
 * ofxJSON (https://github.com/jeffcrouse/ofxJSON)
 * ofxCv (https://github.com/kylemcdonald/ofxCv)
+(for each update projet you do , You will have to this at Properties, C/C++ -> Output Files -> "Object File Name" to be the
+following: $(IntDir)/%(RelativeDir)/)
+//Addons only for Windows
+*ofxSpout2 (https://github.com/Kj1/ofxSpout2) // TODO try trhis fork (https://github.com/sheridanis/ofxSpout2), that fix potencial crash
     
  
 Internals:
