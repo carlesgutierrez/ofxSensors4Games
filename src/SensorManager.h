@@ -18,6 +18,9 @@
 
 #include "ofxJSON.h"
 
+//Uncomment this to get full access to DIRECTSHOW VIDEO INPUT library in OF
+#define USE_SHARECAM_SPOUT
+
 #if defined(USE_SHARECAM_SPOUT)//and (TARGET_WIN32)
 #include "ofxSpout2Sender.h"
 #endif
@@ -27,8 +30,7 @@ struct PlayerArea {
 	bool bAreaActive = false;
 };
 
-//Uncomment this to get full access to DIRECTSHOW VIDEO INPUT library in OF
-#define USE_SHARECAM_SPOUT
+
 
 #ifdef USE_SENSOR_KINECT
 #include "ofxKinect.h"
