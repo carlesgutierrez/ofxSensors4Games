@@ -18,7 +18,7 @@
 
 #include "ofxJSON.h"
 
-#if defined(TARGET_WIN32)
+#if defined(USE_SHARECAM_SPOUT)//and (TARGET_WIN32)
 #include "ofxSpout2Sender.h"
 #endif
 
@@ -28,7 +28,7 @@ struct PlayerArea {
 };
 
 //Uncomment this to get full access to DIRECTSHOW VIDEO INPUT library in OF
-//#define USE_FULL_DIRECTSHOW_ACCESS
+#define USE_SHARECAM_SPOUT
 
 #ifdef USE_SENSOR_KINECT
 #include "ofxKinect.h"
@@ -165,7 +165,7 @@ private:
 	ofxOscReceiver receiverExt;
 	bool bResetHostIp = false;
 
-#if defined(TARGET_WIN32)
+#if defined(USE_SHARECAM_SPOUT)//AND (TARGET_WIN32)
 	bool bSpoutCameraActive = false;
 	ofxSpout2::Sender sender;
 #endif

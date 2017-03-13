@@ -51,8 +51,9 @@ private:
 	int maxDistanceTracking = 32;
 	//Blobs
 	int minSizeBlob = 5;
-	int maxSizeBlob = 1000;
-	int maxBlobsAccuracyMaxValue = maxSizeBlob;
+	int maxSizeBlob = 500; // TODO this should get values from Camera resolution. Now 640 x 480
+	int minBlobsArea = minSizeBlob;
+	int maxBlobsArea = maxSizeBlob;
 	int numBlobs = 20;
 
 

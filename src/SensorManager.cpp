@@ -529,18 +529,6 @@ void SensorManager::drawGuiSensorOptions(bool* opened){
 		ImGui::SliderInt("nearThreshold", &nearThreshold, 0, 255);
 		ImGui::SliderInt("farThreshold", &farThreshold, 0, 255);
 		ImGui::Separator();
-		//TODO missing this property in ofxCv
-		//ImGui::SliderInt("numBlobs ", &numBlobs, 1, 20);
-		ImGui::SliderInt("accuracyMaxSizeBlob", &maxBlobsAccuracyMaxValue, 0, sensorWidth *sensorHeight*sensorDrawScale);
-		
-		if(ImGui::SliderInt("minBlobs ", &minSizeBlob, 5, maxBlobsAccuracyMaxValue)){
-			contourFinder.setMinAreaRadius(minSizeBlob);
-		}
-		
-		
-		if(ImGui::SliderInt("maxBlobs ", &maxSizeBlob, marginDraw, maxBlobsAccuracyMaxValue)){
-			contourFinder.setMaxAreaRadius(maxSizeBlob);
-		}
 		
 #endif
 		//ImGui::PopItemWidth();
@@ -563,20 +551,7 @@ void SensorManager::drawGuiSensorOptions(bool* opened){
 			}
 			ImGui::PopItemWidth();
 
-#ifdef OF_VIDEO_CAPTURE_DIRECTSHOW
-	#ifdef USE_FULL_DIRECTSHOW_ACCESS
-				//WIP. This require public access to VI (Directshow) at OF
-				static bool bCameraComposite = false;
-				if (ImGui::Checkbox("WIP - RESET TO COMPOSITE", &bCameraComposite)) {
-					if (bCameraComposite) {
-						shared_ptr<ofDirectShowGrabber> auxGrabber = shared_ptr <OF_VID_GRABBER_TYPE>(new OF_VID_GRABBER_TYPE);
-						auxGrabber->VI.setupDevice(selectedCameraIndex, VI_COMPOSITE);
-						cam.setGrabber(auxGrabber);
-						ofExit();
-					}				
-				}
-	#endif
-#endif
+
 			if (ImGui::Button("Reset Camera", ImVec2(150, 20))) {
 				resetSimpleSensorCamera();
 			}
@@ -586,7 +561,7 @@ void SensorManager::drawGuiSensorOptions(bool* opened){
 			}
 
 			//Spout
-#if defined(TARGET_WIN32)
+#if defined(USE_SHARECAM_SPOUTTARGET_WIN32)
 			ImGui::Checkbox("SPOUT the Camera", &bSpoutCameraActive);
 			if(bSpoutCameraActive)sender.sendTexture(sourceImageRaw.getTexture(), "Camera");
 #endif

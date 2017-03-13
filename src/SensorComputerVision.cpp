@@ -11,6 +11,8 @@ void SensorComputerVision::setup(int _id, int _cameraW, int _cameraH) {
 	cameraWidth = _cameraW;
 	cameraHeight = _cameraH;
 
+	maxSizeBlob = cameraHeight; // Direct from Camera resolution. seems ok working at 640 x 480
+
 
 	computerVisionImage.allocate(cameraWidth, cameraHeight, OF_IMAGE_GRAYSCALE);
 
@@ -287,6 +289,23 @@ void SensorComputerVision::drawGui() {
 	string IdTextCamera = "ComputerVision Id[" + ofToString(idSensorCV, 0) + "]";
 
 	if (ImGui::CollapsingHeader(IdTextCamera.c_str())) {
+
+		//TODO missing this property in ofxCv
+		//ImGui::SliderInt("numBlobs ", &numBlobs, 1, 20);
+		//ImGui::SliderInt("accuracyMaxSizeBlob", &maxBlobsAccuracyMaxValue, 0, cameraWidth *cameraHeight);
+
+		string minAreaText = "minArea##"+IdTextCamera;
+		string maxAreaText = "maxArea##" + IdTextCamera;
+
+		if (ImGui::SliderInt(maxAreaText.c_str(), &maxSizeBlob, minBlobsArea, maxBlobsArea)) {
+			contourFinder->setMaxAreaRadius(maxSizeBlob);
+		}
+
+		if (ImGui::SliderInt(minAreaText.c_str(), &minSizeBlob, minBlobsArea, maxSizeBlob)) {
+			contourFinder->setMinAreaRadius(minSizeBlob);
+		}
+
+
 
 		string textBlobsFound = "#blobs = " + ofToString(contourFinder->size(), 0);
 		ImGui::Text(textBlobsFound.c_str());
