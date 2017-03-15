@@ -249,12 +249,12 @@ void SensorManager::update(){
 			
 				if (playerAreas[i].bAreaActive) {
 					if (i == 0) {
-						computerVisionSensor1.udpateBackground();
+						if(typeSensor == cameraSensor)computerVisionSensor1.udpateBackground();
 						updateSubImagesFromImageRaw(playerAreas[i].rectArea, sensorImage1);
 						computerVisionSensor1.mainComputerVision(sensorImage1);
 					}
 					else if (i == 1) {
-						computerVisionSensor2.udpateBackground();
+						if (typeSensor == cameraSensor)computerVisionSensor2.udpateBackground();
 						updateSubImagesFromImageRaw(playerAreas[i].rectArea, sensorImage2);
 						computerVisionSensor2.mainComputerVision(sensorImage2);
 					}
@@ -350,8 +350,14 @@ void SensorManager::draw(){
 
 			// draw from the live kinect
 			kinect.drawDepth(marginDraw, i * sensorHeight*sensorDrawScale, kinect.width*sensorDrawScale, kinect.height*sensorDrawScale);
-			computerVisionSensor1.draw(sensorDrawScale, marginDraw + i * sensorHeight*sensorDrawScale);//TODO FIX THIS WAY TO DRAW ! Complex way
-
+			
+			if (i == 0) {
+				computerVisionSensor1.draw(sensorDrawScale, marginDraw + i * sensorHeight*sensorDrawScale);//TODO FIX THIS WAY TO DRAW ! Complex way
+			}
+			else if (i == 1) {
+				computerVisionSensor2.draw(sensorDrawScale, marginDraw + i * sensorHeight*sensorDrawScale);//TODO FIX THIS WAY TO DRAW ! Complex way
+			}
+			
 		}
 
 

@@ -400,14 +400,11 @@ void SensorComputerVision::drawGui() {
 
 			}
 
+			string thresholdValueText = "Threshold Value##" + ofToString(idSensorCV, 0);
+			ImGui::SliderFloat(thresholdValueText.c_str(), &thresholdValue, 0, 255);
 		}
 
-		string thresholdValueText = "Threshold Value##" + ofToString(idSensorCV, 0);
-		ImGui::SliderFloat(thresholdValueText.c_str(), &thresholdValue, 0, 255);
-
-
 		ImGui::Separator();
-
 		ImGui::Checkbox("Activate Tracking", &bTrackgingActive);
 
 		if (bTrackgingActive) {
