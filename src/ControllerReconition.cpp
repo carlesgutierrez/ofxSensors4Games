@@ -512,16 +512,26 @@ void ControllerReconition::drawResumedBlob(/*int transX ,int transY, int winW, i
 
 	ofSetColor(myLineColor.r, myLineColor.g, myLineColor.b, 150);
 
-	ofDrawCircle(xPosBlob*sensorScale,
-		yPosBlob*sensorScale + sensorWidth*(idController-1)*sensorScale, //Auto Down draw Variable
-		10 * sensorScale);//Painting blob result over the Kinect Blob Drawer
+	ofNoFill();
+	ofDrawRectangle(ofRectangle(
+		rectAreaPlayer.x*sensorScale,//x
+		rectAreaPlayer.y*sensorScale+ sensorHeight*(idController - 1)*sensorScale,//y
+		rectAreaPlayer.width*sensorScale,//w
+		rectAreaPlayer.height*sensorScale)//h
+	);
+
+	ofDrawCircle(
+		xPosBlob*sensorScale, //x
+		yPosBlob*sensorScale + sensorHeight*(idController-1)*sensorScale, //y
+		10 * sensorScale);//size
 
 	ofSetLineWidth(2);
 	ofSetColor(myLineColor.r, myLineColor.g, myLineColor.b, 150);
-	ofDrawLine(rectAreaPlayer.getCenter().x*sensorScale,
-				rectAreaPlayer.getCenter().y*sensorScale + 0.5*sensorWidth*(idController - 1)*sensorScale, //Auto Down draw Variable,
-				xPosBlob*sensorScale,
-				yPosBlob*sensorScale + sensorWidth*(idController - 1)*sensorScale);
+	ofDrawLine(
+		rectAreaPlayer.getCenter().x*sensorScale,//x1
+		rectAreaPlayer.getCenter().y*sensorScale + sensorHeight*(idController - 1)*sensorScale, //y1
+		xPosBlob*sensorScale, //x2
+		yPosBlob*sensorScale + sensorHeight*(idController - 1)*sensorScale); //y2
 	
 	ofDisableAlphaBlending();
 	ofPopStyle();
