@@ -18,6 +18,7 @@
 
 #include "ofxJSON.h"
 
+
 //Uncomment this to Use it
 #define USE_SHARECAM_SPOUT
 
@@ -34,7 +35,7 @@ struct PlayerArea {
 
 
 //Uncomment this to Use it
-//#define USE_SENSOR_KINECT
+#define USE_SENSOR_KINECT
 
 #ifdef USE_SENSOR_KINECT
 #include "ofxKinect.h"
@@ -55,8 +56,7 @@ struct radarData
 	int strength;
 };
 
-enum sensorType { kinectSensor, cameraSensor, externalSickSensor };
-enum sensorMode{ realTimeMode, simulationMode };
+
 
 class SensorManager {
 	
@@ -101,6 +101,8 @@ public:
 	bool setupKinectSensor();
 #ifdef USE_SENSOR_KINECT
 	ofxKinect kinect;
+	ofImage depthKinectImage;
+	ofImage myThresholdKinect;
 #endif
 	//bool bThreshWithOpenCV;
 	int nearThreshold;
@@ -128,7 +130,7 @@ public:
 	//Computer Vision Vars
 	SensorComputerVision computerVisionSensor1;
 	SensorComputerVision computerVisionSensor2;
-	void updateSourceImageRaw(ofRectangle _rectArea, ofImage &image2Update);
+	void updateSubImagesFromImageRaw(ofRectangle _rectArea, ofImage &image2Update);
 	void applyMaskToImgVideoCam(ofRectangle _rectArea, ofImage & imageToMask);
 	//------------------------
 	//External OSC sick

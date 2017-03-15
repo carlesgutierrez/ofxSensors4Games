@@ -4,15 +4,16 @@
 
 
 //-----------------------------------------
-void SensorComputerVision::setup(int _id, int _cameraW, int _cameraH) {
+void SensorComputerVision::setup(int _id, int _cameraW, int _cameraH, sensorType _myTypeSensor) {
 
 	idSensorCV = _id;
 
 	cameraWidth = _cameraW;
 	cameraHeight = _cameraH;
 
-	maxSizeBlob = cameraHeight; // Direct from Camera resolution. seems ok working at 640 x 480
+	mySensorType = _myTypeSensor;
 
+	maxSizeBlob = cameraHeight; // Direct from Camera resolution. seems ok working at 640 x 480
 
 	computerVisionImage.allocate(cameraWidth, cameraHeight, OF_IMAGE_GRAYSCALE);
 
@@ -29,6 +30,21 @@ void SensorComputerVision::setup(int _id, int _cameraW, int _cameraH) {
 		// an object can move up to 32 pixels per frame
 		contourFinder->getTracker().setMaximumDistance(maxDistanceTracking);
 		showLabels = true;
+	}
+
+	//In Case Kinect Force to do regular threslholding ... guessing
+	if (mySensorType == kinectSensor) {
+		bSimpleBackgroundSubstraction = false;
+		bLearnBackground = false;
+		bContourFinderThreshold = false;
+
+		//Computer Vision Stuff
+		//Main Image used to Cv
+		computerVisionImage.allocate(cameraWidth, cameraHeight, OF_IMAGE_GRAYSCALE);
+		//filter minSizeBlob, maxSizeBlob, numBlobs
+		contourFinder->setMinAreaRadius(minSizeBlob);
+		contourFinder->setMaxAreaRadius(maxSizeBlob);
+		contourFinder->setThreshold(numBlobs);
 	}
 }
 
@@ -51,117 +67,139 @@ void SensorComputerVision::udpateBackground() {
 //-----------------------------------------
 void SensorComputerVision::mainComputerVision(ofImage _image2Compute) {
 
-	//blur(movie, 10);//TODO This! easy and fast. Add slider options
 
-	//TODO FIX THIS bLearnBackground to not apply really a Learning background if its not active.
-	if (bLearnBackground) {
+	if (mySensorType == kinectSensor) {
+		//hard reset to apply simple and default threshold image
+		bSimpleBackgroundSubstraction = false;
+		bLearnBackground = false;
+		bContourFinderThreshold = false;
 
-
-
-		background.setLearningTime(learningTime);
-		background.setThresholdValue(thresholdValue);
-		//Camera Image to Gray
-		background.update(_image2Compute, computerVisionImage);
-
+		//Update Texture
+		//computerVisionImage.setFromPixels(_image2Compute.getPixelsRef().getPixels(), cameraWidth, cameraHeight, OF_IMAGE_GRAYSCALE);
+		computerVisionImage = _image2Compute;
 		computerVisionImage.update();
 
-		contourFinder->findContours(computerVisionImage);
-	}
-	else if (bSimpleBackgroundSubstraction) {
-
-		//Camera Image to Gray
-		ofxCv::convertColor(_image2Compute, computerVisionImage, CV_RGB2GRAY);
-
-		computerVisionImage.update();
-
-		//Save Background Frame
-		if (bresetBackground) {
-			backGroundCam = computerVisionImage;
-			backGroundCam.update();
-			bresetBackground = false;
-		}
-
-
-		//then background substraction //TODO check diferent methods
-		ofxCv::absdiff(computerVisionImage, backGroundCam, diffCam);
-
-		//Apply invert Threshold
+		//Is really INvert Useful? 
 		if (bInvertContourFinderThreshold)contourFinder->setInvert(true);
 		else contourFinder->setInvert(false);
-
-		if (bContourFinderThreshold) {
-			//FindContours Threshold
-			contourFinder->setThreshold(thresholdValue);
-			contourFinder->findContours(diffCam);
-		}
-		else if (bAutoThreshold) {
-			//Automatic Thresholding
-			ofxCv::autothreshold(diffCam);
-			contourFinder->findContours(diffCam);
-		}
-		else {
-			//Regular Threshold
-			ofxCv::threshold(diffCam, thresholdValue);
-			contourFinder->findContours(diffCam);
-		}
-
-		diffCam.update();
-
-	}
-	else { //ContourFinder Methods
-
-		   //Update Camera colors
-
-		computerVisionImage.setFromPixels(_image2Compute.getPixelsRef().getPixels(), cameraWidth, cameraHeight, OF_IMAGE_COLOR);
-
-		computerVisionImage.update();
-
-		//Threshold
-
-		if (bContourFinderThreshold) {
-
-			contourFinder->setAutoThreshold(true);
-
-			if (bContourFinderColorThreshold) {
-				//FindContours Threshold
-				contourFinder->setUseTargetColor(true);
-				contourFinder->setTargetColor(colorTargetContourFinder);
-				//TODO ADD Color Picker From Camera.
-			}
-
-		}
-		else {
-			//Default Threshold Method
-			/*
-			ContourFinder::ContourFinder()
-			:autoThreshold(true)
-			,invert(false)
-			,simplify(true)
-			,thresholdValue(128.)
-			,useTargetColor(false)
-			,contourFindingMode(CV_RETR_EXTERNAL)
-			,sortBySize(false) {
-			resetMinArea();
-			resetMaxArea();
-			}*/
-
-			contourFinder->setAutoThreshold(true);
-			contourFinder->setInvert(false);
-			contourFinder->setUseTargetColor(false);
-			contourFinder->setThreshold(thresholdValue);
-		}
-
-
-		//Apply invert Threshold
-		if (bInvertContourFinderThreshold)contourFinder->setInvert(true);
-		else contourFinder->setInvert(false);
-
-
-		//Apply Configured Thresdhold
-		contourFinder->setThreshold(thresholdValue);
 
 		//Find Countours
 		contourFinder->findContours(computerVisionImage);
+	}
+	else {
+		//Then it's a regular cameraSensor
+
+		//blur(movie, 10);//TODO This!? easy and fast. Add slider options
+
+		//TODO FIX THIS bLearnBackground to not apply really a Learning background if its not active.
+		if (bLearnBackground) {
+
+			background.setLearningTime(learningTime);
+			background.setThresholdValue(thresholdValue);
+			//Camera Image to Gray
+			background.update(_image2Compute, computerVisionImage);
+
+			computerVisionImage.update();
+
+			contourFinder->findContours(computerVisionImage);
+		}
+		else if (bSimpleBackgroundSubstraction) {
+
+			//Camera Image to Gray
+			ofxCv::convertColor(_image2Compute, computerVisionImage, CV_RGB2GRAY);
+
+			computerVisionImage.update();
+
+			//Save Background Frame
+			if (bresetBackground) {
+				backGroundCam = computerVisionImage;
+				backGroundCam.update();
+				bresetBackground = false;
+			}
+
+
+			//then background substraction //TODO check diferent methods
+			ofxCv::absdiff(computerVisionImage, backGroundCam, diffCam);
+
+			//Apply invert Threshold
+			if (bInvertContourFinderThreshold)contourFinder->setInvert(true);
+			else contourFinder->setInvert(false);
+
+			if (bContourFinderThreshold) {
+				//FindContours Threshold
+				contourFinder->setThreshold(thresholdValue);
+				contourFinder->findContours(diffCam);
+			}
+			else if (bAutoThreshold) {
+				//Automatic Thresholding
+				ofxCv::autothreshold(diffCam);
+				contourFinder->findContours(diffCam);
+			}
+			else {
+				//Regular Threshold
+				ofxCv::threshold(diffCam, thresholdValue);
+				contourFinder->findContours(diffCam);
+			}
+
+			diffCam.update();
+
+		}
+		else { // IFNOT bLearnBackground and bSimpleBackgroundSubstraction
+
+			//Update Camera colors
+
+			computerVisionImage.setFromPixels(_image2Compute.getPixelsRef().getPixels(), cameraWidth, cameraHeight, OF_IMAGE_COLOR);
+
+			computerVisionImage.update();
+
+			if (bContourFinderThreshold) {
+
+				contourFinder->setAutoThreshold(true);
+
+				if (bContourFinderColorThreshold) {
+					//FindContours Threshold
+					contourFinder->setUseTargetColor(true);
+					contourFinder->setTargetColor(colorTargetContourFinder);
+					//TODO ADD Color Picker From Camera.
+				}
+
+			}
+			else {
+				//Default Threshold Method
+				/*
+				ContourFinder::ContourFinder()
+				:autoThreshold(true)
+				,invert(false)
+				,simplify(true)
+				,thresholdValue(128.)
+				,useTargetColor(false)
+				,contourFindingMode(CV_RETR_EXTERNAL)
+				,sortBySize(false) {
+				resetMinArea();
+				resetMaxArea();
+				}*/
+
+				//contourFinder->setAutoThreshold(true);
+				//contourFinder->setInvert(false);
+				contourFinder->setUseTargetColor(false);
+				//contourFinder->setThreshold(thresholdValue);
+			}
+
+			//Finally FindContours
+
+			//Apply invert Threshold
+			if (bInvertContourFinderThreshold)contourFinder->setInvert(true);
+			else contourFinder->setInvert(false);
+
+			//Apply Configured Thresdhold
+			if (bAutoThreshold) contourFinder->setAutoThreshold(true);
+			else contourFinder->setThreshold(thresholdValue);
+
+			//Find Countours
+			contourFinder->findContours(computerVisionImage);
+		}
+
+
 
 	}
 }
@@ -272,6 +310,7 @@ void SensorComputerVision::draw(float _sensorDrawScale, int _marginDraw) {
 
 		}
 
+		ofPushStyle();
 		//Finally the countours matching our image
 		ofSetColor(255, 0, 0);
 
@@ -280,6 +319,8 @@ void SensorComputerVision::draw(float _sensorDrawScale, int _marginDraw) {
 		ofScale(_sensorDrawScale, _sensorDrawScale);
 		contourFinder->draw();
 		ofPopMatrix();
+
+		ofPopStyle();
 	}
 }
 
@@ -294,7 +335,7 @@ void SensorComputerVision::drawGui() {
 		//ImGui::SliderInt("numBlobs ", &numBlobs, 1, 20);
 		//ImGui::SliderInt("accuracyMaxSizeBlob", &maxBlobsAccuracyMaxValue, 0, cameraWidth *cameraHeight);
 
-		string minAreaText = "minArea##"+IdTextCamera;
+		string minAreaText = "minArea##" + IdTextCamera;
 		string maxAreaText = "maxArea##" + IdTextCamera;
 
 		if (ImGui::SliderInt(maxAreaText.c_str(), &maxSizeBlob, minBlobsArea, maxBlobsArea)) {
@@ -310,49 +351,53 @@ void SensorComputerVision::drawGui() {
 		string textBlobsFound = "#blobs = " + ofToString(contourFinder->size(), 0);
 		ImGui::Text(textBlobsFound.c_str());
 
-		string doLearningBackgroundText = "Do Learning Background##" + ofToString(idSensorCV, 0);
-		ImGui::Checkbox(doLearningBackgroundText.c_str(), &bLearnBackground);
+		if(mySensorType == cameraSensor){
 
-		if (ImGui::Button("Reset Background")) {
-			bresetBackground = true;
-		}
+			string doLearningBackgroundText = "Do Learning Background##" + ofToString(idSensorCV, 0);
+			ImGui::Checkbox(doLearningBackgroundText.c_str(), &bLearnBackground);
 
-		
-		if (bLearnBackground) {
-			string learningTimeText = "Learning Time##" + ofToString(idSensorCV, 0);
-			ImGui::SameLine();
-			ImGui::PushItemWidth(100);
-			ImGui::SliderFloat(learningTimeText.c_str(), &learningTime, 0, 255);
-			ImGui::PopItemWidth();
-		}
+			if (ImGui::Button("Reset Background")) {
+				bresetBackground = true;
+			}
 
-		string BackgroundSubstractionText = "Background Substraction##" + ofToString(idSensorCV, 0);
-		ImGui::Checkbox(BackgroundSubstractionText.c_str(), &bSimpleBackgroundSubstraction);
 
-		if (bSimpleBackgroundSubstraction) {
-			ImGui::SameLine();
-			ImGui::Checkbox("Auto Threshold", &bAutoThreshold);
-		}
+			if (bLearnBackground) {
+				string learningTimeText = "Learning Time##" + ofToString(idSensorCV, 0);
+				ImGui::SameLine();
+				ImGui::PushItemWidth(100);
+				ImGui::SliderFloat(learningTimeText.c_str(), &learningTime, 0, 255);
+				ImGui::PopItemWidth();
+			}
 
-		string contoursFinderOptionsText = "ContoursFinder Options##" + ofToString(idSensorCV, 0);
-		ImGui::Checkbox(contoursFinderOptionsText.c_str(), &bContourFinderThreshold);
-		string invertThresholdContoursFinderText = "Invert Threshold ContoursFinder##" + ofToString(idSensorCV, 0);
-		ImGui::Checkbox(invertThresholdContoursFinderText.c_str(), &bInvertContourFinderThreshold);
+			string BackgroundSubstractionText = "Background Substraction##" + ofToString(idSensorCV, 0);
+			ImGui::Checkbox(BackgroundSubstractionText.c_str(), &bSimpleBackgroundSubstraction);
 
-		if (bContourFinderThreshold) {
+			if (bSimpleBackgroundSubstraction) {
+				ImGui::SameLine();
+				ImGui::Checkbox("Auto Threshold", &bAutoThreshold);
+			}
 
-			string contoursFinderColorTargetText = "ContoursFinder Color Target##" + ofToString(idSensorCV, 0);
-			ImGui::Checkbox(contoursFinderColorTargetText.c_str(), &bContourFinderColorThreshold);
-			if (bContourFinderColorThreshold) {
-				ImVec4 colorTargetVec = colorTargetContourFinder;
-				string colorTargetContourFinderText = "ContoursFinder Color Target##" + ofToString(idSensorCV, 0);
-				ImGui::ColorEdit3(colorTargetContourFinderText.c_str(), (float*)& colorTargetVec);
+			string contoursFinderOptionsText = "ContoursFinder Options##" + ofToString(idSensorCV, 0);
+			ImGui::Checkbox(contoursFinderOptionsText.c_str(), &bContourFinderThreshold);
+			string invertThresholdContoursFinderText = "Invert Threshold ContoursFinder##" + ofToString(idSensorCV, 0);
+			ImGui::Checkbox(invertThresholdContoursFinderText.c_str(), &bInvertContourFinderThreshold);
 
+			if (bContourFinderThreshold) {
+
+				string contoursFinderColorTargetText = "ContoursFinder Color Target##" + ofToString(idSensorCV, 0);
+				ImGui::Checkbox(contoursFinderColorTargetText.c_str(), &bContourFinderColorThreshold);
 				if (bContourFinderColorThreshold) {
-					colorTargetContourFinder.r = colorTargetVec.x * 255;
-					colorTargetContourFinder.g = colorTargetVec.y * 255;
-					colorTargetContourFinder.b = colorTargetVec.z * 255;
+					ImVec4 colorTargetVec = colorTargetContourFinder;
+					string colorTargetContourFinderText = "ContoursFinder Color Target##" + ofToString(idSensorCV, 0);
+					ImGui::ColorEdit3(colorTargetContourFinderText.c_str(), (float*)& colorTargetVec);
+
+					if (bContourFinderColorThreshold) {
+						colorTargetContourFinder.r = colorTargetVec.x * 255;
+						colorTargetContourFinder.g = colorTargetVec.y * 255;
+						colorTargetContourFinder.b = colorTargetVec.z * 255;
+					}
 				}
+
 			}
 
 		}
@@ -360,15 +405,6 @@ void SensorComputerVision::drawGui() {
 		string thresholdValueText = "Threshold Value##" + ofToString(idSensorCV, 0);
 		ImGui::SliderFloat(thresholdValueText.c_str(), &thresholdValue, 0, 255);
 
-		/*
-		ImGui::SliderInt("accuracyMaxSizeBlob", &maxBlobsAccuracyMaxValue, 0, cameraWidth *cameraHeight*sensorDrawScale);
-
-		if (ImGui::SliderInt("min Area Blob", &minSizeBlob, _marginDraw, maxBlobsAccuracyMaxValue)) {
-		contourFinder.setMinAreaRadius(minSizeBlob);
-		}
-		if (ImGui::SliderInt("max Area Blob", &maxSizeBlob, _marginDraw, maxBlobsAccuracyMaxValue)) {
-		contourFinder.setMaxAreaRadius(maxSizeBlob);
-		}*/
 
 		ImGui::Separator();
 

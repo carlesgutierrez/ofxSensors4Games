@@ -114,12 +114,17 @@ void SensorManager::setup(sensorType _sensorType, sensorMode _sensorMode){
 	if (typeSensor == kinectSensor) {
 #ifdef USE_SENSOR_KINECT
 		bSensorReady = setupKinectSensor();
+		depthKinectImage.allocate(sensorWidth, sensorHeight, OF_IMAGE_GRAYSCALE);
+		myThresholdKinect.allocate(sensorWidth, sensorHeight, OF_IMAGE_GRAYSCALE);
+		
+		computerVisionSensor1.setup(1, sensorWidth, sensorHeight, kinectSensor); //TODO Change this to JSon params loaded at a config file
+		computerVisionSensor2.setup(2, sensorWidth, sensorHeight, kinectSensor); //TODO Change this to JSon params loaded at a config file
 #endif
 	}else if (typeSensor == cameraSensor){
 		bSensorReady = setupCameraSensor();
 		//Setup CV
-		computerVisionSensor1.setup(1, 640, 480); //TODO Change this to JSon params loaded at a config file
-		computerVisionSensor2.setup(2, 640, 480); //TODO Change this to JSon params loaded at a config file
+		computerVisionSensor1.setup(1, sensorWidth, sensorHeight, cameraSensor); //TODO Change this to JSon params loaded at a config file
+		computerVisionSensor2.setup(2, sensorWidth, sensorHeight, cameraSensor); //TODO Change this to JSon params loaded at a config file
 		
 	}else if(typeSensor == externalSickSensor){
 		bSensorReady = setupExternalSickSensor();
@@ -133,7 +138,7 @@ void SensorManager::setup(sensorType _sensorType, sensorMode _sensorMode){
 	//For Computer Vision Setup some general vars
 	sensorImage1.allocate(getWidth(), getHeight(), OF_IMAGE_COLOR);
 	mySourcedSensorFbo.allocate(getWidth(), getHeight(), GL_RGB);
-	//sensorImage2.allocate(cam.getWidth(), cam.getHeight(), OF_IMAGE_COLOR);
+	sensorImage2.allocate(getWidth(), getHeight(), OF_IMAGE_COLOR);//This should be allocated, like now
 	sourceImageRaw.allocate(getWidth(), getHeight(), OF_IMAGE_COLOR);
 
 	//setup default number of player areas
@@ -166,30 +171,41 @@ void SensorManager::update(){
 		
 		// there is a new frame and we are connected
 		if(kinect.isFrameNew()) {
-			
-			// load grayscale depth image from the kinect source
-			computerVisionImage.setFromPixels(kinect.getDepthPixels());
-			
-			//we do two thresholds - one for the far plane and one for the near plane
-			//we do it ourselves - show people how they can work with the pixels
-			ofPixels & pix = computerVisionImage.getPixels();
-			int numPixels = pix.size();
-			for(int i = 0; i < numPixels; i++) {
-				if(pix[i] < nearThreshold && pix[i] > farThreshold) {
-					pix[i] = 255;
-				} else {
-					pix[i] = 0;
+
+			if (modeSensor == realTimeMode) {
+				
+				sourceImageRaw.setFromPixels(kinect.getPixels().getPixels(), kinect.getWidth(), kinect.getHeight(), OF_IMAGE_COLOR);
+
+				// load grayscale depth image from the kinect source
+				depthKinectImage.setFromPixels(kinect.getDepthPixels());
+
+				/**/
+				//we do two thresholds - one for the far plane and one for the near plane
+				//we do it ourselves - show people how they can work with the pixels
+				ofPixels & pix = depthKinectImage.getPixels();
+				int numPixels = pix.size();
+				for (int i = 0; i < numPixels; i++) {
+					if (pix[i] < nearThreshold && pix[i] > farThreshold) {
+						pix[i] = 255;
+					}
+					else {
+						pix[i] = 0;
+					}
 				}
+
+				//Set pixels back to main cv image
+				myThresholdKinect.setFromPixels(pix);
+				
+				//Shape Kinect Improves?
+				//TODO for Kinect check how to:  scaling up, blurring, buffering, getting a new image from the result by finding contours and so on. You can get quite nice results then.
+
+
+			}
+			else {
+				//TODO
 			}
 			
-			//Set pixels back to main cv image
-			computerVisionImage.setFromPixels(pix);
-
-			// find contours which are between the size of 20 pixels and 1/3 the w*h pixels.
-			// also, find holes is set to true so we will get interior contours as well....
-			//contourFinder.findContours(grayImage, minSizeBlob, maxSizeBlob, numBlobs, false);
-			contourFinder.findContours(computerVisionImage);
-			bNewSensorFrame = true;
+				bNewSensorFrame = true;
 		}
 
 		
@@ -212,28 +228,10 @@ void SensorManager::update(){
 
 			//Save the Camera Image. If not for now for other porpouses
 			if (modeSensor == simulationMode) {
-				sourceImageRaw.setFromPixels(videoPlayerCam.getPixelsRef().getPixels(), videoPlayerCam.getWidth(), videoPlayerCam.getHeight(), OF_IMAGE_COLOR);
+				sourceImageRaw.setFromPixels(videoPlayerCam.getPixelsRef().getPixels(), getWidth(), getHeight(), OF_IMAGE_COLOR);
 			}
 			else if (modeSensor == realTimeMode) {
-				sourceImageRaw.setFromPixels(cam.getPixelsRef().getPixels(), videoPlayerCam.getWidth(), videoPlayerCam.getHeight(), OF_IMAGE_COLOR);
-			}
-
-			//Diferent computer vision for All PlayerAreas
-			for (int i = 0; i < playerAreas.size(); i++) {
-			
-				if (playerAreas[i].bAreaActive) {
-					if (i == 0) {
-						computerVisionSensor1.udpateBackground();
-						updateSourceImageRaw(playerAreas[i].rectArea, sensorImage1);
-						computerVisionSensor1.mainComputerVision(sensorImage1);
-					}
-					else if (i == 1) {
-						computerVisionSensor2.udpateBackground();
-						updateSourceImageRaw(playerAreas[i].rectArea, sensorImage2);
-						computerVisionSensor2.mainComputerVision(sensorImage2);
-					}
-				}
-
+				sourceImageRaw.setFromPixels(cam.getPixelsRef().getPixels(), getWidth(), getHeight(), OF_IMAGE_COLOR);
 			}
 
 		}
@@ -241,6 +239,29 @@ void SensorManager::update(){
 	else if (typeSensor == externalSickSensor){
 		//This updates osc data that contains all Blobs
 		bNewSensorFrame = updateExternalSickSensor();
+	}
+
+	if (typeSensor == kinectSensor || typeSensor == cameraSensor) {
+			//Diferent computer vision for All PlayerAreas
+			//updateAllComputerVisionAreas();
+
+			for (int i = 0; i < playerAreas.size(); i++) {
+			
+				if (playerAreas[i].bAreaActive) {
+					if (i == 0) {
+						computerVisionSensor1.udpateBackground();
+						updateSubImagesFromImageRaw(playerAreas[i].rectArea, sensorImage1);
+						computerVisionSensor1.mainComputerVision(sensorImage1);
+					}
+					else if (i == 1) {
+						computerVisionSensor2.udpateBackground();
+						updateSubImagesFromImageRaw(playerAreas[i].rectArea, sensorImage2);
+						computerVisionSensor2.mainComputerVision(sensorImage2);
+					}
+				}
+
+			}
+
 	}
 	
 
@@ -279,13 +300,20 @@ void SensorManager::applyMaskToImgVideoCam(ofRectangle _rectArea, ofImage & imag
 }
 
 //-----------------------------------------
-void SensorManager::updateSourceImageRaw(ofRectangle _rectArea, ofImage &image2Update) {
+void SensorManager::updateSubImagesFromImageRaw(ofRectangle _rectArea, ofImage &image2Update) {
 	//get Pixels from sensor ( VideoPlayer or VideoCamera )
 	if (modeSensor == simulationMode) {
+		//TODO kinect mode? or just use sourceImageRaw
 		image2Update.setFromPixels(videoPlayerCam.getPixelsRef().getPixels(), videoPlayerCam.getWidth(), videoPlayerCam.getHeight(), OF_IMAGE_COLOR);
 	}
 	else if (modeSensor == realTimeMode) {
-		image2Update.setFromPixels(cam.getPixelsRef().getPixels(), videoPlayerCam.getWidth(), videoPlayerCam.getHeight(), OF_IMAGE_COLOR);
+
+		if (typeSensor == kinectSensor) {
+			image2Update.setFromPixels(myThresholdKinect.getPixels().getPixels(), myThresholdKinect.getWidth(), myThresholdKinect.getHeight(), OF_IMAGE_GRAYSCALE);
+		}
+		else {
+			image2Update.setFromPixels(sourceImageRaw.getPixelsRef().getPixels(), sourceImageRaw.getWidth(), sourceImageRaw.getHeight(), OF_IMAGE_COLOR);
+		}
 	}
 
 	image2Update.update();
@@ -300,8 +328,6 @@ bool SensorManager::isNewSensorFrame(){
 
 //-----------------------------------------
 void SensorManager::draw(){
-
-	//TODO , Contour Finder not drawing now, and Second Image paint in red.
 
 	//Draw GUI Sensors
 	
@@ -320,19 +346,14 @@ void SensorManager::draw(){
 
 		ofSetColor(255, 255, 255);
 		
+		for (int i = 0; i < playerAreas.size(); i++) {
 
-		// draw from the live kinect
-		kinect.drawDepth(marginDraw, marginDraw, kinect.width*sensorDrawScale, kinect.height*sensorDrawScale);
-		kinect.draw(2*kinect.width*sensorDrawScale, marginDraw, kinect.width*sensorDrawScale, kinect.height*sensorDrawScale);
-			
-		computerVisionImage.draw(marginDraw, sensorWidth*sensorDrawScale, kinect.width*sensorDrawScale, kinect.height*sensorDrawScale);
-		
-		ofSetColor(255, 0, 0);
-		ofPushMatrix();
-		ofTranslate(marginDraw, sensorWidth*sensorDrawScale);
-		ofScale(sensorDrawScale, sensorDrawScale);
-		contourFinder.draw();
-		ofPopMatrix();
+			// draw from the live kinect
+			kinect.drawDepth(marginDraw, i * sensorHeight*sensorDrawScale, kinect.width*sensorDrawScale, kinect.height*sensorDrawScale);
+			computerVisionSensor1.draw(sensorDrawScale, marginDraw + i * sensorHeight*sensorDrawScale);//TODO FIX THIS WAY TO DRAW ! Complex way
+
+		}
+
 
 		
 		// draw instructions
@@ -375,7 +396,7 @@ void SensorManager::draw(){
 			if (playerAreas[i].bAreaActive) {
 				if (i == 0) {
 					computerVisionSensor1.computerVisionImage.draw(marginDraw, marginDraw + i*sensorHeight*sensorDrawScale, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
-					computerVisionSensor1.draw(sensorDrawScale, marginDraw + i*sensorHeight*sensorDrawScale);//TODO FIX THIS WAY TO DRAW ! TOO DIFICULT
+					computerVisionSensor1.draw(sensorDrawScale, marginDraw + i*sensorHeight*sensorDrawScale);//TODO FIX THIS WAY TO DRAW ! Complex way
 
 					ofEnableAlphaBlending();
 					ofSetColor(255, 255, 255, 100);
@@ -396,36 +417,7 @@ void SensorManager::draw(){
 			}
 
 		}
-		//--------------------------------------
 
-		/*
-		for (int i = 0; i < playerAreas.size(); i++) {
-
-			if (playerAreas[i].bAreaActive) {
-				if (i == 0) {
-					//Draw Raw Sensor images
-					computerVisionSensor1.computerVisionImage.draw(marginDraw, marginDraw + i*sensorHeight*sensorDrawScale, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
-					computerVisionSensor1.draw(sensorDrawScale, marginDraw + i*sensorHeight*sensorDrawScale);
-				
-					ofEnableAlphaBlending();
-					ofSetColor(255, 255, 255, 100);
-					sourceImageRaw.draw(sensorDrawScale, marginDraw + i*sensorHeight*sensorDrawScale, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
-					ofDisableAlphaBlending();
-					ofSetColor(255, 255, 255);
-				}
-				else if (i == 1) {
-					sourceImageRaw.draw(sensorDrawScale, marginDraw + i*sensorHeight*sensorDrawScale, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
-					computerVisionSensor2.computerVisionImage.draw(marginDraw, marginDraw + i*sensorHeight*sensorDrawScale, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
-					
-					ofEnableAlphaBlending();
-					ofSetColor(255, 255, 255, 100);
-					sourceImageRaw.draw(sensorDrawScale, marginDraw + i*sensorHeight*sensorDrawScale, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
-					ofDisableAlphaBlending();
-					ofSetColor(255, 255, 255);
-				}
-			}
-
-		}	*/
 	}
 	else if(typeSensor == externalSickSensor){
 		
@@ -440,15 +432,12 @@ void SensorManager::draw(){
 		}
 	}
 
-	//last Draw if camera options for filtering image
-	if (typeSensor == cameraSensor) {
+	//Finally Draw Filter Rectangles Player Areas
+	if (typeSensor == cameraSensor || typeSensor == kinectSensor) {
 		for (int i = 0; i < playerAreas.size(); i++) {
 			drawAreaRectangle(playerAreas[i].rectArea, i + 1);
 		}
 	}
-
-	//drawAreaRectangle(rectArea1, 1);
-	//drawAreaRectangle(rectArea2, 2);
 	
 }
 
@@ -466,6 +455,8 @@ void SensorManager::drawAreaRectangle(ofRectangle _areaRect, int idSensor) {
 	ofSetColor(ofColor::red);
 	ofDrawRectangle(auxRectArea1);
 	ofPopStyle();
+
+	ofSetColor(ofColor::white);
 }
 
 //---------------------------------------------------------------------
@@ -526,8 +517,12 @@ void SensorManager::drawGuiSensorOptions(bool* opened){
 
 		ImGui::Text(sensorTextType.c_str());
 		//ImGui::Checkbox("bThreshWithOpenCV", &bThreshWithOpenCV);
-		ImGui::SliderInt("nearThreshold", &nearThreshold, 0, 255);
-		ImGui::SliderInt("farThreshold", &farThreshold, 0, 255);
+		if (ImGui::SliderInt("nearThreshold", &nearThreshold, 0, 255)) {
+			//kinect.setDepthClipping(nearThreshold, farThreshold);
+		}
+		if (ImGui::SliderInt("farThreshold", &farThreshold, 0, 255)) {
+			//kinect.setDepthClipping(nearThreshold, farThreshold);
+		}
 		ImGui::Separator();
 		
 #endif
@@ -600,7 +595,18 @@ void SensorManager::drawGuiSensorOptions(bool* opened){
 				videoPlayerCam.setPosition(videoPlayerCam_pos);
 			}
 		}
+		
+	}
+	else if(typeSensor == externalSickSensor){
+		string auxmessage = "Sick received in OSC at PORT " + ofToString(PortRecvExt, 0);
+		ImGui::Text(auxmessage.c_str());
+	}
+	else{
+		cout << "SensorManager::Error Set Sensor Mode Type" << endl;
+	}
 
+	//AREAS FOR KINECT AND CAMERA mode type sensor AVAILABLE // check others...
+	if (typeSensor == cameraSensor || typeSensor == kinectSensor) {
 		//Selectable Areas to Do Computer Vision separately. TODO : set this into modulable Array of playersAreas Array
 		ImGui::SliderInt("Num Player Areas", &numPlayersAreas, 0, 2);
 		if (playerAreas.size() != numPlayersAreas) {
@@ -620,7 +626,7 @@ void SensorManager::drawGuiSensorOptions(bool* opened){
 		}
 
 		for (int i = 0; i < playerAreas.size(); i++) {
-			string textAreaSensor_collapsing = "Area " + ofToString(i+1, 0);
+			string textAreaSensor_collapsing = "Area " + ofToString(i + 1, 0);
 			string textAreaSensor_bActive = "Active?##" + ofToString(i + 1, 0);
 			string textAreaSensor_x = "X##" + ofToString(i + 1, 2);
 			string textAreaSensor_y = "Y##" + ofToString(i + 1, 2);
@@ -640,17 +646,7 @@ void SensorManager::drawGuiSensorOptions(bool* opened){
 			//TODO improve this manual mode
 			if (i == 0 && playerAreas[i].bAreaActive)computerVisionSensor1.drawGui();
 			if (i == 1 && playerAreas[i].bAreaActive)computerVisionSensor2.drawGui();
-		}		
-
-
-		
-	}
-	else if(typeSensor == externalSickSensor){
-		string auxmessage = "Sick received in OSC at PORT " + ofToString(PortRecvExt, 0);
-		ImGui::Text(auxmessage.c_str());
-	}
-	else{
-		cout << "SensorManager::Error Set Sensor Mode Type" << endl;
+		}
 	}
 
 }
@@ -785,7 +781,7 @@ bool SensorManager::setupCameraSensor(){
 		cam.setVerbose(true);
 		cam.listDevices();
 		cam.setDeviceID(selectedCameraIndex);
-		cam.setup(640, 480);
+		cam.setup(640, 480); // TODO get this from a JSON data config...TODO
 
 		//rectArea1.set(0, 0, cam.getWidth(), cam.getHeight());
 		//TODO load Json pre values
@@ -861,25 +857,16 @@ bool SensorManager::setupKinectSensor(){
 	//Related to ComputerVision
 	nearThreshold = 230;
 	farThreshold = 70;
-	
-	
-	//Computer Vision Stuff
-	//Main Image used to Cv
-	computerVisionImage.allocate(kinect.width, kinect.height, OF_IMAGE_GRAYSCALE);
-	//filter minSizeBlob, maxSizeBlob, numBlobs
-	contourFinder.setMinAreaRadius(minSizeBlob);
-	contourFinder.setMaxAreaRadius(maxSizeBlob);
-	contourFinder.setThreshold(numBlobs);
-	
+
+	//kinect.setDepthClipping(nearThreshold, farThreshold);
+
 	///////////////////////////////////
-	//General SensorData for others
+	//General SensorData Dimensions
 	sensorWidth = kinect.width;
 	sensorHeight = kinect.height;
 
 #endif	
 	return bConnected;
-
-
 }
 
 

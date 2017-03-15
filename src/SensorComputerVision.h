@@ -3,12 +3,17 @@
 #include "ofMain.h"
 #include "ofxCv.h"
 #include "ofxImGui.h"
+
+enum sensorType { kinectSensor, cameraSensor, externalSickSensor };
+enum sensorMode { realTimeMode, simulationMode };
+
+
 class SensorComputerVision {
 
 public:
 
 	//FUNCTIONS
-	void setup(int _id, int _cameraW, int _cameraH);
+	void setup(int _id, int _cameraW, int _cameraH, sensorType _myTypeSensor);
 	void setTrackingMode(bool _status);
 	void udpateBackground();
 	void mainComputerVision(ofImage _image2Compute);
@@ -41,6 +46,8 @@ public:
 	//Tracking mode
 	ofImage computerVisionImage;
 	ofxCv::ContourFinder * contourFinder;
+
+	sensorType mySensorType;
 
 private:
 
