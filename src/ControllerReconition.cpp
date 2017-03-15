@@ -507,10 +507,10 @@ void ControllerReconition::drawResumedBlob(/*int transX ,int transY, int winW, i
 	ofPushStyle();
 	ofColor myLineColor;
 	if(idController == 1)myLineColor = ofColor::green;
-	else if(idController == 2)myLineColor = ofColor::pink;
-	else myLineColor = ofColor::orangeRed; //Error color line not definet yet
+	else if(idController == 2)myLineColor = ofColor::blueSteel;
+	else myLineColor = ofColor::red; //Error color line not definet yet
 
-	ofSetColor(myLineColor.r, myLineColor.g, myLineColor.b, 150);
+	ofSetColor(myLineColor.r, myLineColor.g, myLineColor.b, 220);
 
 	ofNoFill();
 	ofDrawRectangle(ofRectangle(
@@ -520,6 +520,7 @@ void ControllerReconition::drawResumedBlob(/*int transX ,int transY, int winW, i
 		rectAreaPlayer.height*sensorScale)//h
 	);
 
+	ofFill();
 	ofDrawCircle(
 		xPosBlob*sensorScale, //x
 		yPosBlob*sensorScale + sensorHeight*(idController-1)*sensorScale, //y

@@ -209,7 +209,8 @@ void SensorComputerVision::draw(float _sensorDrawScale, int _marginDraw) {
 
 	if (computerVisionImage.isAllocated()) {
 
-		ofSetColor(255, 255, 255);
+		ofEnableAlphaBlending();
+		ofSetColor(ofColor::lightGray);
 
 		if (bLearnBackground) {
 			computerVisionImage.draw(cameraWidth*_sensorDrawScale, _marginDraw, cameraWidth*_sensorDrawScale, cameraHeight*_sensorDrawScale);
@@ -225,6 +226,9 @@ void SensorComputerVision::draw(float _sensorDrawScale, int _marginDraw) {
 			computerVisionImage.draw(cameraWidth*_sensorDrawScale, _marginDraw, cameraWidth*_sensorDrawScale, cameraHeight*_sensorDrawScale);
 		}
 
+		ofDisableAlphaBlending();
+
+		ofSetColor(255, 255, 255);
 
 		//---------------------------------------
 		//Kyle Mcdonnal - Blob Tracker Visualization
