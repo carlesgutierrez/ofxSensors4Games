@@ -17,7 +17,7 @@
 
 //Status Regonition Controller Type
 enum ActionRecognitionType { GoUpAction, GoDownAction }; //Up and Down from median height blob player.
-enum ControllerMethod { MaxMinsAllBlob, UpDownLeftRightBlobs , AllBlobsIn };
+enum ControllerMethod { MaxMinBlob, UpDownLeftRightBlobs , AllBlobsIn };
 
 class ControllerReconition {
 public:
@@ -46,6 +46,8 @@ public:
 	//////////////////////////////
 	//RESUMED BLOB
 
+	void drawGui_OSCUPD_sendingData();
+
 	void drawGui_Controller();
 	void drawGui_HostIP_configurable();
 	bool isController_ResumedBlob = true;
@@ -63,7 +65,7 @@ public:
 	
 	void calcMainBlobLocation(ofRectangle _rectAreaPlayer);
 	
-	void send_OSC_UPD_Data(string nameTag);
+	void send_OSC_UPD_Data_MaxMinBlob(string nameTag);
 
 	//////////////////////////////
 	//OSC
@@ -99,7 +101,7 @@ public:
 	
 	//Advanced Filtered Blob Data
 	//median stat value
-	ControllerMethod myControllerMethod = MaxMinsAllBlob; //TODO CHECK TO LAD THIS AT JSON
+	ControllerMethod myControllerMethod = MaxMinBlob; //TODO CHECK TO LAD THIS AT JSON
 	detectionMethod  myDetectMethod = FindContourns; //TODO CHECK TO LAD THIS AT JSON
 	void updateRecognitionSystem(ofRectangle _rectAreaPlayer);
 	void udpate_MaxMins_Recognition_UpDown_Actions(float _value, statsRecorder & _stats);

@@ -632,7 +632,7 @@ void SensorManager::drawGuiSensorOptions(bool* opened){
 		}
 
 		for (int i = 0; i < playerAreas.size(); i++) {
-			string textAreaSensor_collapsing = "Area " + ofToString(i + 1, 0);
+			string textAreaSensor_collapsing = "Area [" + ofToString(i + 1, 0)+"]";
 			string textAreaSensor_bActive = "Active?##" + ofToString(i + 1, 0);
 			string textAreaSensor_x = "X##" + ofToString(i + 1, 2);
 			string textAreaSensor_y = "Y##" + ofToString(i + 1, 2);

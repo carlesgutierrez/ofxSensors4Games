@@ -327,7 +327,7 @@ void SensorComputerVision::draw(float _sensorDrawScale, int _marginDraw) {
 //--------------------------------------------
 void SensorComputerVision::drawGui() {
 
-	string IdTextCamera = "ComputerVision Id[" + ofToString(idSensorCV, 0) + "]";
+	string IdTextCamera = "CV [" + ofToString(idSensorCV, 0) + "]";
 
 	if (ImGui::CollapsingHeader(IdTextCamera.c_str())) {
 

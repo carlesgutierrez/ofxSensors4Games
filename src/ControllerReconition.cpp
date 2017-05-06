@@ -169,7 +169,7 @@ void ControllerReconition::updateRecognitionSystem(ofRectangle _rectAreaPlayer){
 		//update the num of blobs found in this Controller / Area
 		numBlobsDetected = myContourFinder->getContours().size();
 	
-		if(myControllerMethod == MaxMinsAllBlob){
+		if(myControllerMethod == MaxMinBlob){
 			//Calc Max Mins and get the relative position to the Camera. //TODO get relative pos to the area1,2,n
 			calcMainBlobLocation(_rectAreaPlayer);
 			//WIP Calc some average to detect UP or Down Sudden movemnts.
@@ -317,9 +317,9 @@ void ControllerReconition::udpate_MaxMins_Recognition_UpDown_Actions(float _valu
 
 
 //-----------------------------------------
-void ControllerReconition::send_OSC_UPD_Data(string nameTag) {
+void ControllerReconition::send_OSC_UPD_Data_MaxMinBlob(string nameTag) {
 	
-	
+	//OSC
 	if (bSendOsc_fMiddleX_fMinY_fUP_fDOWN) {
 
 		ofxOscMessage m;
@@ -336,6 +336,7 @@ void ControllerReconition::send_OSC_UPD_Data(string nameTag) {
 		sender.sendMessage(m, false);
 	}
 
+	//UPD
 	if (bSendUDP_fMiddleX_fMinY_fUP_fDOWN) {
 
 		string message = "/"+nameTag+" ffff ";
@@ -352,14 +353,14 @@ void ControllerReconition::send_OSC_UPD_Data(string nameTag) {
 void ControllerReconition::sendOSCBlobData(){
 
 	if (numBlobsDetected > 0) {
-		if (myControllerMethod == MaxMinsAllBlob) {
+		if (myControllerMethod == MaxMinBlob) {
 			//working at selected Areas. Finding the proper XY related and Sending to a Client the results
 			//TODO Convert this into dynamic controlers
 			if (idController == 1) {
-				send_OSC_UPD_Data("GameBlob");
+				send_OSC_UPD_Data_MaxMinBlob("GameBlob");
 			}
 			else if (idController == 2) {
-				send_OSC_UPD_Data("GameBlob2");
+				send_OSC_UPD_Data_MaxMinBlob("GameBlob2");
 			}
 		}
 		else if (myControllerMethod == AllBlobsIn) {
@@ -409,61 +410,102 @@ void ControllerReconition::drawGui_HostIP_configurable(){
 		ImGui::Text("-------------------------");
 }
 
+//----------------------------------------------------
+void ControllerReconition::drawGui_OSCUPD_sendingData() {
+
+	string myControlerIdText = "OSC | UPD" + ofToString(idController);
+	ImGui::Text(myControlerIdText.c_str());
+
+	/////SEND OSC / UPD
+
+	string dataDescription1 = "SEND ffff f0(X)  f1(Y)  f2(UP)  f3(DOWN)";
+	ImGui::Text(dataDescription1.c_str());
+
+	ImGui::PushItemWidth(50);
+	ImGui::Checkbox("UDP:29095", &bSendUDP_fMiddleX_fMinY_fUP_fDOWN); ImGui::SameLine();
+
+	if (bSendUDP_fMiddleX_fMinY_fUP_fDOWN) {
+		ImGui::SliderFloat("##(f0)UPD", &xPosBlobFloatOsc, 0, 1); ImGui::SameLine();
+		ImGui::SliderFloat("##(f1)UPD", &yPosBlobFloatOsc, 0, 1); ImGui::SameLine();
+		ImGui::VSliderFloat("##(f2)UPD", ImVec2(20, 50), &fUpActionBlob_OSC, 0, 1); ImGui::SameLine();
+		ImGui::VSliderFloat("##(f3)UPD", ImVec2(20, 50), &fDownActionBlob_OSC, 0, 1);
+	}
+	ImGui::Separator();
+
+	ImGui::Checkbox("OSC:12345", &bSendOsc_fMiddleX_fMinY_fUP_fDOWN); ImGui::SameLine();
+	if (bSendOsc_fMiddleX_fMinY_fUP_fDOWN) {
+		ImGui::SliderFloat("##(f0)OSC", &xPosBlobFloatOsc, 0, 1); ImGui::SameLine();
+		ImGui::VSliderFloat("##(f1)OSC", ImVec2(20, 50), &yPosBlobFloatOsc, 0, 1); ImGui::SameLine();
+		ImGui::VSliderFloat("##(f2)OSC", ImVec2(20, 50), &fUpActionBlob_OSC, 0, 1); ImGui::SameLine();
+		ImGui::VSliderFloat("##(f3)OSC", ImVec2(20, 50), &fDownActionBlob_OSC, 0, 1);
+	}
+
+	ImGui::PopItemWidth();
+
+}
 //-------------------------------------------------
 void ControllerReconition::drawGui_Controller(){
-	ImGui::SetNextWindowSize(ImVec2(310, 350));
+	//ImGui::SetNextWindowSize(ImVec2(310, 350));
 	
 	//cout << "Check this Out PreVious window" << endl;
 	//bool wopen = true;
-	string myControlerIdText = "ControllerRecognition Ctrl" + ofToString(idController);
-	
-	ImGui::Begin(myControlerIdText.c_str());
-	
+	string myControlerHOSTIPText = "HOST_IP Ctr l" + ofToString(idController);
+	ImGui::Begin(myControlerHOSTIPText.c_str());
 	//Draw and Edit OSC info
 	drawGui_HostIP_configurable();
-	static int ControllerMethod_item_current = 0;//Deafult simple //TODO use load this from JSon
-	const char* combo_controllerTypeStrings[] = { "MaxMinsAllBlob", "UpDownLeftRightBlobs" , "AllBlobsIn" };
-	ImGui::Combo("Controller Data Type", &ControllerMethod_item_current, combo_controllerTypeStrings, IM_ARRAYSIZE_TEMP2(combo_controllerTypeStrings));
-	myControllerMethod = static_cast<ControllerMethod>(ControllerMethod_item_current);
-	
-	if (myControllerMethod == MaxMinsAllBlob) {
+	drawGui_OSCUPD_sendingData();
+	ImGui::End();
 
-		drawGui_ResumedBlob_MaxMinBlobs();
+	//string myControlerIdText = "ControllerRecognition Ctrl" + ofToString(idController);
+	string myControlerIdTextPostCV = "Post-CV [" + ofToString(idController, 0) + "]";
+	if (ImGui::CollapsingHeader(myControlerIdTextPostCV.c_str())) {
 
-		//TODO Add This to plot gui
-		//medianBlobHeightValue.draw(500 , 500, sensorWidth, 100, 100, "medianBlobHeightValue", true, 150);
+		static int ControllerMethod_item_current = 0;//Deafult simple //TODO use load this from JSon
+		const char* combo_controllerTypeStrings[] = { "MaxMinBlob", "UpDownLeftRightBlobs" , "AllBlobsIn" };
+		ImGui::Combo("Controller Data Type", &ControllerMethod_item_current, combo_controllerTypeStrings, IM_ARRAYSIZE_TEMP2(combo_controllerTypeStrings));
+		myControllerMethod = static_cast<ControllerMethod>(ControllerMethod_item_current);
 
-		drawResumedBlob_MaxMinBlobs();
+		if (myControllerMethod == MaxMinBlob) {
 
-	}
-	else if (myControllerMethod == UpDownLeftRightBlobs) {
-		//TODO
-		//At least 4 elements with X and Y 
-	}
-	else if (myControllerMethod == AllBlobsIn) {
-		//TODO
-		//Receiving all blobs, then sending them
+			drawGui_ResumedBlob_MaxMinBlobs();
+
+			//TODO Add This to plot gui
+			//medianBlobHeightValue.draw(500 , 500, sensorWidth, 100, 100, "medianBlobHeightValue", true, 150);
+
+			drawResumedBlob_MaxMinBlobs();
+
+		}
+		else if (myControllerMethod == UpDownLeftRightBlobs) {
+			//TODO
+			//At least 4 elements with X and Y 
+		}
+		else if (myControllerMethod == AllBlobsIn) {
+			//TODO
+			//Receiving all blobs, then sending them
+		}
 	}
 
 		
-	ImGui::End();
+	
 	
 
 }
 
 //-------------------------------------------------
-void ControllerReconition::drawGui_ResumedBlob_MaxMinBlobs(){
+void ControllerReconition::drawGui_ResumedBlob_MaxMinBlobs() {
 
-	ImGui::Text("Select Type of Controller recognition");
-
+	ImGui::Text("MaxMinBlob: Read all Blob contourns &\nCalc a resulting pt -> (MaxX, MinY),...");
+	ImGui::Separator();
 	//Slider to select the -> RecognitionMethod _myComputeBlobType ... From 0 .. 2? 
 
-	ImGui::Text("Filter Results And send them Via OSC / UPD");
-	
-	string myControlerIdText = "MaxMins CtrlRecognition " + ofToString(idController);
-
-	ImGui::Text(myControlerIdText.c_str());
+	ImGui::Text("-+-+-+-+-+-+-+-+");
+	ImGui::Separator();
 		
+	string myControlerIdText_MAXMINSetup = "MaxMins Setup " + ofToString(idController);
+	ImGui::Text(myControlerIdText_MAXMINSetup.c_str());
+
+	//if(ImGui::CollapsingHeader(myControlerIdText_MAXMINSetup.c_str())){
+
 		ImGui::PushItemWidth(160);
 
 		//// X Y 
@@ -477,7 +519,6 @@ void ControllerReconition::drawGui_ResumedBlob_MaxMinBlobs(){
 
 		ImGui::PushItemWidth(50);
 
-		
 		ImGui::Text("Invert:"); ImGui::SameLine();
 		ImGui::Checkbox("X", &bresumeBlob_inverX); ImGui::SameLine();
 		ImGui::Checkbox("Y", &bresumeBlob_inverY);
@@ -495,35 +536,14 @@ void ControllerReconition::drawGui_ResumedBlob_MaxMinBlobs(){
 		ImGui::SameLine();
 		ImGui::Text(" = "); ImGui::SameLine();
 		ImGui::SliderFloat("##medianResult", &medianResult, 0, 1);
-		
+
 		ImGui::PopItemWidth();
 		ImGui::Separator();
-		
-		/////SEND OSC / UPD
 
-		string dataDescription1 = "SEND ffff f0(X)  f1(Y)  f2(UP)  f3(DOWN)";
-		ImGui::Text(dataDescription1.c_str());
+	//}
 
-		ImGui::PushItemWidth(50);
-		ImGui::Checkbox("UDP:29095", &bSendUDP_fMiddleX_fMinY_fUP_fDOWN); ImGui::SameLine();
-
-		if(bSendUDP_fMiddleX_fMinY_fUP_fDOWN){		
-			ImGui::SliderFloat("##(f0)UPD", &xPosBlobFloatOsc, 0, 1);ImGui::SameLine();
-			ImGui::SliderFloat("##(f1)UPD", &yPosBlobFloatOsc, 0, 1);ImGui::SameLine();
-			ImGui::VSliderFloat("##(f2)UPD", ImVec2(20, 50), &fUpActionBlob_OSC, 0, 1);ImGui::SameLine();
-			ImGui::VSliderFloat("##(f3)UPD", ImVec2(20, 50), &fDownActionBlob_OSC, 0, 1);		
-		}
-		ImGui::Separator();
-
-		ImGui::Checkbox("OSC:12345", &bSendOsc_fMiddleX_fMinY_fUP_fDOWN); ImGui::SameLine();
-		if(bSendOsc_fMiddleX_fMinY_fUP_fDOWN){
-			ImGui::SliderFloat("##(f0)OSC", &xPosBlobFloatOsc, 0, 1);ImGui::SameLine();
-			ImGui::VSliderFloat("##(f1)OSC", ImVec2(20, 50),&yPosBlobFloatOsc, 0, 1);ImGui::SameLine();
-			ImGui::VSliderFloat("##(f2)OSC", ImVec2(20, 50), &fUpActionBlob_OSC, 0, 1);ImGui::SameLine();
-			ImGui::VSliderFloat("##(f3)OSC", ImVec2(20, 50), &fDownActionBlob_OSC, 0, 1);
-		}
-		
-		ImGui::PopItemWidth();
+	ImGui::Text("-+-+-+-+-+-+-+-+");
+	ImGui::Separator();
 }
 
 
