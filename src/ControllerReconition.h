@@ -42,31 +42,7 @@ public:
 	//Udpated from Camera
 	ofxCv::ContourFinder * myContourFinder;
 
-
-	//////////////////////////////
-	//RESUMED BLOB
-
-	void drawGui_OSCUPD_sendingData();
-
-	void drawGui_Controller();
-	void drawGui_HostIP_configurable();
-	bool isController_ResumedBlob = true;
 	
-	void drawGui_ResumedBlob_MaxMinBlobs();
-	void drawResumedBlob_MaxMinBlobs();
-
-	//bool bresumeBlob_maxX = true;
-	//bool bresumeBlob_minX = false;
-	//bool bresumeBlob_minY = true;
-	//bool bresumeBlob_maxY = false;
-	int item_resumedBlob_X = 0;
-	
-	int item_resumedBlob_Y = 1;
-	
-	void calcMainBlobLocation(ofRectangle _rectAreaPlayer);
-	
-	void send_OSC_UPD_Data_MaxMinBlob(string nameTag);
-
 	//////////////////////////////
 	//OSC
 	void sendOSCBlobData();
@@ -88,16 +64,6 @@ public:
 	int imageRecognitionW;
 	int imageRecognitionH;
 	
-	/////////////////////////////////
-	//Tracking Blobs detection
-	bool isController_trackingMode = false;
-	//bool bMoveRight
-	
-	//Resume Blob MaxMinMiddel detections
-	ofVec2f		xMin,xMax,yMin,yMax;
-	float xDiff;
-	float yDiff;
-	void calculateMaxMin();
 	
 	//Advanced Filtered Blob Data
 	//median stat value
@@ -106,7 +72,24 @@ public:
 	void updateRecognitionSystem(ofRectangle _rectAreaPlayer);
 	void udpate_MaxMins_Recognition_UpDown_Actions(float _value, statsRecorder & _stats);
 	
-	//int numFramesStates = 100; //TODO Addd to gui
+	/////////////////////////////////////////////////////////////////////////////////////////////
+	//Resume Blob MaxMin Blob & OSC RELATED
+	ofVec2f		xMin, xMax, yMin, yMax;
+	void drawGui_OSCUPD_sendingData();
+	void drawGui_Controller();
+	void drawGui_HostIP_configurable();
+	bool isController_ResumedBlob = true;
+	void drawGui_ResumedBlob_MaxMinBlobs();
+	void drawResumedBlob_MaxMinBlobs();
+	void calcMainBlobLocation(ofRectangle _rectAreaPlayer);
+	void send_OSC_UPD_Data_MaxMinBlob(string nameTag);
+
+	void send_OSC_Data_AllInBlobs();
+
+	float xDiff;
+	float yDiff;
+	void calculateMaxMin();
+
 	int numAverageFrammes;
 	statsRecorder medianNormValue;
 	float medianResult;
@@ -119,8 +102,13 @@ public:
 	
 	float xPosBlobFloatOsc;
 	float yPosBlobFloatOsc;
-	
-	
+
+	int item_resumedBlob_X = 0;
+	int item_resumedBlob_Y = 1;
+
+	/////////////////////////////////////////////////////////////////////////////////////////////
+	//ALLIN_VARS & OSC VARS RELATED
+
 	///////////////////////////////
 	////OSC VARS
 	bool bSendOsc_fMiddleX_fMinY_fUP_fDOWN = true;

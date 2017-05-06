@@ -28,17 +28,11 @@ void ControllerReconition::setup(int w, int h, ofxCv::ContourFinder * _contourFi
 	// open an outgoing connection to HOST:PORT
 	sender.setup(HOST, PORT);
 	//TODO Check if both can be created at same time. Theoretically if PORTS are different should work
-	setupUDP(HOST, 29095); // 29095 port is used in GODOT (game engine) software.
+	setupUDP(HOST, 29095); // 29095 port is used in GODOT (The game engine) to receive UPD data
 	
-
-	
-	//Area ref tranking
+		
+	//Required to have a area ref for tracking
 	rectAreaPlayer.set(0, 0, sensorWidth*sensorScale, sensorHeight*sensorScale);
-
-	
-	imageRecognitionPosition = ofPoint(sensorWidth*sensorScale, SensorManager::getInstance()->marginDraw);
-	imageRecognitionW = sensorWidth*sensorScale;
-	imageRecognitionH = sensorHeight*sensorScale;
 	
 	ofRegisterMouseEvents(this);
 	ofRegisterKeyEvents(this);
@@ -178,10 +172,11 @@ void ControllerReconition::updateRecognitionSystem(ofRectangle _rectAreaPlayer){
 		}
 		else if(myControllerMethod == AllBlobsIn){
 
-			//Here we will take care about the LABELS... 
-			// WE need to get them at update process too
+			//All we receive we resend it here, so there is no filter
+			//For now we do NOTHING
 
-			//TODO
+
+			//BUT TODO
 			//Process all this Tracking data as you want.
 			//Get some relevant situations of all of them
 			//like density factor, distance average, velocity average,
@@ -191,7 +186,7 @@ void ControllerReconition::updateRecognitionSystem(ofRectangle _rectAreaPlayer){
 			// Etc...
 		}
 		else if (myControllerMethod == UpDownLeftRightBlobs) {
-			//TODO check up , down, left, right at same time, like a cross
+			//Calc the most UP , down, left, right for simplex body part detections for example
 		}
 		//TODO try to detect vector direction actions
 		//else if (myComputeBlobType == KalmanVectorDirDetection) {
@@ -350,6 +345,36 @@ void ControllerReconition::send_OSC_UPD_Data_MaxMinBlob(string nameTag) {
 }
 
 //-----------------------------------------
+void ControllerReconition::send_OSC_Data_AllInBlobs() {
+
+	ofxCv::RectTracker& tracker = myContourFinder->getTracker();
+
+	//TODO Decide desired data and parameters to send
+	ofxOscMessage m;
+	m.clear();
+	m.setAddress("/GameBlobAll");//TODO tracking Label
+
+	for (int i = 0; i < numBlobsDetected > 0; i++) {
+		cv::Point2f centerBlobi = myContourFinder->getCenter(i); //TODO getCentroid
+																
+		float resumedPosX = (myContourFinder->getCenter(i).x - rectAreaPlayer.x) / rectAreaPlayer.width; //Forced to 0..1 inside the RectArea 
+		float resumedPosY = (myContourFinder->getCenter(i).y - rectAreaPlayer.y) / rectAreaPlayer.height; //Forced to 0..1 inside the RectArea 
+		m.addFloatArg(resumedPosX);
+		m.addFloatArg(resumedPosY);
+
+		if(myDetectMethod == FindContournsTracking){
+			//for Tracking add int ID & int TIME
+			int idAux = myContourFinder->getLabel(i);
+			m.addIntArg(idAux); //Sending ID Label
+			int timeAux = tracker.getAge(idAux);
+			m.addIntArg(timeAux); //Sending Time Tracked
+		}
+		sender.sendMessage(m, false);
+	}
+
+}
+
+//-----------------------------------------
 void ControllerReconition::sendOSCBlobData(){
 
 	if (numBlobsDetected > 0) {
@@ -364,7 +389,9 @@ void ControllerReconition::sendOSCBlobData(){
 			}
 		}
 		else if (myControllerMethod == AllBlobsIn) {
-			//TODO Decide desired data and parameters to send
+			if (myDetectMethod == FindContournsTracking || myDetectMethod == FindContourns) {
+				send_OSC_Data_AllInBlobs(); //IF TRACKINGMODE active this is senind 2 LABELS.ID and TIME 
+			}
 		}
 
 
