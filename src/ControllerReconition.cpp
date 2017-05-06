@@ -352,7 +352,8 @@ void ControllerReconition::send_OSC_Data_AllInBlobs() {
 	//TODO Decide desired data and parameters to send
 	ofxOscMessage m;
 	m.clear();
-	m.setAddress("/GameBlobAll");//TODO tracking Label
+	m.setAddress("/GameBlobAllIn");//TODO tracking Label
+	m.addIntArg(numBlobsDetected); //Add the number of Blobs detected in order to read them properly and easy
 
 	for (int i = 0; i < numBlobsDetected > 0; i++) {
 		cv::Point2f centerBlobi = myContourFinder->getCenter(i); //TODO getCentroid
