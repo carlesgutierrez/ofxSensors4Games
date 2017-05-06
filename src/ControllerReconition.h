@@ -16,14 +16,14 @@
 
 
 //Status Regonition Controller Type
-enum RecognitionMethod { MaxMinsAllBlob, TrackingBlobs }; //TODO Add all this methods
 enum ActionRecognitionType { GoUpAction, GoDownAction }; //Up and Down from median height blob player.
+enum ControllerMethod { MaxMinsAllBlob, UpDownLeftRightBlobs , AllBlobsIn };
 
 class ControllerReconition {
 public:
 	int idController = -1;
-	void setup(int w, int h, RecognitionMethod _myComputeBlobType, ofxCv::ContourFinder * _contourFinder, int idControll);
-	void update(ofRectangle _rectAreaPlayer);
+	void setup(int w, int h, ofxCv::ContourFinder * _contourFinder, int idControll);
+	void update(ofRectangle _rectAreaPlayer, detectionMethod _myDetectMethod);
 	void draw();
 	void exit();
 	
@@ -45,11 +45,13 @@ public:
 
 	//////////////////////////////
 	//RESUMED BLOB
-	void drawResumedBlob();
+
 	void drawGui_Controller();
 	void drawGui_HostIP_configurable();
 	bool isController_ResumedBlob = true;
-	void drawGui_ResumedBlob();
+	
+	void drawGui_ResumedBlob_MaxMinBlobs();
+	void drawResumedBlob_MaxMinBlobs();
 
 	//bool bresumeBlob_maxX = true;
 	//bool bresumeBlob_minX = false;
@@ -97,7 +99,8 @@ public:
 	
 	//Advanced Filtered Blob Data
 	//median stat value
-	RecognitionMethod myComputeBlobType;
+	ControllerMethod myControllerMethod = MaxMinsAllBlob; //TODO CHECK TO LAD THIS AT JSON
+	detectionMethod  myDetectMethod = FindContourns; //TODO CHECK TO LAD THIS AT JSON
 	void updateRecognitionSystem(ofRectangle _rectAreaPlayer);
 	void udpate_MaxMins_Recognition_UpDown_Actions(float _value, statsRecorder & _stats);
 	

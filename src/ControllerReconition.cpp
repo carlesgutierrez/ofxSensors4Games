@@ -12,7 +12,7 @@
 // Set borders
 
 //-----------------------------------------
-void ControllerReconition::setup(int w, int h, RecognitionMethod _myComputeBlobType, ofxCv::ContourFinder * _contourFinder, int _idCntroller){
+void ControllerReconition::setup(int w, int h, ofxCv::ContourFinder * _contourFinder, int _idCntroller){
 
 	idController = _idCntroller;
 
@@ -30,7 +30,7 @@ void ControllerReconition::setup(int w, int h, RecognitionMethod _myComputeBlobT
 	//TODO Check if both can be created at same time. Theoretically if PORTS are different should work
 	setupUDP(HOST, 29095); // 29095 port is used in GODOT (game engine) software.
 	
-	myComputeBlobType = _myComputeBlobType;
+
 	
 	//Area ref tranking
 	rectAreaPlayer.set(0, 0, sensorWidth*sensorScale, sensorHeight*sensorScale);
@@ -141,8 +141,10 @@ bool ControllerReconition::setParams(ofxJSONElement jsonFile)
 }
 
 //-----------------------------------------
-void ControllerReconition::update(ofRectangle rectAreaPlayer){
+void ControllerReconition::update(ofRectangle rectAreaPlayer, detectionMethod _detectionMethod){
 
+	myDetectMethod = _detectionMethod; //updated on the fly, if SensorComputerVision Change, then here we will know it
+	
 	//Update high level data to detect desired Players Actions
 	updateRecognitionSystem(rectAreaPlayer);
 	
@@ -167,14 +169,18 @@ void ControllerReconition::updateRecognitionSystem(ofRectangle _rectAreaPlayer){
 		//update the num of blobs found in this Controller / Area
 		numBlobsDetected = myContourFinder->getContours().size();
 	
-		if(myComputeBlobType == MaxMinsAllBlob){
+		if(myControllerMethod == MaxMinsAllBlob){
 			//Calc Max Mins and get the relative position to the Camera. //TODO get relative pos to the area1,2,n
 			calcMainBlobLocation(_rectAreaPlayer);
 			//WIP Calc some average to detect UP or Down Sudden movemnts.
 			udpate_MaxMins_Recognition_UpDown_Actions(yPosBlobFloatOsc, medianNormValue); //yPosBlobFloatOsc or another value
 
 		}
-		else if(myComputeBlobType == TrackingBlobs){
+		else if(myControllerMethod == AllBlobsIn){
+
+			//Here we will take care about the LABELS... 
+			// WE need to get them at update process too
+
 			//TODO
 			//Process all this Tracking data as you want.
 			//Get some relevant situations of all of them
@@ -183,6 +189,9 @@ void ControllerReconition::updateRecognitionSystem(ofRectangle _rectAreaPlayer){
 			//	- then find with blob is alone in his area
 			//  - then find wich blob is in a populated area
 			// Etc...
+		}
+		else if (myControllerMethod == UpDownLeftRightBlobs) {
+			//TODO check up , down, left, right at same time, like a cross
 		}
 		//TODO try to detect vector direction actions
 		//else if (myComputeBlobType == KalmanVectorDirDetection) {
@@ -343,7 +352,7 @@ void ControllerReconition::send_OSC_UPD_Data(string nameTag) {
 void ControllerReconition::sendOSCBlobData(){
 
 	if (numBlobsDetected > 0) {
-		if (myComputeBlobType == MaxMinsAllBlob) {
+		if (myControllerMethod == MaxMinsAllBlob) {
 			//working at selected Areas. Finding the proper XY related and Sending to a Client the results
 			//TODO Convert this into dynamic controlers
 			if (idController == 1) {
@@ -353,7 +362,7 @@ void ControllerReconition::sendOSCBlobData(){
 				send_OSC_UPD_Data("GameBlob2");
 			}
 		}
-		else if (myComputeBlobType == TrackingBlobs) {
+		else if (myControllerMethod == AllBlobsIn) {
 			//TODO Decide desired data and parameters to send
 		}
 
@@ -412,13 +421,29 @@ void ControllerReconition::drawGui_Controller(){
 	
 	//Draw and Edit OSC info
 	drawGui_HostIP_configurable();
+	static int ControllerMethod_item_current = 0;//Deafult simple //TODO use load this from JSon
+	const char* combo_controllerTypeStrings[] = { "MaxMinsAllBlob", "UpDownLeftRightBlobs" , "AllBlobsIn" };
+	ImGui::Combo("Controller Data Type", &ControllerMethod_item_current, combo_controllerTypeStrings, IM_ARRAYSIZE_TEMP2(combo_controllerTypeStrings));
+	myControllerMethod = static_cast<ControllerMethod>(ControllerMethod_item_current);
 	
-	drawGui_ResumedBlob();
+	if (myControllerMethod == MaxMinsAllBlob) {
 
-	//TODO Add This to plot gui
-	//medianBlobHeightValue.draw(500 , 500, sensorWidth, 100, 100, "medianBlobHeightValue", true, 150);
+		drawGui_ResumedBlob_MaxMinBlobs();
 
-	drawResumedBlob();
+		//TODO Add This to plot gui
+		//medianBlobHeightValue.draw(500 , 500, sensorWidth, 100, 100, "medianBlobHeightValue", true, 150);
+
+		drawResumedBlob_MaxMinBlobs();
+
+	}
+	else if (myControllerMethod == UpDownLeftRightBlobs) {
+		//TODO
+		//At least 4 elements with X and Y 
+	}
+	else if (myControllerMethod == AllBlobsIn) {
+		//TODO
+		//Receiving all blobs, then sending them
+	}
 
 		
 	ImGui::End();
@@ -427,7 +452,13 @@ void ControllerReconition::drawGui_Controller(){
 }
 
 //-------------------------------------------------
-void ControllerReconition::drawGui_ResumedBlob(){
+void ControllerReconition::drawGui_ResumedBlob_MaxMinBlobs(){
+
+	ImGui::Text("Select Type of Controller recognition");
+
+	//Slider to select the -> RecognitionMethod _myComputeBlobType ... From 0 .. 2? 
+
+	ImGui::Text("Filter Results And send them Via OSC / UPD");
 	
 	string myControlerIdText = "MaxMins CtrlRecognition " + ofToString(idController);
 
@@ -439,8 +470,8 @@ void ControllerReconition::drawGui_ResumedBlob(){
 		const char* combo_resumedBlob_X[] = { "bresumeBlob_maxX", "bresumeBlob_minX", "bresumeBlob_middleX" };
 		const char* combo_resumedBlob_Y[] = { "bresumeBlob_maxY", "bresumeBlob_minY", "bresumeBlob_middleY" };
 
-		ImGui::Combo("MaxMin X type", &item_resumedBlob_X, combo_resumedBlob_X, IM_ARRAYSIZE(combo_resumedBlob_X));
-		ImGui::Combo("MaxMin Y type", &item_resumedBlob_Y, combo_resumedBlob_Y, IM_ARRAYSIZE(combo_resumedBlob_Y));
+		ImGui::Combo("MaxMin X type", &item_resumedBlob_X, combo_resumedBlob_X, IM_ARRAYSIZE_TEMP2(combo_resumedBlob_X));
+		ImGui::Combo("MaxMin Y type", &item_resumedBlob_Y, combo_resumedBlob_Y, IM_ARRAYSIZE_TEMP2(combo_resumedBlob_Y));
 
 		ImGui::PopItemWidth();
 
@@ -495,7 +526,8 @@ void ControllerReconition::drawGui_ResumedBlob(){
 		ImGui::PopItemWidth();
 }
 
-void ControllerReconition::drawResumedBlob(/*int transX ,int transY, int winW, int winH*/){
+
+void ControllerReconition::drawResumedBlob_MaxMinBlobs(/*int transX ,int transY, int winW, int winH*/){
 	//TODO add Translate X, translate Y , Point Position ( 0 .. 1 ), WidthWindow, HeightWindow
  
 	ofPushMatrix();

@@ -23,14 +23,14 @@ void SensorComputerVision::setup(int _id, int _cameraW, int _cameraH, sensorType
 	contourFinder->setMaxAreaRadius(maxSizeBlob);
 	contourFinder->setThreshold(numBlobs);
 
-	///Tracker
-	if (bTrackgingActive) {
+	///Tracker Setup Always
+	//if (trackingMode == FindContournsTracking) {
 		// wait for half a frame before forgetting something
 		contourFinder->getTracker().setPersistence(maxPersistenceTracking);
 		// an object can move up to 32 pixels per frame
 		contourFinder->getTracker().setMaximumDistance(maxDistanceTracking);
 		showLabels = true;
-	}
+	//}
 
 	//In Case Kinect Force to do regular threslholding ... guessing
 	if (mySensorType == kinectSensor) {
@@ -48,10 +48,6 @@ void SensorComputerVision::setup(int _id, int _cameraW, int _cameraH, sensorType
 	}
 }
 
-//----------------------------------------
-void SensorComputerVision::setTrackingMode(bool _status) {
-	bTrackgingActive = _status;
-}
 
 //----------------------------------------
 void SensorComputerVision::udpateBackground() {
@@ -232,7 +228,7 @@ void SensorComputerVision::draw(float _sensorDrawScale, int _marginDraw) {
 
 		//---------------------------------------
 		//Kyle Mcdonnal - Blob Tracker Visualization
-		if (bTrackgingActive) {
+		if (trackingMode == FindContournsTracking) {
 
 			//TODO To acces this from outside may be neceseary to clean
 			ofxCv::RectTracker& tracker = contourFinder->getTracker();
@@ -321,7 +317,7 @@ void SensorComputerVision::draw(float _sensorDrawScale, int _marginDraw) {
 		ofPushMatrix();
 		ofTranslate(cameraWidth*_sensorDrawScale, _marginDraw); //TODO change _sensorDrawScale as int sensorScale var
 		ofScale(_sensorDrawScale, _sensorDrawScale);
-		contourFinder->draw();
+		if(trackingMode == FindContourns || trackingMode == FindContournsTracking)contourFinder->draw();
 		ofPopMatrix();
 
 		ofPopStyle();
@@ -409,9 +405,18 @@ void SensorComputerVision::drawGui() {
 		}
 
 		ImGui::Separator();
-		ImGui::Checkbox("Activate Tracking", &bTrackgingActive);
+		//ImGui::Checkbox("Activate Tracking", &bTrackgingActive);
+		
+		const char* RecognitionMethod_items[] = { "FindContourns", "FindContournsTracking", "DarkNetTODO" };
+		//ImGui::Combo("MaxMin X type", &item_resumedBlob_X, RecognitionMethod_items, IM_ARRAYSIZE_TEMP2(combo_resumedBlob_X));
+		static int RecognitionMethod_item_current = 1;//Deafult simple
+		ImGui::ListBox("Tracking Mode", &RecognitionMethod_item_current, RecognitionMethod_items, IM_ARRAYSIZE_TEMP1(RecognitionMethod_items), 4);
+		ImGui::Separator();
 
-		if (bTrackgingActive) {
+		trackingMode = static_cast<detectionMethod>(RecognitionMethod_item_current);
+
+
+		if (trackingMode == FindContournsTracking) {
 			ImGui::SliderInt("Max Persistance", &maxPersistenceTracking, 5, 100);
 			ImGui::SliderInt("Max Distance", &maxDistanceTracking, 10, 100);
 			ImGui::Checkbox("Show Labels", &showLabels);

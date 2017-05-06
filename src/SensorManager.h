@@ -14,7 +14,7 @@
 #include "ofxCv.h"
 #include "ofxImGui.h"
 #include "SensorComputerVision.h"
-#define IM_ARRAYSIZE(_ARR)  ((int)(sizeof(_ARR)/sizeof(*_ARR)))
+#define IM_ARRAYSIZE_TEMP2(_ARR)  ((int)(sizeof(_ARR)/sizeof(*_ARR)))
 
 #include "ofxJSON.h"
 

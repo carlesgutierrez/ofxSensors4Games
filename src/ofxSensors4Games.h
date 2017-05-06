@@ -29,10 +29,11 @@
 #include "ofxImGui.h"
 #include "ofxJSON.h"
 
+
 class ofxSensors4Games {
 public:
 	
-	void setup(sensorType myType, sensorMode _modeSensor, RecognitionMethod _myComputeBlobType);
+	void setup(sensorType myType, sensorMode _modeSensor);
 	void update();
 	void draw();
 	void exit();

@@ -6,7 +6,7 @@
 */
 
 //--------------------------------------------------------------
-void ofxSensors4Games::setup(sensorType _myType, sensorMode _modeSensor, RecognitionMethod _myComputeBlobType) {
+void ofxSensors4Games::setup(sensorType _myType, sensorMode _modeSensor) {
 	ofSetLogLevel(OF_LOG_VERBOSE);
 	
 	//required calls
@@ -25,7 +25,6 @@ void ofxSensors4Games::setup(sensorType _myType, sensorMode _modeSensor, Recogni
 	myControllerRecognition1.setup(
 								SensorManager::getInstance()->getWidth(),
 								SensorManager::getInstance()->getHeight(),
-								_myComputeBlobType,
 								SensorManager::getInstance()->computerVisionSensor1.contourFinder,
 								1
 								);
@@ -33,7 +32,6 @@ void ofxSensors4Games::setup(sensorType _myType, sensorMode _modeSensor, Recogni
 	myControllerRecognition2.setup(
 								SensorManager::getInstance()->getWidth(),
 								SensorManager::getInstance()->getHeight(),
-								_myComputeBlobType,
 								SensorManager::getInstance()->computerVisionSensor2.contourFinder,
 								2
 								);
@@ -49,8 +47,8 @@ void ofxSensors4Games::update() {
 	for (int i = 0; i < SensorManager::getInstance()->playerAreas.size(); i++) {
 		ofRectangle auxArea = SensorManager::getInstance()->playerAreas[i].rectArea;
 		if (SensorManager::getInstance()->playerAreas[i].bAreaActive){
-			if (i == 0)myControllerRecognition1.update(auxArea);
-			else if(i == 1)myControllerRecognition2.update(auxArea);
+			if (i == 0)myControllerRecognition1.update(auxArea, SensorManager::getInstance()->computerVisionSensor1.trackingMode);
+			else if(i == 1)myControllerRecognition2.update(auxArea, SensorManager::getInstance()->computerVisionSensor2.trackingMode);
 		}
 	}
 }

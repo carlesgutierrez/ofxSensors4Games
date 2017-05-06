@@ -574,7 +574,7 @@ void SensorManager::drawGuiSensorOptions(bool* opened){
 			//TODO InputTextFilterCharacter
 			static char cmoviePath[60] = "videos/default/"; //This will load fisrt Video available at the this Folder
 			ImGui::PushItemWidth(200);
-			ImGui::InputText("Videos Path", cmoviePath, IM_ARRAYSIZE(cmoviePath));
+			ImGui::InputText("Videos Path", cmoviePath, IM_ARRAYSIZE_TEMP2(cmoviePath));
 			static int myGuiVideoIndex = 0;
 			if(ImGui::InputInt("Index video", &myGuiVideoIndex, 1)){//Step one by one
 				if(myGuiVideoIndex > -1 && myGuiVideoIndex < videosAvailable.size()){

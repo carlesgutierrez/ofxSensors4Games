@@ -6,7 +6,11 @@
 
 enum sensorType { kinectSensor, cameraSensor, externalSickSensor };
 enum sensorMode { realTimeMode, simulationMode };
+enum detectionMethod { FindContourns, FindContournsTracking, DarkNetTODO }; //TODO Add all this methods
 
+
+//GUi util Funtion
+#define IM_ARRAYSIZE_TEMP1(_ARR)  ((int)(sizeof(_ARR)/sizeof(*_ARR)))
 
 class SensorComputerVision {
 
@@ -14,7 +18,6 @@ public:
 
 	//FUNCTIONS
 	void setup(int _id, int _cameraW, int _cameraH, sensorType _myTypeSensor);
-	void setTrackingMode(bool _status);
 	void udpateBackground();
 	void mainComputerVision(ofImage _image2Compute);
 	void draw(float _sensorDrawScale, int _marginDraw);
@@ -48,11 +51,12 @@ public:
 	ofxCv::ContourFinder * contourFinder;
 
 	sensorType mySensorType;
+	detectionMethod trackingMode = FindContourns;
 
 private:
 
 	//Tracking mode
-	bool bTrackgingActive = false;
+	//bool bTrackgingActive = false;
 	bool showLabels = true;
 	int maxPersistenceTracking = 15;
 	int maxDistanceTracking = 32;
