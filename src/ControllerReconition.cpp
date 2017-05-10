@@ -390,8 +390,15 @@ void ControllerReconition::sendOSCBlobData(){
 			}
 		}
 		else if (myControllerMethod == AllBlobsIn) {
+
 			if (myDetectMethod == FindContournsTracking || myDetectMethod == FindContourns) {
-				send_OSC_Data_AllInBlobs(); //IF TRACKINGMODE active this is senind 2 LABELS.ID and TIME 
+				//TODO that should work for all Areas. Now only for the area 1.
+				if (idController == 1) {
+					send_OSC_Data_AllInBlobs(); //IF TRACKINGMODE active this is senind 2 LABELS.ID and TIME 
+				}
+				//else if (idController == 2) {
+				//	send_OSC_Data_AllInBlobs(); //IF TRACKINGMODE active this is senind 2 LABELS.ID and TIME 
+				//}
 			}
 		}
 
