@@ -17,7 +17,7 @@
 
 //Status Regonition Controller Type
 enum ActionRecognitionType { GoUpAction, GoDownAction }; //Up and Down from median height blob player.
-enum ControllerMethod { MaxMinBlob, UpDownLeftRightBlobs , AllBlobsIn };
+enum ControllerMethod { MaxMinBlob, /*UpDownLeftRightBlobs ,*/ AllBlobsIn };
 
 class ControllerReconition {
 public:
@@ -67,7 +67,7 @@ public:
 	
 	//Advanced Filtered Blob Data
 	//median stat value
-	ControllerMethod myControllerMethod = MaxMinBlob; //TODO CHECK TO LAD THIS AT JSON
+	ControllerMethod myControllerMethod = AllBlobsIn; // MaxMinBlob; //TODO CHECK TO LAD THIS AT JSON
 	detectionMethod  myDetectMethod = FindContourns; //TODO CHECK TO LAD THIS AT JSON
 	void updateRecognitionSystem(ofRectangle _rectAreaPlayer);
 	void udpate_MaxMins_Recognition_UpDown_Actions(float _value, statsRecorder & _stats);

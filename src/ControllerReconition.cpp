@@ -185,9 +185,9 @@ void ControllerReconition::updateRecognitionSystem(ofRectangle _rectAreaPlayer){
 			//  - then find wich blob is in a populated area
 			// Etc...
 		}
-		else if (myControllerMethod == UpDownLeftRightBlobs) {
+		//else if (myControllerMethod == UpDownLeftRightBlobs) {
 			//Calc the most UP , down, left, right for simplex body part detections for example
-		}
+		//}
 		//TODO try to detect vector direction actions
 		//else if (myComputeBlobType == KalmanVectorDirDetection) {
 		//}
@@ -493,12 +493,14 @@ void ControllerReconition::drawGui_Controller(){
 
 	//string myControlerIdText = "ControllerRecognition Ctrl" + ofToString(idController);
 	string myControlerIdTextPostCV = "Post-CV [" + ofToString(idController, 0) + "]";
-	if (ImGui::CollapsingHeader(myControlerIdTextPostCV.c_str())) {
+	static bool closable_group = true;
+	if (ImGui::CollapsingHeader(myControlerIdTextPostCV.c_str()), &closable_group) {
 
-		static int ControllerMethod_item_current = 0;//Deafult simple //TODO use load this from JSon
-		const char* combo_controllerTypeStrings[] = { "MaxMinBlob", "UpDownLeftRightBlobs" , "AllBlobsIn" };
-		ImGui::Combo("Controller Data Type", &ControllerMethod_item_current, combo_controllerTypeStrings, IM_ARRAYSIZE_TEMP2(combo_controllerTypeStrings));
-		myControllerMethod = static_cast<ControllerMethod>(ControllerMethod_item_current);
+		static int ControllerMethod_item_current = myControllerMethod;//Deafult simple //TODO use load this from JSon
+		const char* combo_controllerTypeStrings[] = { "MaxMinBlob", /*"UpDownLeftRightBlobs" ,*/ "AllBlobsIn" };
+		if (ImGui::Combo("Controller Data Type", &ControllerMethod_item_current, combo_controllerTypeStrings, IM_ARRAYSIZE_TEMP2(combo_controllerTypeStrings))) {
+			myControllerMethod = static_cast<ControllerMethod>(ControllerMethod_item_current);
+		}
 
 		if (myControllerMethod == MaxMinBlob) {
 
@@ -510,13 +512,26 @@ void ControllerReconition::drawGui_Controller(){
 			drawResumedBlob_MaxMinBlobs();
 
 		}
-		else if (myControllerMethod == UpDownLeftRightBlobs) {
+		/*else if (myControllerMethod == UpDownLeftRightBlobs) {
 			//TODO
 			//At least 4 elements with X and Y 
-		}
+		}*/
 		else if (myControllerMethod == AllBlobsIn) {
-			//TODO
-			//Receiving all blobs, then sending them
+			//TODO all blobs draw their resume data 
+			ofPushStyle();
+			ofSetColor(ofColor::aquamarine);
+			ofNoFill();
+			
+			ofPushMatrix();
+			ofTranslate(sensorWidth*sensorScale, SensorManager::getInstance()->marginDraw);
+			ofDrawRectangle(ofRectangle(
+				rectAreaPlayer.x*sensorScale,//x
+				rectAreaPlayer.y*sensorScale + sensorHeight*(idController - 1)*sensorScale,//y
+				rectAreaPlayer.width*sensorScale,//w
+				rectAreaPlayer.height*sensorScale)//h
+			);
+			ofPopStyle();
+			ofPopMatrix();
 		}
 	}
 

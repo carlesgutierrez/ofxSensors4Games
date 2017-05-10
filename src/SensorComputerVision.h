@@ -6,7 +6,7 @@
 
 enum sensorType { kinectSensor, cameraSensor, externalSickSensor };
 enum sensorMode { realTimeMode, simulationMode };
-enum detectionMethod { FindContourns, FindContournsTracking, DarkNetTODO }; //TODO Add all this methods
+enum detectionMethod { FindContourns, FindContournsTracking/*, DarkNetTODO*/ }; //TODO Add all this methods
 
 
 //GUi util Funtion
@@ -51,7 +51,7 @@ public:
 	ofxCv::ContourFinder * contourFinder;
 
 	sensorType mySensorType;
-	detectionMethod trackingMode = FindContourns;
+	detectionMethod trackingMode = FindContournsTracking;// FindContourns;
 
 private:
 

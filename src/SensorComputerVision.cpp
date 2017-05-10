@@ -409,12 +409,13 @@ void SensorComputerVision::drawGui() {
 		
 		const char* RecognitionMethod_items[] = { "FindContourns", "FindContournsTracking", "DarkNetTODO" };
 		//ImGui::Combo("MaxMin X type", &item_resumedBlob_X, RecognitionMethod_items, IM_ARRAYSIZE_TEMP2(combo_resumedBlob_X));
-		static int RecognitionMethod_item_current = 1;//Deafult simple
-		ImGui::ListBox("Tracking Mode", &RecognitionMethod_item_current, RecognitionMethod_items, IM_ARRAYSIZE_TEMP1(RecognitionMethod_items), 4);
+		static int RecognitionMethod_item_current = trackingMode;//Deafult simple
+		if (ImGui::ListBox("Tracking Mode", &RecognitionMethod_item_current, RecognitionMethod_items, IM_ARRAYSIZE_TEMP1(RecognitionMethod_items), 4)) {
+			trackingMode = static_cast<detectionMethod>(RecognitionMethod_item_current);
+		}
 		ImGui::Separator();
 
-		trackingMode = static_cast<detectionMethod>(RecognitionMethod_item_current);
-
+		
 
 		if (trackingMode == FindContournsTracking) {
 			ImGui::SliderInt("Max Persistance", &maxPersistenceTracking, 5, 100);
