@@ -35,7 +35,7 @@ struct PlayerArea {
 
 
 //Uncomment this to Use it
-#define USE_SENSOR_KINECT
+//#define USE_SENSOR_KINECT
 
 #ifdef USE_SENSOR_KINECT
 #include "ofxKinect.h"

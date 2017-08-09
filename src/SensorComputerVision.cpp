@@ -84,20 +84,37 @@ void SensorComputerVision::mainComputerVision(ofImage _image2Compute) {
 	}
 	else {
 		//Then it's a regular cameraSensor
-
-		//blur(movie, 10);//TODO This!? easy and fast. Add slider options
-
-		//TODO FIX THIS bLearnBackground to not apply really a Learning background if its not active.
+		if (blur > 0)ofxCv::blur(_image2Compute, blur);
+		//if (gaussianBlur > 0)ofxCv::GaussianBlur(_image2Compute, gaussianBlur);
+		
 		if (bLearnBackground) {
+
+			//TODO MEDTHOD Thresholds
+			background.setDifferenceMode(background.BRIGHTER);
 
 			background.setLearningTime(learningTime);
 			background.setThresholdValue(thresholdValue);
+			
+			//Mode Threshold setup
+			if (selectedThersholdMethodId == 0) { //ABSDIFF
+				background.setDifferenceMode(background.ABSDIFF);
+			}
+			else if (selectedThersholdMethodId == 1) { //BRIGHTER
+				background.setDifferenceMode(background.BRIGHTER);
+			}else background.setDifferenceMode(background.DARKER);
+			
 			//Camera Image to Gray
+			//TODO Check for lower resolutions (320x240) what can crash over here
 			background.update(_image2Compute, computerVisionImage);
-
 			computerVisionImage.update();
 
+			if (erode > 0)ofxCv::erode(computerVisionImage, erode);
+			if (dilate > 0)ofxCv::dilate(computerVisionImage, dilate);
+			if (postBlur > 0)ofxCv::blur(computerVisionImage, postBlur);
+
 			contourFinder->findContours(computerVisionImage);
+
+
 		}
 		else if (bSimpleBackgroundSubstraction) {
 
@@ -114,26 +131,39 @@ void SensorComputerVision::mainComputerVision(ofImage _image2Compute) {
 			}
 
 
-			//then background substraction //TODO check diferent methods
-			ofxCv::absdiff(computerVisionImage, backGroundCam, diffCam);
+			//background substraction modes
+			switch (selectedThersholdMethodId) {	
+				case 0: ofxCv::absdiff(computerVisionImage, backGroundCam, diffCam); break;
+				case 1: ofxCv::subtract(computerVisionImage, backGroundCam, diffCam); break;
+				case 2: ofxCv::subtract(backGroundCam, computerVisionImage, diffCam); break;
+			}
 
-			//Apply invert Threshold
+			//Configure invert Threshold
 			if (bInvertContourFinderThreshold)contourFinder->setInvert(true);
 			else contourFinder->setInvert(false);
 
 			if (bContourFinderThreshold) {
 				//FindContours Threshold
 				contourFinder->setThreshold(thresholdValue);
+				if (erode > 0)ofxCv::erode(diffCam, erode);
+				if (dilate > 0)ofxCv::dilate(diffCam, dilate);
+				if (postBlur > 0)ofxCv::blur(diffCam, postBlur);
 				contourFinder->findContours(diffCam);
 			}
 			else if (bAutoThreshold) {
 				//Automatic Thresholding
 				ofxCv::autothreshold(diffCam);
+				if (erode > 0)ofxCv::erode(diffCam, erode);
+				if (dilate > 0)ofxCv::dilate(diffCam, dilate);
+				if (postBlur > 0)ofxCv::blur(diffCam, postBlur);
 				contourFinder->findContours(diffCam);
 			}
 			else {
 				//Regular Threshold
 				ofxCv::threshold(diffCam, thresholdValue);
+				if (erode > 0)ofxCv::erode(diffCam, erode);
+				if (dilate > 0)ofxCv::dilate(diffCam, dilate);
+				if (postBlur > 0)ofxCv::blur(diffCam, postBlur);
 				contourFinder->findContours(diffCam);
 			}
 
@@ -331,6 +361,13 @@ void SensorComputerVision::drawGui() {
 
 	if (ImGui::CollapsingHeader(IdTextCamera.c_str())) {
 
+		
+		ImGui::SliderInt("Blur Cv", &blur, 0, 10);
+		//ImGui::SliderInt("gaussianBlur Cv", &gaussianBlur, 0, 10);
+		ImGui::SliderInt("Erode Cv", &erode, 0, 10);
+		ImGui::SliderInt("Dilate Cv", &dilate, 0, 10);
+
+		ImGui::SliderInt("Post Blur Cv", &postBlur, 0, 10);
 		//TODO missing this property in ofxCv
 		//ImGui::SliderInt("numBlobs ", &numBlobs, 1, 20);
 		//ImGui::SliderInt("accuracyMaxSizeBlob", &maxBlobsAccuracyMaxValue, 0, cameraWidth *cameraHeight);
@@ -400,6 +437,7 @@ void SensorComputerVision::drawGui() {
 
 			}
 
+			ComboCinder("Threslod Mode", &selectedThersholdMethodId, diffThresholdModes, diffThresholdModes.size());
 			string thresholdValueText = "Threshold Value##" + ofToString(idSensorCV, 0);
 			ImGui::SliderFloat(thresholdValueText.c_str(), &thresholdValue, 0, 255);
 		}

@@ -307,13 +307,13 @@ void SensorManager::updateSubImagesFromImageRaw(ofRectangle _rectArea, ofImage &
 		image2Update.setFromPixels(videoPlayerCam.getPixelsRef().getPixels(), videoPlayerCam.getWidth(), videoPlayerCam.getHeight(), OF_IMAGE_COLOR);
 	}
 	else if (modeSensor == realTimeMode) {
-
+		/*
 		if (typeSensor == kinectSensor) {
 			image2Update.setFromPixels(myThresholdKinect.getPixels().getPixels(), myThresholdKinect.getWidth(), myThresholdKinect.getHeight(), OF_IMAGE_GRAYSCALE);
 		}
-		else {
+		else {*/
 			image2Update.setFromPixels(sourceImageRaw.getPixelsRef().getPixels(), sourceImageRaw.getWidth(), sourceImageRaw.getHeight(), OF_IMAGE_COLOR);
-		}
+		//}
 	}
 
 	image2Update.update();
@@ -562,7 +562,7 @@ void SensorManager::drawGuiSensorOptions(bool* opened){
 			}
 
 			//Spout
-#if defined(USE_SHARECAM_SPOUTTARGET_WIN32)
+#if defined(USE_SHARECAM_SPOUT)
 			ImGui::Checkbox("SPOUT the Camera", &bSpoutCameraActive);
 			if(bSpoutCameraActive)sender.sendTexture(sourceImageRaw.getTexture(), "Camera");
 #endif

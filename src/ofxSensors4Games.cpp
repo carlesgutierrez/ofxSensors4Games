@@ -1,70 +1,80 @@
 #include "ofxSensors4Games.h"
 
 /*
-    If you are struggling to get the device to connect ( especially Windows Users )
-    please look at the ReadMe: in addons/ofxKinect/README.md
+	If you are struggling to get the device to connect ( especially Windows Users )
+	please look at the ReadMe: in addons/ofxKinect/README.md
 */
 
 //--------------------------------------------------------------
 void ofxSensors4Games::setup(sensorType _myType, sensorMode _modeSensor) {
-	ofSetLogLevel(OF_LOG_VERBOSE);
-	
+	ofSetLogLevel(OF_LOG_ERROR);//OF_LOG_VERBOSE
+
 	//required calls
 	SensorManager::getInstance()->setSensorType(_myType);
 	SensorManager::getInstance()->setSensorMode(_modeSensor);
-	
+
 	//SensorManager::getInstance()->typeSensor = _myType;
 	//SensorManager::getInstance()->modeSensor = _modeSensor;
-	
+
 	gui.setup();
-	
+
 	//setups managers with selected SensorType
-	
+
 	SensorManager::getInstance()->setup(_myType, _modeSensor);
 
 	myControllerRecognition1.setup(
-								SensorManager::getInstance()->getWidth(),
-								SensorManager::getInstance()->getHeight(),
-								SensorManager::getInstance()->computerVisionSensor1.contourFinder,
-								1
-								);
+		SensorManager::getInstance()->getWidth(),
+		SensorManager::getInstance()->getHeight(),
+		SensorManager::getInstance()->computerVisionSensor1.contourFinder,
+		1
+	);
 
 	myControllerRecognition2.setup(
-								SensorManager::getInstance()->getWidth(),
-								SensorManager::getInstance()->getHeight(),
-								SensorManager::getInstance()->computerVisionSensor2.contourFinder,
-								2
-								);
-	
-	
+		SensorManager::getInstance()->getWidth(),
+		SensorManager::getInstance()->getHeight(),
+		SensorManager::getInstance()->computerVisionSensor2.contourFinder,
+		2
+	);
+
+
 }
 
 //--------------------------------------------------------------
 void ofxSensors4Games::update() {
-	
+
 	SensorManager::getInstance()->update();
-	
+
 	for (int i = 0; i < SensorManager::getInstance()->playerAreas.size(); i++) {
 		ofRectangle auxArea = SensorManager::getInstance()->playerAreas[i].rectArea;
-		if (SensorManager::getInstance()->playerAreas[i].bAreaActive){
+		if (SensorManager::getInstance()->playerAreas[i].bAreaActive) {
 			if (i == 0)myControllerRecognition1.update(auxArea, SensorManager::getInstance()->computerVisionSensor1.trackingMode);
-			else if(i == 1)myControllerRecognition2.update(auxArea, SensorManager::getInstance()->computerVisionSensor2.trackingMode);
+			else if (i == 1)myControllerRecognition2.update(auxArea, SensorManager::getInstance()->computerVisionSensor2.trackingMode);
 		}
 	}
 }
 
 //--------------------------------------------------------------
 void ofxSensors4Games::draw() {
-	
+
 	///////////////////////////////////////////////////////////////
 	//Gui Draw and controls
-	
+
 	//required to call this at beginning
 	gui.begin();
 	string frameRateAvailable = "Fps: " + ofToString(ofGetFrameRate(), 0);
 	ImGui::Text("Sensors For Games!");
-	
+
 	ImGui::Text(frameRateAvailable.c_str());
+
+	if(ImGui::Button("Save Params")){
+		saveAllParams();
+	}
+
+	ImGui::SameLine();
+
+	if (ImGui::Button("Reload Params")) {
+		loadAllParamters();
+	}
 	
 	//TODO
 	//Set here Sensor Selections

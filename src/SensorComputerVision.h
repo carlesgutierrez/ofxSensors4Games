@@ -3,6 +3,7 @@
 #include "ofMain.h"
 #include "ofxCv.h"
 #include "ofxImGui.h"
+#include "imGuiUtils.h"
 
 enum sensorType { kinectSensor, cameraSensor, externalSickSensor };
 enum sensorMode { realTimeMode, simulationMode };
@@ -53,19 +54,32 @@ public:
 	sensorType mySensorType;
 	detectionMethod trackingMode = FindContournsTracking;// FindContourns;
 
-private:
+	//Thesdhold methods
+	int selectedThersholdMethodId = 0;
 
-	//Tracking mode
-	//bool bTrackgingActive = false;
-	bool showLabels = true;
-	int maxPersistenceTracking = 15;
-	int maxDistanceTracking = 32;
-	//Blobs
+	//Computer vision Values
+	//int gaussianBlur = 0;
+	int blur = 0;
+	int postBlur = 0;
+	int dilate = 0;
+	int erode = 0;
+
 	int minSizeBlob = 5;
 	int maxSizeBlob = 500; // TODO this should get values from Camera resolution. Now 640 x 480
+
+	int maxPersistenceTracking = 15;
+	int maxDistanceTracking = 32;
+
+private:
+	vector<string> diffThresholdModes{ "ABSDIFF", "BRIGHTER", "DARKER" };
+	
+	bool showLabels = true;
+
+	//Blobs
+
 	int minBlobsArea = minSizeBlob;
 	int maxBlobsArea = maxSizeBlob;
-	int numBlobs = 20;
+	int numBlobs = 40;//Check if this value its enought, may affect if there is a bad detection somewhere, waste that 20. Let's set up to 40 for now. 
 
 
 };
