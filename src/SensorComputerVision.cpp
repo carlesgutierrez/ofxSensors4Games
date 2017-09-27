@@ -453,11 +453,22 @@ void SensorComputerVision::drawGui() {
 		}
 		ImGui::Separator();
 
-		
+		//ImGui::ShowTestWindow();
 
 		if (trackingMode == FindContournsTracking) {
-			ImGui::SliderInt("Max Persistance", &maxPersistenceTracking, 5, 100);
-			ImGui::SliderInt("Max Distance", &maxDistanceTracking, 10, 100);
+			ImGui::SliderInt("Max Persistance", &maxPersistenceTracking, 5, 500); ImGui::SameLine(); ImGui::Button("+info");
+			if (ImGui::BeginPopupContextItem("Info -> Max Persistance"))
+			{
+				ImGui::Text("Max Persistence determines how many frames an \nobject can last without being seen until the tracker forgets about it");
+				ImGui::EndPopup();
+			}
+			ImGui::SliderInt("Max Distance", &maxDistanceTracking, 1, 200); ImGui::SameLine(); ImGui::Button("+info");
+			if (ImGui::BeginPopupContextItem("Info -> Max Distance"))
+			{
+				ImGui::Text("MaximumDistance determines how far an object \ncan move until the tracker considers it a new object.");
+				ImGui::EndPopup();
+			}
+			
 			ImGui::Checkbox("Show Labels", &showLabels);
 		}
 	}
