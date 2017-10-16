@@ -1115,6 +1115,9 @@
 		<ClInclude Include="..\..\..\addons\ofxSensors4Games\src\ControllerReconition.h">
 			<Filter>addons\ofxSensors4Games\src</Filter>
 		</ClInclude>
+		<ClInclude Include="..\..\..\addons\ofxSensors4Games\src\imGuiUtils.h">
+			<Filter>addons\ofxSensors4Games\src</Filter>
+		</ClInclude>
 		<ClInclude Include="..\..\..\addons\ofxSensors4Games\src\ofxSensors4Games.h">
 			<Filter>addons\ofxSensors4Games\src</Filter>
 		</ClInclude>
