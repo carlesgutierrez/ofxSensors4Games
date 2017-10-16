@@ -73,7 +73,8 @@ public:
 	SensorManager();
 	~SensorManager();
 
-	void setup(sensorType _sensorType, sensorMode _sensorMode);
+	void setup(sensorType _sensorType);
+	void resetVideoInterface();
 	void update();
 	void draw();
 	void drawAreaRectangle(ofRectangle _areaRect, int idSensorId);
@@ -166,7 +167,10 @@ private:
 	int sensorWidth = 640;//TODO check this is always modif
 	int sensorHeight = 480;
 	sensorType typeSensor;
-	sensorMode modeSensor;
+	//sensorMode modeSensor;
+	ofPixels videoPixels;
+	bool bVideoPlayer;
+	int idVideoGrabber;
 	
 	//Receiver externalSickSensor
 	const int PortRecvExt = 4000; //Default value

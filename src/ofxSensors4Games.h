@@ -33,7 +33,7 @@
 class ofxSensors4Games {
 public:
 	
-	void setup(sensorType myType, sensorMode _modeSensor);
+	void setup(sensorType myType);
 	void update();
 	void draw();
 	void exit();

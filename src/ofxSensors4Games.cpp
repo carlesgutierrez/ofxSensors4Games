@@ -6,7 +6,7 @@
 */
 
 //--------------------------------------------------------------
-void ofxSensors4Games::setup(sensorType _myType, sensorMode _modeSensor) {
+void ofxSensors4Games::setup(sensorType _myType) {
 	ofSetLogLevel(OF_LOG_ERROR);//OF_LOG_VERBOSE
 
 	//required calls
@@ -20,7 +20,7 @@ void ofxSensors4Games::setup(sensorType _myType, sensorMode _modeSensor) {
 
 	//setups managers with selected SensorType
 
-	SensorManager::getInstance()->setup(_myType, _modeSensor);
+	SensorManager::getInstance()->setup(_myType);
 
 	myControllerRecognition1.setup(
 		SensorManager::getInstance()->getWidth(),

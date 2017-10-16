@@ -95,14 +95,11 @@ bool SensorManager::setParams(ofxJSONElement jsonFile)
 void SensorManager::setSensorType(sensorType _type){
 	typeSensor =_type;
 }
-//-----------------------------------------
-void  SensorManager::setSensorMode(sensorMode _mode){
-	modeSensor = _mode;
-}
+
 
 
 //-----------------------------------------
-void SensorManager::setup(sensorType _sensorType, sensorMode _sensorMode){
+void SensorManager::setup(sensorType _sensorType){
 	
 	typeSensor = _sensorType;
 	modeSensor = _sensorMode;
@@ -157,6 +154,26 @@ void SensorManager::setup(sensorType _sensorType, sensorMode _sensorMode){
 	
 }
 
+//----------------------------
+void SensorManager::resetVideoInterface() {
+	bool bLoadedVid = false;
+	if (bVideoPlayer) {
+		bLoadedVid = videoPlayerCam.load("videos/1.mov");
+		if (bLoadedVid) {
+			videoPlayerCam.play();
+			cout << "Setup videoPlayer = " << videoPlayerCam.getMoviePath() << endl;
+		}
+		else bVideoPlayer = false;
+	}
+
+	if (!bVideoPlayer) {
+		//videoGrabber.listDevices();
+		cam.setDeviceID(idVideoGrabber);
+		cam.setDesiredFrameRate(30);
+		cam.initGrabber(640, 480);
+		cout << "Setup videoGrabber ID= " << idVideoGrabber << endl;
+	}
+}
 
 //-----------------------------------------
 void SensorManager::update(){
@@ -172,7 +189,7 @@ void SensorManager::update(){
 		// there is a new frame and we are connected
 		if(kinect.isFrameNew()) {
 
-			if (modeSensor == realTimeMode) {
+			//if (modeSensor == realTimeMode) {
 				
 				sourceImageRaw.setFromPixels(kinect.getPixels().getPixels(), kinect.getWidth(), kinect.getHeight(), OF_IMAGE_COLOR);
 
@@ -200,10 +217,10 @@ void SensorManager::update(){
 				//TODO for Kinect check how to:  scaling up, blurring, buffering, getting a new image from the result by finding contours and so on. You can get quite nice results then.
 
 
-			}
-			else {
-				//TODO
-			}
+			//}
+			//else {
+			//	//TODO
+			//}
 			
 				bNewSensorFrame = true;
 		}
@@ -214,26 +231,30 @@ void SensorManager::update(){
 
 	}
 	else if (typeSensor == cameraSensor){
-		
-		if(modeSensor == simulationMode){
-			videoPlayerCam.update();
-			bNewSensorFrame = videoPlayerCam.isFrameNew();
-		}
-		else if(modeSensor == realTimeMode){
+
+		////////////////////////////////////////////////////////
+		//ResetInterface if Video was not init & Update Internal VideoFrames
+		if (!bVideoPlayer) {
+			if (!cam.isInitialized())resetVideoInterface();
 			cam.update();
-			bNewSensorFrame = cam.isFrameNew();
 		}
+		else {
+			if (!videoPlayerCam.isInitialized())resetVideoInterface();
+			videoPlayerCam.update();
+			if (cam.isInitialized())videoPlayerCam.close();
+		}
+
+		//Check if new Pixels
+		if (bVideoPlayer) bNewSensorFrame = videoPlayerCam.isFrameNew();
+		else  bNewSensorFrame = cam.isFrameNew();
+		
 		
 		if (bNewSensorFrame) {
-
-			//Save the Camera Image. If not for now for other porpouses
-			if (modeSensor == simulationMode) {
-				sourceImageRaw.setFromPixels(videoPlayerCam.getPixelsRef().getPixels(), getWidth(), getHeight(), OF_IMAGE_COLOR);
-			}
-			else if (modeSensor == realTimeMode) {
-				sourceImageRaw.setFromPixels(cam.getPixelsRef().getPixels(), getWidth(), getHeight(), OF_IMAGE_COLOR);
-			}
-
+			//Update raw pixels
+			//Save it in a Image because later on is being used for others to share texture : Spout // TODO syphon
+			if (bVideoPlayer)
+			sourceImageRaw.setFromPixels(videoPlayerCam.getPixelsRef().getPixels(), getWidth(), getHeight(), OF_IMAGE_COLOR);
+			else sourceImageRaw.setFromPixels(cam.getPixelsRef().getPixels(), getWidth(), getHeight(), OF_IMAGE_COLOR);
 		}
 	}
 	else if (typeSensor == externalSickSensor){
