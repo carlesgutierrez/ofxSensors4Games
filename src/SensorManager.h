@@ -167,7 +167,8 @@ private:
 	int sensorWidth = 640;//TODO check this is always modif
 	int sensorHeight = 480;
 	sensorType typeSensor;
-	//sensorMode modeSensor;
+	sensorMode modeSensor;
+	vector<string> selectableSensorMode{ "realTimeMode", "simulationMode" };
 	ofPixels videoPixels;
 	bool bVideoPlayer;
 	int idVideoGrabber;

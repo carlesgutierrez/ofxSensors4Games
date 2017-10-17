@@ -11,7 +11,6 @@ void ofxSensors4Games::setup(sensorType _myType) {
 
 	//required calls
 	SensorManager::getInstance()->setSensorType(_myType);
-	SensorManager::getInstance()->setSensorMode(_modeSensor);
 
 	//SensorManager::getInstance()->typeSensor = _myType;
 	//SensorManager::getInstance()->modeSensor = _modeSensor;
@@ -112,6 +111,7 @@ bool ofxSensors4Games::loadAllParamters() {
 
 	myControllerRecognition1.setParams(jPreset);
 	myControllerRecognition2.setParams(jPreset);
+
 	SensorManager::getInstance()->setParams(jPreset);
 
 	return true;

@@ -86,6 +86,17 @@ bool SensorManager::setParams(ofxJSONElement jsonFile)
 	}
 
 
+	//Small Hack if modeSensor was not saved set first VideoPlayer
+	int axuSensorMode = -1;
+	//Read from JSON
+	//....
+	if (axuSensorMode == -1) {
+		setSensorMode(simulationMode);
+	}
+	else {
+		//Set the loaded mode
+	}
+
 	
 	return bLoaded;
 }
@@ -96,13 +107,16 @@ void SensorManager::setSensorType(sensorType _type){
 	typeSensor =_type;
 }
 
+//-----------------------------------------
+void SensorManager::setSensorMode(sensorMode _mode) {
+	modeSensor = _mode;
+}
 
 
 //-----------------------------------------
 void SensorManager::setup(sensorType _sensorType){
 	
 	typeSensor = _sensorType;
-	modeSensor = _sensorMode;
 	
 	///////////////////////
 	//Sensor Configurations
@@ -156,23 +170,31 @@ void SensorManager::setup(sensorType _sensorType){
 
 //----------------------------
 void SensorManager::resetVideoInterface() {
-	bool bLoadedVid = false;
-	if (bVideoPlayer) {
-		bLoadedVid = videoPlayerCam.load("videos/1.mov");
-		if (bLoadedVid) {
-			videoPlayerCam.play();
-			cout << "Setup videoPlayer = " << videoPlayerCam.getMoviePath() << endl;
-		}
-		else bVideoPlayer = false;
-	}
 
-	if (!bVideoPlayer) {
-		//videoGrabber.listDevices();
-		cam.setDeviceID(idVideoGrabber);
-		cam.setDesiredFrameRate(30);
-		cam.initGrabber(640, 480);
-		cout << "Setup videoGrabber ID= " << idVideoGrabber << endl;
-	}
+
+	setupCameraSensor();
+
+	//bool bLoadedVid = false;
+	//if (modeSensor == simulationMode) {
+	//	bLoadedVid = videoPlayerCam.load("videos/1.mov");
+	//	if (bLoadedVid) {
+	//		videoPlayerCam.play();
+	//		cout << "Setup videoPlayer = " << videoPlayerCam.getMoviePath() << endl;
+	//	}
+	//	else {
+	//		//bVideoPlayer = false;
+	//		modeSensor = simulationMode;
+	//	}
+	//}
+
+	//if (modeSensor == realTimeMode) {
+	//	//videoGrabber.listDevices();
+	//	cam.setDeviceID(idVideoGrabber);
+	//	cam.setDesiredFrameRate(30);
+	//	cam.initGrabber(640, 480);
+	//	cout << "Setup videoGrabber ID= " << idVideoGrabber << endl;
+	//}
+
 }
 
 //-----------------------------------------
@@ -234,27 +256,31 @@ void SensorManager::update(){
 
 		////////////////////////////////////////////////////////
 		//ResetInterface if Video was not init & Update Internal VideoFrames
-		if (!bVideoPlayer) {
+		if (modeSensor == realTimeMode) {
 			if (!cam.isInitialized())resetVideoInterface();
 			cam.update();
 		}
-		else {
+		else if(modeSensor == simulationMode){
 			if (!videoPlayerCam.isInitialized())resetVideoInterface();
 			videoPlayerCam.update();
-			if (cam.isInitialized())videoPlayerCam.close();
+			if (cam.isInitialized())cam.close();
 		}
 
+
 		//Check if new Pixels
-		if (bVideoPlayer) bNewSensorFrame = videoPlayerCam.isFrameNew();
+		if (modeSensor == simulationMode) bNewSensorFrame = videoPlayerCam.isFrameNew();
 		else  bNewSensorFrame = cam.isFrameNew();
 		
 		
 		if (bNewSensorFrame) {
 			//Update raw pixels
 			//Save it in a Image because later on is being used for others to share texture : Spout // TODO syphon
-			if (bVideoPlayer)
-			sourceImageRaw.setFromPixels(videoPlayerCam.getPixelsRef().getPixels(), getWidth(), getHeight(), OF_IMAGE_COLOR);
-			else sourceImageRaw.setFromPixels(cam.getPixelsRef().getPixels(), getWidth(), getHeight(), OF_IMAGE_COLOR);
+			if (modeSensor == simulationMode) {
+				sourceImageRaw.setFromPixels(videoPlayerCam.getPixelsRef().getPixels(), getWidth(), getHeight(), OF_IMAGE_COLOR);
+			}
+			else {
+				sourceImageRaw.setFromPixels(cam.getPixelsRef().getPixels(), getWidth(), getHeight(), OF_IMAGE_COLOR);
+			}
 		}
 	}
 	else if (typeSensor == externalSickSensor){
@@ -324,8 +350,7 @@ void SensorManager::applyMaskToImgVideoCam(ofRectangle _rectArea, ofImage & imag
 void SensorManager::updateSubImagesFromImageRaw(ofRectangle _rectArea, ofImage &image2Update) {
 	//get Pixels from sensor ( VideoPlayer or VideoCamera )
 	if (modeSensor == simulationMode) {
-		//TODO kinect mode? or just use sourceImageRaw
-		image2Update.setFromPixels(videoPlayerCam.getPixelsRef().getPixels(), videoPlayerCam.getWidth(), videoPlayerCam.getHeight(), OF_IMAGE_COLOR);
+		image2Update.setFromPixels(sourceImageRaw.getPixelsRef().getPixels(), videoPlayerCam.getWidth(), videoPlayerCam.getHeight(), OF_IMAGE_COLOR);
 	}
 	else if (modeSensor == realTimeMode) {
 		/*
@@ -558,9 +583,12 @@ void SensorManager::drawGuiSensorOptions(bool* opened){
 		sensorTextType = "OF Camera";
 		ImGui::Text(sensorTextType.c_str());
 		
-		if (modeSensor == realTimeMode) {
-		
+		int auxModeType = modeSensor;
+		ComboCinder("Select Video Mode", &auxModeType, selectableSensorMode, selectableSensorMode.size());
+		if (auxModeType != modeSensor)modeSensor = (sensorMode)auxModeType;//Check if has been modif
 
+		if (modeSensor == realTimeMode) {
+	
 			ImGui::PushItemWidth(200);
 			static int myGuiCameraIndex = 0;
 			if (ImGui::InputInt("Index Camera", &myGuiCameraIndex, 1)) {//Step one by one
@@ -593,7 +621,7 @@ void SensorManager::drawGuiSensorOptions(bool* opened){
 		else if(modeSensor == simulationMode){
 			
 			//TODO InputTextFilterCharacter
-			static char cmoviePath[60] = "videos/default/"; //This will load fisrt Video available at the this Folder
+			static char cmoviePath[60] = "videos/default/"; // = svideosDirPath //This will load fisrt Video available at the this Folder
 			ImGui::PushItemWidth(200);
 			ImGui::InputText("Videos Path", cmoviePath, IM_ARRAYSIZE_TEMP2(cmoviePath));
 			static int myGuiVideoIndex = 0;
@@ -831,7 +859,11 @@ bool SensorManager::setupCameraSensor(){
 			//cam.setup(640, 480);
 		}
 		
-	}else if(modeSensor == simulationMode){
+	}
+	
+	if (bConnected == false)modeSensor = simulationMode;
+
+	if(modeSensor == simulationMode){
 		
 #ifdef TARGET_WIN32
 		svideosDirPath = "videos/default/";
