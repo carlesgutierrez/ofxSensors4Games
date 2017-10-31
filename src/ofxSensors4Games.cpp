@@ -9,6 +9,8 @@
 void ofxSensors4Games::setup(sensorType _myType) {
 	ofSetLogLevel(OF_LOG_ERROR);//OF_LOG_VERBOSE
 
+	cout << "Before setup we called loadAllParamters() " << endl;
+
 	//required calls
 	SensorManager::getInstance()->setSensorType(_myType);
 
@@ -21,21 +23,36 @@ void ofxSensors4Games::setup(sensorType _myType) {
 
 	SensorManager::getInstance()->setup(_myType);
 
-	myControllerRecognition1.setup(
-		SensorManager::getInstance()->getWidth(),
-		SensorManager::getInstance()->getHeight(),
-		SensorManager::getInstance()->computerVisionSensor1.contourFinder,
-		1
-	);
+	controllersRecognitionSetup();
 
-	myControllerRecognition2.setup(
-		SensorManager::getInstance()->getWidth(),
-		SensorManager::getInstance()->getHeight(),
-		SensorManager::getInstance()->computerVisionSensor2.contourFinder,
-		2
-	);
+	if (SensorManager::getInstance()->numPlayersAreas > 2) {
+		cout << "Error:: There are not enought controllers classes" << endl;
+	}
 
 
+
+}
+
+//--------------------------------------
+void ofxSensors4Games::controllersRecognitionSetup() {
+
+	//if (SensorManager::getInstance()->numPlayersAreas > 0) {
+		myControllerRecognition1.setup(
+			SensorManager::getInstance()->getWidth(),
+			SensorManager::getInstance()->getHeight(),
+			SensorManager::getInstance()->computerVisionSensor1.contourFinder,
+			1
+		);
+	//}
+
+	//if (SensorManager::getInstance()->numPlayersAreas > 1) {
+		myControllerRecognition2.setup(
+			SensorManager::getInstance()->getWidth(),
+			SensorManager::getInstance()->getHeight(),
+			SensorManager::getInstance()->computerVisionSensor2.contourFinder,
+			2
+		);
+	//}
 }
 
 //--------------------------------------------------------------
@@ -109,8 +126,27 @@ bool ofxSensors4Games::loadAllParamters() {
 	string filePath = "allMyParams.json";
 	ofxJSONElement jPreset = loadJSON(filePath);
 
-	myControllerRecognition1.setParams(jPreset);
-	myControllerRecognition2.setParams(jPreset);
+	//read here sensormode Todo
+
+
+	cout << "jPreset" << jPreset << endl;
+	if (!jPreset[0]["numPlayersAreas"].isNull()) {
+		cout << "jPreset[numPlayersAreas] = " << jPreset[0]["numPlayersAreas"] << endl;
+		SensorManager::getInstance()->numPlayersAreas = ofToInt(jPreset[0]["numPlayersAreas"].asString());
+	}
+	else SensorManager::getInstance()->numPlayersAreas = 1;
+	
+	if (SensorManager::getInstance()->numPlayersAreas > 0) {
+		myControllerRecognition1.setParams(jPreset);
+	}
+	
+	if (SensorManager::getInstance()->numPlayersAreas > 1) {
+		myControllerRecognition2.setParams(jPreset); 
+	}
+	
+	if (SensorManager::getInstance()->numPlayersAreas > 2) {
+		cout << "Error:: TODO more controllers classes" << endl;
+	}
 
 	SensorManager::getInstance()->setParams(jPreset);
 
@@ -138,6 +174,10 @@ bool ofxSensors4Games::saveAllParams() {
 	ofxJSONElement paramsRecognition1 = myControllerRecognition1.getParams();
 	ofxJSONElement paramsRecognition2 = myControllerRecognition2.getParams();
 	ofxJSONElement paramsSensor = SensorManager::getInstance()->getParams();
+
+	ofxJSONElement localJsonParams;
+	localJsonParams["numPlayersAreas"] = ofToString(SensorManager::getInstance()->numPlayersAreas, 0); // this wil lbe saved at 0 pos in the JSON... TODO  How do this better.
+	allParametersGui.append(localJsonParams);
 
 	allParametersGui.append(paramsRecognition1);
 	allParametersGui.append(paramsRecognition2);

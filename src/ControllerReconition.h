@@ -22,7 +22,7 @@ enum ControllerMethod { MaxMinBlob, /*UpDownLeftRightBlobs ,*/ AllBlobsIn };
 class ControllerReconition {
 public:
 	int idController = -1;
-	void setup(int w, int h, ofxCv::ContourFinder * _contourFinder, int idControll);
+	void setup(int w, int h, ofxCv::ContourFinder * _contourFinder, int idControll/*, int _totalPlayersAreas*/);
 	void update(ofRectangle _rectAreaPlayer, detectionMethod _myDetectMethod);
 	void draw();
 	void exit();

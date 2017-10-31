@@ -34,6 +34,7 @@ class ofxSensors4Games {
 public:
 	
 	void setup(sensorType myType);
+	void controllersRecognitionSetup();
 	void update();
 	void draw();
 	void exit();
@@ -48,6 +49,11 @@ public:
 	//SensorManager mySensor;
 	
 	//Computer Visition
+	//TODO MEMO and LOAD
+	//CV mode contourFinderTrack or Regular
+	//Area Sizes!?
+	int numPlayersAreasLoaded = 2; //Hack
+
 	ControllerReconition myControllerRecognition1;
 	ControllerReconition myControllerRecognition2;
 	

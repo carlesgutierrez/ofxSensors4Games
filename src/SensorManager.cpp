@@ -75,12 +75,16 @@ bool SensorManager::setParams(ofxJSONElement jsonFile)
 			cout << "SensorManager player = " << jsonFile[j]["sensorParams"] << endl;
 				
 			bLoaded = bLoaded + true;
-			for (int i = 0; i < playerAreas.size(); i++) {
-				playerAreas[i].bAreaActive = ofToBool(jsonFile[j]["sensorParams"][ofToString(i + 1, 2)]["bAreaActive"].asString());
-				playerAreas[i].rectArea.x = ofToFloat(jsonFile[j]["sensorParams"][ofToString(i + 1, 2)]["rectAreaX"].asString());
-				playerAreas[i].rectArea.y = ofToFloat(jsonFile[j]["sensorParams"][ofToString(i + 1, 2)]["rectAreaY"].asString());
-				playerAreas[i].rectArea.width = ofToFloat(jsonFile[j]["sensorParams"][ofToString(i + 1, 2)]["rectAreaW"].asString());
-				playerAreas[i].rectArea.height = ofToFloat(jsonFile[j]["sensorParams"][ofToString(i + 1, 2)]["rectAreaH"].asString());
+
+			playerAreas.clear();
+			for (int i = 0; i < numPlayersAreas; i++) {
+				PlayerArea auxPlayerArea;
+				auxPlayerArea.bAreaActive = ofToBool(jsonFile[j]["sensorParams"][ofToString(i + 1, 2)]["bAreaActive"].asString());
+				auxPlayerArea.rectArea.x = ofToFloat(jsonFile[j]["sensorParams"][ofToString(i + 1, 2)]["rectAreaX"].asString());
+				auxPlayerArea.rectArea.y = ofToFloat(jsonFile[j]["sensorParams"][ofToString(i + 1, 2)]["rectAreaY"].asString());
+				auxPlayerArea.rectArea.width = ofToFloat(jsonFile[j]["sensorParams"][ofToString(i + 1, 2)]["rectAreaW"].asString());
+				auxPlayerArea.rectArea.height = ofToFloat(jsonFile[j]["sensorParams"][ofToString(i + 1, 2)]["rectAreaH"].asString());
+				playerAreas.push_back(auxPlayerArea);
 			}
 		}
 	}
@@ -91,7 +95,7 @@ bool SensorManager::setParams(ofxJSONElement jsonFile)
 	//Read from JSON
 	//....
 	if (axuSensorMode == -1) {
-		setSensorMode(simulationMode);
+		setSensorMode(realTimeMode); //simulationMode
 	}
 	else {
 		//Set the loaded mode
@@ -151,17 +155,6 @@ void SensorManager::setup(sensorType _sensorType){
 	mySourcedSensorFbo.allocate(getWidth(), getHeight(), GL_RGB);
 	sensorImage2.allocate(getWidth(), getHeight(), OF_IMAGE_COLOR);//This should be allocated, like now
 	sourceImageRaw.allocate(getWidth(), getHeight(), OF_IMAGE_COLOR);
-
-	//setup default number of player areas
-	for (int i = 0; i < numPlayersAreas; i++) {
-		//Add Default playerAreas into vector 
-		PlayerArea auxPlayerArea;
-		auxPlayerArea.bAreaActive = true;
-		auxPlayerArea.rectArea.setWidth(sensorWidth);
-		auxPlayerArea.rectArea.setHeight(sensorHeight);
-		playerAreas.push_back(auxPlayerArea);
-	}
-	
 
 	//Mouse and Keyboard Events
 	ofRegisterKeyEvents(this);
@@ -466,6 +459,7 @@ void SensorManager::draw(){
 					ofDisableAlphaBlending();
 					ofSetColor(255, 255, 255);
 				}
+				//TODO more ? or make this functions dynamic .
 			}
 
 		}
@@ -673,6 +667,9 @@ void SensorManager::drawGuiSensorOptions(bool* opened){
 				auxPlayerArea.rectArea.setHeight(sensorHeight);
 
 				playerAreas.push_back(auxPlayerArea);
+
+				//This require that all controllerReconition clases are being setup previously
+				
 			}
 			else {
 				//TODO Remove last vector pos until get equal
@@ -841,7 +838,7 @@ bool SensorManager::setupCameraSensor(){
 		//rectArea1.set(0, 0, cam.getWidth(), cam.getHeight());
 		//TODO load Json pre values
 		for (int i = 0; i < playerAreas.size(); i++) {
-			playerAreas[i].rectArea.set(0, 0, cam.getWidth(), cam.getHeight());
+			playerAreas[i].rectArea.set(0, 0, playerAreas[i].rectArea.width, playerAreas[i].rectArea.height);
 		}
 
 		sensorWidth = cam.getWidth();

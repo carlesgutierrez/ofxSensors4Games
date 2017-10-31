@@ -12,7 +12,7 @@
 // Set borders
 
 //-----------------------------------------
-void ControllerReconition::setup(int w, int h, ofxCv::ContourFinder * _contourFinder, int _idCntroller){
+void ControllerReconition::setup(int w, int h, ofxCv::ContourFinder * _contourFinder, int _idCntroller/*, int _totalPlayersAreas*/){
 
 	idController = _idCntroller;
 
@@ -192,7 +192,7 @@ void ControllerReconition::updateRecognitionSystem(ofRectangle _rectAreaPlayer){
 	if (SensorManager::getInstance()->isNewSensorFrame()) {
 
 		//update the num of blobs found in this Controller / Area
-		numBlobsDetected = myContourFinder->getContours().size();
+		//numBlobsDetected = myContourFinder->getContours().size();
 	
 		if(myControllerMethod == MaxMinBlob){
 			//Calc Max Mins and get the relative position to the Camera. //TODO get relative pos to the area1,2,n
@@ -384,9 +384,9 @@ void ControllerReconition::send_OSC_Data_AllInBlobs() {
 	ofxOscMessage m;
 	m.clear();
 	m.setAddress("/GameBlobAllIn");//TODO tracking Label
-	m.addIntArg(numBlobsDetected); //Add the number of Blobs detected in order to read them properly and easy
+	m.addIntArg(myContourFinder->getContours().size()); //Add the number of Blobs detected in order to read them properly and easy
 
-	for (int i = 0; i < numBlobsDetected > 0; i++) {
+	for (int i = 0; i < myContourFinder->getContours().size()/* > 0*/; i++) {
 		cv::Point2f centerBlobi = myContourFinder->getCenter(i); //TODO getCentroid
 																
 		float resumedPosX = (myContourFinder->getCenter(i).x - rectAreaPlayer.x) / rectAreaPlayer.width; //Forced to 0..1 inside the RectArea 
@@ -409,7 +409,7 @@ void ControllerReconition::send_OSC_Data_AllInBlobs() {
 //-----------------------------------------
 void ControllerReconition::sendOSCBlobData(){
 
-	if (numBlobsDetected > 0) {
+	if (myContourFinder->getContours().size() > 0) {
 		if (myControllerMethod == MaxMinBlob) {
 			//working at selected Areas. Finding the proper XY related and Sending to a Client the results
 			//TODO Convert this into dynamic controlers
@@ -425,6 +425,7 @@ void ControllerReconition::sendOSCBlobData(){
 			if (myDetectMethod == FindContournsTracking || myDetectMethod == FindContourns) {
 				//TODO that should work for all Areas. Now only for the area 1.
 				if (idController == 1) {
+					//TODO Find how to do this for more subn areas. Right now just 1.
 					send_OSC_Data_AllInBlobs(); //IF TRACKINGMODE active this is senind 2 LABELS.ID and TIME 
 				}
 				//else if (idController == 2) {
@@ -449,6 +450,13 @@ void ControllerReconition::draw(){
 	drawGui_Controller();
 	
 	//drawPolylinesAreas();
+
+	//Specific Draws
+	if (myControllerMethod == MaxMinBlob) {
+		//TODO Add This to plot gui
+		//medianBlobHeightValue.draw(500 , 500, sensorWidth, 100, 100, "medianBlobHeightValue", true, 150);
+		drawResumedBlob_MaxMinBlobs();
+	}
 	
 }
 
@@ -524,24 +532,19 @@ void ControllerReconition::drawGui_Controller(){
 
 	//string myControlerIdText = "ControllerRecognition Ctrl" + ofToString(idController);
 	string myControlerIdTextPostCV = "Post-CV [" + ofToString(idController, 0) + "]";
-	static bool closable_group = true;
-	if (ImGui::CollapsingHeader(myControlerIdTextPostCV.c_str()), &closable_group) {
+	
+	if (ImGui::CollapsingHeader(myControlerIdTextPostCV.c_str())) {
 
 		static int ControllerMethod_item_current = myControllerMethod;//Deafult simple //TODO use load this from JSon
 		const char* combo_controllerTypeStrings[] = { "MaxMinBlob", /*"UpDownLeftRightBlobs" ,*/ "AllBlobsIn" };
-		if (ImGui::Combo("Controller Data Type", &ControllerMethod_item_current, combo_controllerTypeStrings, IM_ARRAYSIZE_TEMP2(combo_controllerTypeStrings))) {
+		
+		string myControlerMethodText = "Controller Data Type [" + ofToString(idController, 0) + "]";
+		if (ImGui::Combo(myControlerMethodText.c_str(), &ControllerMethod_item_current, combo_controllerTypeStrings, IM_ARRAYSIZE_TEMP2(combo_controllerTypeStrings))) {
 			myControllerMethod = static_cast<ControllerMethod>(ControllerMethod_item_current);
 		}
 
 		if (myControllerMethod == MaxMinBlob) {
-
 			drawGui_ResumedBlob_MaxMinBlobs();
-
-			//TODO Add This to plot gui
-			//medianBlobHeightValue.draw(500 , 500, sensorWidth, 100, 100, "medianBlobHeightValue", true, 150);
-
-			drawResumedBlob_MaxMinBlobs();
-
 		}
 		/*else if (myControllerMethod == UpDownLeftRightBlobs) {
 			//TODO
