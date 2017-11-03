@@ -63,8 +63,8 @@ void ofxSensors4Games::update() {
 	for (int i = 0; i < SensorManager::getInstance()->playerAreas.size(); i++) {
 		ofRectangle auxArea = SensorManager::getInstance()->playerAreas[i].rectArea;
 		if (SensorManager::getInstance()->playerAreas[i].bAreaActive) {
-			if (i == 0)myControllerRecognition1.update(auxArea, SensorManager::getInstance()->computerVisionSensor1.trackingMode);
-			else if (i == 1)myControllerRecognition2.update(auxArea, SensorManager::getInstance()->computerVisionSensor2.trackingMode);
+			if (i == 0)myControllerRecognition1.update(auxArea);
+			else if (i == 1)myControllerRecognition2.update(auxArea);
 		}
 	}
 }
@@ -137,11 +137,11 @@ bool ofxSensors4Games::loadAllParamters() {
 	else SensorManager::getInstance()->numPlayersAreas = 1;
 	
 	if (SensorManager::getInstance()->numPlayersAreas > 0) {
-		myControllerRecognition1.setParams(jPreset);
+		myControllerRecognition1.setParams(jPreset, 1);
 	}
 	
 	if (SensorManager::getInstance()->numPlayersAreas > 1) {
-		myControllerRecognition2.setParams(jPreset); 
+		myControllerRecognition2.setParams(jPreset, 2); 
 	}
 	
 	if (SensorManager::getInstance()->numPlayersAreas > 2) {

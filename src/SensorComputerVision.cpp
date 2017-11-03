@@ -445,12 +445,20 @@ void SensorComputerVision::drawGui() {
 		ImGui::Separator();
 		//ImGui::Checkbox("Activate Tracking", &bTrackgingActive);
 		
-		const char* RecognitionMethod_items[] = { "FindContourns", "FindContournsTracking", "DarkNetTODO" };
+		//const char* RecognitionMethod_items[] = { "FindContourns", "FindContournsTracking", "DarkNetTODO" };
 		//ImGui::Combo("MaxMin X type", &item_resumedBlob_X, RecognitionMethod_items, IM_ARRAYSIZE_TEMP2(combo_resumedBlob_X));
-		static int RecognitionMethod_item_current = trackingMode;//Deafult simple
-		if (ImGui::ListBox("Tracking Mode", &RecognitionMethod_item_current, RecognitionMethod_items, IM_ARRAYSIZE_TEMP1(RecognitionMethod_items), 4)) {
-			trackingMode = static_cast<detectionMethod>(RecognitionMethod_item_current);
-		}
+		//static int RecognitionMethod_item_current = trackingMode;//Deafult simple
+		
+		//if (ComboCinder("Tracking Mode", &RecognitionMethod_item_current, detectionTrackingMethods, detectionTrackingMethods.size())) {
+		//	trackingMode = static_cast<detectionMethod>(RecognitionMethod_item_current);
+		//}
+
+		ImGui::RadioButton("CountourFinder", &RecognitionMethod_item_current, 0); ImGui::SameLine();
+		ImGui::RadioButton("CountourFinder with Tracking", &RecognitionMethod_item_current, 1); ImGui::SameLine();
+		ImGui::RadioButton("Yolo_TODO", &RecognitionMethod_item_current, 2);
+		trackingMode = static_cast<detectionMethod>(RecognitionMethod_item_current);
+
+
 		ImGui::Separator();
 
 		//ImGui::ShowTestWindow();

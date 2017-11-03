@@ -23,7 +23,7 @@ class ControllerReconition {
 public:
 	int idController = -1;
 	void setup(int w, int h, ofxCv::ContourFinder * _contourFinder, int idControll/*, int _totalPlayersAreas*/);
-	void update(ofRectangle _rectAreaPlayer, detectionMethod _myDetectMethod);
+	void update(ofRectangle _rectAreaPlayer);
 	void draw();
 	void exit();
 	
@@ -68,7 +68,7 @@ public:
 	//Advanced Filtered Blob Data
 	//median stat value
 	ControllerMethod myControllerMethod = AllBlobsIn; // MaxMinBlob; //TODO CHECK TO LAD THIS AT JSON
-	detectionMethod  myDetectMethod = FindContourns; //TODO CHECK TO LAD THIS AT JSON
+	detectionMethod  myDetectMethod; //Contournd, tracking Contourns or Future detection methods such YOLO2
 	void updateRecognitionSystem(ofRectangle _rectAreaPlayer);
 	void udpate_MaxMins_Recognition_UpDown_Actions(float _value, statsRecorder & _stats);
 	
@@ -130,6 +130,6 @@ public:
 	//////////////////////////////////////////
 	//Json save params
 	ofxJSONElement getParams();
-	bool setParams(ofxJSONElement myJson);
+	bool setParams(ofxJSONElement myJson, int _idController);
 	
 };

@@ -9,6 +9,9 @@ enum sensorType { kinectSensor, cameraSensor, externalSickSensor };
 enum sensorMode { realTimeMode, simulationMode };
 enum detectionMethod { FindContourns, FindContournsTracking/*, DarkNetTODO*/ }; //TODO Add all this methods
 
+//const char* RecognitionMethod_items[] = { "FindContourns", "FindContournsTracking", "DarkNetTODO" };
+//vector<string> detectionTrackingMethods;// { "FindContourns", "FindContournsTracking", "DarkNetTODO" };
+//int RecognitionMethod_item_current = 0;//Deafult simple -> FindContourns
 
 //GUi util Funtion
 #define IM_ARRAYSIZE_TEMP1(_ARR)  ((int)(sizeof(_ARR)/sizeof(*_ARR)))
@@ -53,7 +56,7 @@ public:
 
 	sensorType mySensorType;
 	detectionMethod trackingMode = FindContournsTracking;// FindContourns;
-
+	int RecognitionMethod_item_current =  trackingMode;
 	//Thesdhold methods
 	int selectedThersholdMethodId = 0;
 

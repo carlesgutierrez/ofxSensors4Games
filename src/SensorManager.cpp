@@ -838,7 +838,7 @@ bool SensorManager::setupCameraSensor(){
 		//rectArea1.set(0, 0, cam.getWidth(), cam.getHeight());
 		//TODO load Json pre values
 		for (int i = 0; i < playerAreas.size(); i++) {
-			playerAreas[i].rectArea.set(0, 0, playerAreas[i].rectArea.width, playerAreas[i].rectArea.height);
+			playerAreas[i].rectArea.set(playerAreas[i].rectArea.x, playerAreas[i].rectArea.y, playerAreas[i].rectArea.width, playerAreas[i].rectArea.height);
 		}
 
 		sensorWidth = cam.getWidth();

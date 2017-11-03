@@ -52,6 +52,17 @@ ofxJSONElement ControllerReconition::getParams()
 	ofxJSONElement jsonParams;
 	jsonParams.clear();
 
+	string value2Save_CtrollerMethod;
+	if (myControllerMethod == MaxMinBlob) value2Save_CtrollerMethod = "MaxMinBlob";
+	else if (myControllerMethod == AllBlobsIn) value2Save_CtrollerMethod = "AllBlobsIn";
+	jsonParams["ControllerReconition"]["controllerMethod"] = ofToString(value2Save_CtrollerMethod);
+
+	string value2Save_detectMethod;
+	if (SensorManager::getInstance()->computerVisionSensor1.trackingMode == FindContourns) value2Save_detectMethod = "FindContourns";
+	else if (SensorManager::getInstance()->computerVisionSensor1.trackingMode == FindContournsTracking) value2Save_detectMethod = "FindContournsTracking";
+	jsonParams["ControllerReconition"]["detectMethod"] = ofToString(value2Save_detectMethod);
+
+
 	if (idController == 1) {
 		jsonParams["ControllerReconition"][ofToString(idController, 2)]["learningTime"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.learningTime);
 		jsonParams["ControllerReconition"][ofToString(idController, 2)]["thresholdValue"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.thresholdValue);
@@ -71,6 +82,10 @@ ofxJSONElement ControllerReconition::getParams()
 		jsonParams["ControllerReconition"][ofToString(idController, 2)]["maxSizeBlob"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.maxSizeBlob);
 		jsonParams["ControllerReconition"][ofToString(idController, 2)]["maxPersistenceTracking"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.maxPersistenceTracking);
 		jsonParams["ControllerReconition"][ofToString(idController, 2)]["maxDistanceTracking"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.maxDistanceTracking);
+		
+		//jsonParams["ControllerReconition"][ofToString(idController, 2)]["controllerMethod"] = ofToString(myControllerMethod);
+		//jsonParams["ControllerReconition"][ofToString(idController, 2)]["detectMethod"] = ofToString(myDetectMethod);
+
 		
 	}
 	else if(idController == 2) {
@@ -93,6 +108,10 @@ ofxJSONElement ControllerReconition::getParams()
 		jsonParams["ControllerReconition"][ofToString(idController, 2)]["maxPersistenceTracking"] = ofToString(SensorManager::getInstance()->computerVisionSensor2.maxPersistenceTracking);
 		jsonParams["ControllerReconition"][ofToString(idController, 2)]["maxDistanceTracking"] = ofToString(SensorManager::getInstance()->computerVisionSensor2.maxDistanceTracking);
 
+
+	/*	jsonParams["ControllerReconition"][ofToString(idController, 2)]["controllerMethod"] = ofToString(myControllerMethod);
+		jsonParams["ControllerReconition"][ofToString(idController, 2)]["detectMethod"] = ofToString(myDetectMethod);*/
+
 	}
 	else cout << "Error Saving idController not recognized" << endl;
 
@@ -100,13 +119,34 @@ ofxJSONElement ControllerReconition::getParams()
 }
 
 //-------------------------------------------------------------------
-bool ControllerReconition::setParams(ofxJSONElement jsonFile)
+bool ControllerReconition::setParams(ofxJSONElement jsonFile, int _idController)
 {
 	bool bLoaded = true;
 
 	//cout << "traying to get data from ControllerRecognition = " << ofToString(idController, 0) << endl;
-	//cout << "Data JSon preview = " << jsonFile << endl;
-	//cout << "Data JSon Size = " << jsonFile.size() << endl;
+	cout << "Data JSon preview = " << jsonFile << endl;
+	cout << "Data JSon Size = " << jsonFile.size() << endl;
+	
+	//TODO resolve how to read non existence Values.... Read FORO Imgui
+	//Get Which idController we are reading then rest of paramters
+	idController = _idController;
+	for (int i = 0; i < jsonFile.size(); i++) {
+		if (jsonFile[i]["ControllerReconition"].size() > 0) {
+			//cout << "jsonFile controllerMethod size = " << jsonFile[i]["ControllerReconition"]["controllerMethod"].size() << endl;
+			//if (jsonFile[i]["ControllerReconition"]["controllerMethod"].size() > 0) {
+				string auxControllerMethodReadedText = jsonFile[idController]["ControllerReconition"]["controllerMethod"].asString();
+				if (auxControllerMethodReadedText == "AllBlobsIn")myControllerMethod = AllBlobsIn;
+				else if (auxControllerMethodReadedText == "MaxMinBlob")myControllerMethod = MaxMinBlob;
+			//}
+			//cout << "jsonFile detectmethod size = " << jsonFile[i]["ControllerReconition"]["detectMethod"].size() << endl;
+			//if (jsonFile[i]["ControllerReconition"]["detectMethod"].size() > 0) {
+				string auxdetectMethodReadedText = jsonFile[idController]["ControllerReconition"]["detectMethod"].asString();
+				if (auxdetectMethodReadedText == "FindContourns")SensorManager::getInstance()->computerVisionSensor1.trackingMode = FindContourns;
+				else if (auxdetectMethodReadedText == "FindContournsTracking")SensorManager::getInstance()->computerVisionSensor1.trackingMode = FindContournsTracking;
+			//}
+		}
+	}
+
 
 	for (int i = 0; i < jsonFile.size(); i++) {
 		if (jsonFile[i]["ControllerReconition"].size() > 0) {
@@ -166,10 +206,11 @@ bool ControllerReconition::setParams(ofxJSONElement jsonFile)
 }
 
 //-----------------------------------------
-void ControllerReconition::update(ofRectangle rectAreaPlayer, detectionMethod _detectionMethod){
+void ControllerReconition::update(ofRectangle rectAreaPlayer){
 
-	myDetectMethod = _detectionMethod; //updated on the fly, if SensorComputerVision Change, then here we will know it
+	//myDetectMethod = &_detectionMethod; //updated on the fly, if SensorComputerVision Change, then here we will know it
 	
+
 	//Update high level data to detect desired Players Actions
 	updateRecognitionSystem(rectAreaPlayer);
 	
@@ -394,7 +435,7 @@ void ControllerReconition::send_OSC_Data_AllInBlobs() {
 		m.addFloatArg(resumedPosX);
 		m.addFloatArg(resumedPosY);
 
-		if(myDetectMethod == FindContournsTracking){
+		if(SensorManager::getInstance()->computerVisionSensor1.trackingMode == FindContournsTracking){
 			//for Tracking add int ID & int TIME
 			int idAux = myContourFinder->getLabel(i);
 			m.addIntArg(idAux); //Sending ID Label
@@ -422,7 +463,7 @@ void ControllerReconition::sendOSCBlobData(){
 		}
 		else if (myControllerMethod == AllBlobsIn) {
 
-			if (myDetectMethod == FindContournsTracking || myDetectMethod == FindContourns) {
+			if (SensorManager::getInstance()->computerVisionSensor1.trackingMode == FindContournsTracking || SensorManager::getInstance()->computerVisionSensor1.trackingMode == FindContourns) {
 				//TODO that should work for all Areas. Now only for the area 1.
 				if (idController == 1) {
 					//TODO Find how to do this for more subn areas. Right now just 1.
@@ -535,13 +576,22 @@ void ControllerReconition::drawGui_Controller(){
 	
 	if (ImGui::CollapsingHeader(myControlerIdTextPostCV.c_str())) {
 
-		static int ControllerMethod_item_current = myControllerMethod;//Deafult simple //TODO use load this from JSon
-		const char* combo_controllerTypeStrings[] = { "MaxMinBlob", /*"UpDownLeftRightBlobs" ,*/ "AllBlobsIn" };
-		
-		string myControlerMethodText = "Controller Data Type [" + ofToString(idController, 0) + "]";
-		if (ImGui::Combo(myControlerMethodText.c_str(), &ControllerMethod_item_current, combo_controllerTypeStrings, IM_ARRAYSIZE_TEMP2(combo_controllerTypeStrings))) {
-			myControllerMethod = static_cast<ControllerMethod>(ControllerMethod_item_current);
-		}
+		int currentControllerMethod = myControllerMethod;//Deafult simple //TODO use load this from JSon
+		//const char* combo_controllerTypeStrings[] = { "MaxMinBlob", /*"UpDownLeftRightBlobs" ,*/ "AllBlobsIn" };
+		//string myControlerMethodText = "Controller Data Type [" + ofToString(idController, 0) + "]";
+		//if (ComboCinder(myControlerMethodText.c_str(), &ControllerMethod_item_current, combo_controllerTypeStrings, IM_ARRAYSIZE_TEMP2(combo_controllerTypeStrings))) {
+		//	myControllerMethod = static_cast<ControllerMethod>(ControllerMethod_item_current);
+		//}
+
+		string methodMaxMins = "MaxMinBlob ";
+		string methodAllBlobsIn = "AllBlobsIn ";
+		string myIdControllerText = "[" + ofToString(idController, 0) + "]";
+		ImGui::Text("Controller Data Type ");
+		string radioTextMaxMins = methodMaxMins + myIdControllerText;
+		string radioTextAllBlobsIn = methodAllBlobsIn + myIdControllerText;
+		ImGui::RadioButton(radioTextMaxMins.c_str(), &currentControllerMethod, 0); ImGui::SameLine();
+		ImGui::RadioButton(radioTextAllBlobsIn.c_str(), &currentControllerMethod, 1); ImGui::SameLine();
+		myControllerMethod = static_cast<ControllerMethod>(currentControllerMethod);
 
 		if (myControllerMethod == MaxMinBlob) {
 			drawGui_ResumedBlob_MaxMinBlobs();
