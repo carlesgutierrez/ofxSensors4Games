@@ -61,9 +61,9 @@ Configure the sensor:
 
 Then your App or Game ( ready for OSC or UDP ) will receive at port 12342 (OSC) or UPD (29095) the desired filtered data, that will represent your desired actions for your App. That are commonly designed for VideoGames but could be used for other propouses.
 
-Network data type: 
+## Network data type ( OSC ) 
 
-## For MaxMinXY Controller: 
+### For MaxMinXY Controller: 
 
 	#### OSC:
 
@@ -82,9 +82,11 @@ Network data type:
 		*	- (float) UP mov 	[0..1]
 		*	- (float) DOWN mov	[0..1]
 
-	#### Same for UPD: ffff x, y, up, down 
+	#### For this controller is available UPD protocol at port 29095 
+		* "SEND ffff f0(X)  f1(Y)  f2(UP)  f3(DOWN)";
+			-> ffff x, y, up, down 
 	
-## For AllBlobIn Controller: 
+### For AllBlobIn Controller: 
 
 	#### OSC: 
 	
@@ -101,7 +103,7 @@ Network data type:
 		}
 }
 		
-## TODO other filters?
+	## TODO other filters?
 
 
 **********************************************************
