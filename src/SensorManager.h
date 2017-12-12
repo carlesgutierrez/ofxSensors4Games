@@ -20,7 +20,7 @@
 
 
 //Uncomment this to Use it
-#define USE_SHARECAM_SPOUT
+//#define USE_SHARECAM_SPOUT
 
 
 

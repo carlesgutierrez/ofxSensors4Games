@@ -19,17 +19,17 @@ meta:
 	ADDON_DESCRIPTION = Addon for controll some devides as sensors ( Kinect , Camera, RadarGLX, SickLMS ) 
 	ADDON_AUTHOR = Carles Gutierrez
 	ADDON_TAGS = "computer vision" "tracking" "camera"
-	ADDON_URL = https://github.com/carlesgutierrez/ofxSensors4Games/
+	ADDON_URL = https://github.com/carlesgutierrez/ofxSensors4Games
 
 common:
 	# dependencies with other addons, a list of them separated by spaces 
 	# or use += in several lines
 	ADDON_DEPENDENCIES = ofxJSON
+	ADDON_DEPENDENCIES += ofxOpencv
 	ADDON_DEPENDENCIES += ofxCv
 	#ADDON_DEPENDENCIES += ofxKinect
 	ADDON_DEPENDENCIES += ofxNetwork
-	ADDON_DEPENDENCIES += ofxOpencv
-	ADDON_DEPENDENCIES += ofxOSC
+	ADDON_DEPENDENCIES += ofxOsc
 	ADDON_DEPENDENCIES += ofxImGui
 	#ADDON_DEPENDENCIES += others...
 	
@@ -37,7 +37,8 @@ common:
 	# but if the addon or addon libraries need special search paths they can be
 	# specified here separated by spaces or one per line using +=
 	ADDON_INCLUDES = src
-	ADDON_INCLUDES += src\statsManager
+	#ADDON_INCLUDES += src\statsManager
+
 	
 	# any special flag that should be passed to the compiler when using this
 	# addon
