@@ -6,80 +6,107 @@ ofxSensors4Games
 Introduction
 ------------
 
-This addon provides a remote interface that aims to control games that can be controlled using simple button actions. 
-This it's possible by using external sensors such for example an Infrared Camera, then sending detected actions to external games by OSC / UPD.
+This addon provides a remote interface that aims to control your game or App by interpret sense action into Network packages. 
+Setup a camera ( or another available sensor ), define regions of interests, select for each one a method to interpred such actions. The easier method filter maximum X/Y detected objects and send this with a proper label to the network by OSC protocol.
 
-Infrared cameras are cheap and practical to use. But There are other powerfull sensors that can be also used. 
-For now we keep the posibility to add external sensors here and send data filtered to your game or App.  
-
-Internal Sensors allowed: 
-* Camera and Videoplayer for testing.
-* Kinect ( require specific installation ). In actual version has been disabled.
-* RadarGlxRss3 
-* LaserRange Sensor: Sick LMS1XX. 
-
-
-This addon is using the last v0.9.8 release but should work with others 0.9.x Of versions.
+Sensors available: 
+* Camera / Videoplayer sensors. Cameras ( Infrared or not ) are quite cheap and practical to use it for outdoors environtmets. 
+But There are other powerfull sensors that can be also used. You could reconfigure this addon and use: 
+* Kinect1( require specific installation for windows). Actually remain disabled.
+* External RadarGlxRss3 ( a speed radar usually for cars ofxRadarGlxRss3). 
+* External LaserRange Sensor: Sick LMS1XX. ( Receive OSC from resulst from ofxSick )
 
 
 Installation
 ------------
-
-Copy the `ofxSensors4Games` folder into your `openFrameworks/addons/` folder.  Modify setup in order to select you sensor (Now only available cameraSensor) and running mode ( realtime or simulation) ( life videoCamera or just play a video located at bin/data )
+Copy or clone the `ofxSensors4Games` folder into your `openFrameworks/addons/` folder. Open and Run the example. In order to select another sensor instead of camera or videoplayer, you will require to modify setup function at ofApp.cpp. Camera is default life camera and will start if it's available or otherwise will play a default video ( located at bin/data/ )
 
 	
 Dependencies
 ------------
-Externals:
+OF Addons (from 0.98):
+
+* ofxNetwork
+* ofxOsc
+* ofxOpencv
+* //ofxKinect add this manually. !!! README  !!! ofxkinect README (usb libs install) 
+
+ofxAddons:
+
 * ofxImgui (https://github.com/jvcleave/ofxImGui)
 * ofxJSON (https://github.com/jeffcrouse/ofxJSON)
 * ofxCv (https://github.com/kylemcdonald/ofxCv)
 (for each update projet you do , You will have to this at Properties, C/C++ -> Output Files -> "Object File Name" to be the
 following: $(IntDir)/%(RelativeDir)/)
 //Addons only for Windows
-*ofxSpout2 (https://github.com/Kj1/ofxSpout2) // TODO try trhis fork (https://github.com/sheridanis/ofxSpout2), that fix potencial crash
+* ofxSpout2 (https://github.com/Kj1/ofxSpout2) // TODO try trhis fork (https://github.com/sheridanis/ofxSpout2), that fix potencial crash
     
- 
-Internals:
-* ofxNetwork
-* ofxOsc
-* ofxOpencv
-* //ofxKinect add this manually. !!! README  !!! ofxkinect README (usb libs install) 
+For sensors SickLMS111 or RadarGlxRss3:
+* ofxRadarGlxRss3: https://github.com/carlesgutierrez/ofxRadarGlxRss3
+* ofxSick: https://github.com/carlesgutierrez/ofxSick
+Check Nuclai workshop examples (July 2016): https://github.com/carlesgutierrez/openLab_AdvancedSensors4PublicGames
+I know this is proper documented, so send me an email [carles.gutierrez[at]gmail.com] if you have any doubt.
 
 
 Compatibility
 ------------
-
-Tested with OF 0.9.x on
-
-    Windows 7/10, Visual Studio 2015. Require full install (http://openframeworks.cc/setup/vs/)
-
-
-For camera sensor: 
- Sometimes it's important to have full control of sensor: Check camera properties: To set Auto White Balance and Auto Exposition are required to allow a precise camera control.
-
+Tested with OF 0.9.x on: Windows 7/10, Visual Studio 2015. Require full install (http://openframeworks.cc/setup/vs/)
 
 Usage 
 -----
-Your App or Game will receive at "127.0.0.1" by port 12342 (OSC) or UPD (29095)
-If sends different desired and selected data
+Configure the sensor: 
+* Setup the number and the locations of ROI ( Regions of Interest )
+* Setup the Controller Method ( MaxMinXY or AllBlobs )
+* Select OSC destination. 
 
-//ResumedBlob
+Then your App or Game ( ready for OSC or UDP ) will receive at port 12342 (OSC) or UPD (29095) the desired filtered data, that will represent your desired actions for your App. That are commonly designed for VideoGames but could be used for other propouses.
 
-osc:/GameBlob
-*	- (float) x pos 	[0..1]
-*	- (float) y pos 	[0..1]
-*	- (float) UP mov 	[0..1]
-*	- (float) DOWN mov	[0..1]
+## Network data type ( OSC ) 
+
+### For MaxMinXY Controller: 
+
+	#### OSC:
+
+		//ResumedBlob
+		//ROI 1
+		osc:/GameBlob
+		*	- (float) x pos 	[0..1]
+		*	- (float) y pos 	[0..1]
+		*	- (float) UP mov 	[0..1]
+		*	- (float) DOWN mov	[0..1]
+
+		//ROI 2
+		osc:/GameBlob2
+		*	- (float) x pos 	[0..1]
+		*	- (float) y pos 	[0..1]
+		*	- (float) UP mov 	[0..1]
+		*	- (float) DOWN mov	[0..1]
+
+	#### For this controller is available UPD protocol at port 29095 
+		* "SEND ffff f0(X)  f1(Y)  f2(UP)  f3(DOWN)";
+			-> ffff x, y, up, down 
+	
+### For AllBlobIn Controller: 
+
+	#### OSC: 
+	
+		osc:/GameBlobAllIn
+		* - (int) Total num of Blobs "N"
+		Then "N" times:
+		* - (float) X [ 0 .. 1]
+		* - (float) Y [ 0 .. 1]
+		if( trackingMode == FindContournsTracking )
+		{
+			//for Tracking add int ID & int TIME
+			* - (int) id 
+			* - (int) time 
+		}
+}
+		
+	## TODO other filters?
 
 
-//Tracking Blobs (WIP)
-osc:/GameBlob2
-*	- (float) x pos 	[0..1]
-*	- (float) y pos 	[0..1]
-*	- (float) UP mov 	[0..1]
-*	- (float) DOWN mov	[0..1]
-
+**********************************************************
 
 License
 -------
