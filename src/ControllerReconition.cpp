@@ -516,15 +516,6 @@ void ControllerReconition::drawGui_OSCUPD_sendingData() {
 //-------------------------------------------------
 void ControllerReconition::drawGui_Controller(){
 	
-	//cout << "Check this Out PreVious window" << endl;
-	//bool wopen = true;
-	string myControlerHOSTIPText = "HOST_IP Ctr l" + ofToString(idController);
-	ImGui::Begin(myControlerHOSTIPText.c_str());
-	//Draw and Edit OSC info
-	drawGui_HostIP_configurable();
-	drawGui_OSCUPD_sendingData();
-	ImGui::End();
-
 	//string myControlerIdText = "ControllerRecognition Ctrl" + ofToString(idController);
 	string myControlerIdTextPostCV = "Post-CV [" + ofToString(idController, 0) + "]";
 	
@@ -543,8 +534,10 @@ void ControllerReconition::drawGui_Controller(){
 		ImGui::Text("Controller Data Type ");
 		string radioTextMaxMins = methodMaxMins + myIdControllerText;
 		string radioTextAllBlobsIn = methodAllBlobsIn + myIdControllerText;
-		ImGui::RadioButton(radioTextMaxMins.c_str(), &currentControllerMethod, 0); ImGui::SameLine();
-		ImGui::RadioButton(radioTextAllBlobsIn.c_str(), &currentControllerMethod, 1); ImGui::SameLine();
+		ImGui::RadioButton(radioTextMaxMins.c_str(), &currentControllerMethod, 0); 
+		ImGui::SameLine();
+		ImGui::RadioButton(radioTextAllBlobsIn.c_str(), &currentControllerMethod, 1); 
+
 		myControllerMethod = static_cast<ControllerMethod>(currentControllerMethod);
 
 		if (myControllerMethod == MaxMinBlob) {
@@ -571,8 +564,17 @@ void ControllerReconition::drawGui_Controller(){
 			ofPopStyle();
 			ofPopMatrix();
 		}
+
 	}
 
+	string myControlerHOSTIPText = "Network [" + ofToString(idController) +"]";
+	if (ImGui::CollapsingHeader(myControlerHOSTIPText.c_str())) {
+
+		//Draw and Edit OSC info
+		drawGui_HostIP_configurable();
+		drawGui_OSCUPD_sendingData();
+
+	}
 		
 	
 	
