@@ -84,7 +84,7 @@ public:
 	void calcMainBlobLocation(ofRectangle _rectAreaPlayer);
 	void send_OSC_UPD_Data_MaxMinBlob(string nameTag);
 
-	void send_OSC_Data_AllInBlobs();
+	void send_OSC_Data_AllInBlobs(int _idCvVector);
 
 	float xDiff;
 	float yDiff;

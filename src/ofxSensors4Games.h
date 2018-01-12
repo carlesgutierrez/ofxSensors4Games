@@ -54,8 +54,9 @@ public:
 	//Area Sizes!?
 	int numPlayersAreasLoaded = 2; //Hack
 
-	ControllerReconition myControllerRecognition1;
-	ControllerReconition myControllerRecognition2;
+	//ControllerReconition myControllerRecognition1;
+	//ControllerReconition myControllerRecognition2;
+	vector<ControllerReconition>myControllerRecognitionVector;
 	
 	//Gui interaction
 	ofxImGui::Gui gui;

@@ -58,62 +58,37 @@ ofxJSONElement ControllerReconition::getParams()
 	jsonParams["ControllerReconition"]["controllerMethod"] = ofToString(value2Save_CtrollerMethod);
 
 	string value2Save_detectMethod;
-	if (SensorManager::getInstance()->computerVisionSensor1.trackingMode == FindContourns) value2Save_detectMethod = "FindContourns";
-	else if (SensorManager::getInstance()->computerVisionSensor1.trackingMode == FindContournsTracking) value2Save_detectMethod = "FindContournsTracking";
+	//if (SensorManager::getInstance()->computerVisionSensor1.trackingMode == FindContourns) value2Save_detectMethod = "FindContourns";
+	//else if (SensorManager::getInstance()->computerVisionSensor1.trackingMode == FindContournsTracking) value2Save_detectMethod = "FindContournsTracking";
+	for (int i = 0; i < SensorManager::getInstance()->computerVisionSensorVector.size(); i++) {
+		if (SensorManager::getInstance()->computerVisionSensorVector[i].trackingMode == FindContourns)
+			value2Save_detectMethod = "FindContourns";
+		else if(SensorManager::getInstance()->computerVisionSensorVector[i].trackingMode == FindContournsTracking)
+			value2Save_detectMethod = "FindContournsTracking";
+	}
 	jsonParams["ControllerReconition"]["detectMethod"] = ofToString(value2Save_detectMethod);
 
+	for(int i = 0; i< SensorManager::getInstance()->computerVisionSensorVector.size(); i++){
+		jsonParams["ControllerReconition"][ofToString(idController, 2)]["learningTime"] = ofToString(SensorManager::getInstance()->computerVisionSensorVector[i].learningTime);
+		jsonParams["ControllerReconition"][ofToString(idController, 2)]["thresholdValue"] = ofToString(SensorManager::getInstance()->computerVisionSensorVector[i].thresholdValue);
+		jsonParams["ControllerReconition"][ofToString(idController, 2)]["bSimpleBackgroundSubstraction"] = ofToString(SensorManager::getInstance()->computerVisionSensorVector[i].bSimpleBackgroundSubstraction);
+		jsonParams["ControllerReconition"][ofToString(idController, 2)]["bLearnBackground"] = ofToString(SensorManager::getInstance()->computerVisionSensorVector[i].bLearnBackground);
+		jsonParams["ControllerReconition"][ofToString(idController, 2)]["bAutoThreshold"] = ofToString(SensorManager::getInstance()->computerVisionSensorVector[i].bAutoThreshold);
+		jsonParams["ControllerReconition"][ofToString(idController, 2)]["thresholdValue"] = ofToString(SensorManager::getInstance()->computerVisionSensorVector[i].thresholdValue);
+		jsonParams["ControllerReconition"][ofToString(idController, 2)]["bContourFinderThreshold"] = ofToString(SensorManager::getInstance()->computerVisionSensorVector[i].bContourFinderThreshold);
+		jsonParams["ControllerReconition"][ofToString(idController, 2)]["bContourFinderColorThreshold"] = ofToString(SensorManager::getInstance()->computerVisionSensorVector[i].bContourFinderColorThreshold);
 
-	if (idController == 1) {
-		jsonParams["ControllerReconition"][ofToString(idController, 2)]["learningTime"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.learningTime);
-		jsonParams["ControllerReconition"][ofToString(idController, 2)]["thresholdValue"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.thresholdValue);
-		jsonParams["ControllerReconition"][ofToString(idController, 2)]["bSimpleBackgroundSubstraction"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.bSimpleBackgroundSubstraction);
-		jsonParams["ControllerReconition"][ofToString(idController, 2)]["bLearnBackground"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.bLearnBackground);
-		jsonParams["ControllerReconition"][ofToString(idController, 2)]["bAutoThreshold"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.bAutoThreshold);
-		jsonParams["ControllerReconition"][ofToString(idController, 2)]["thresholdValue"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.thresholdValue);
-		jsonParams["ControllerReconition"][ofToString(idController, 2)]["bContourFinderThreshold"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.bContourFinderThreshold);
-		jsonParams["ControllerReconition"][ofToString(idController, 2)]["bContourFinderColorThreshold"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.bContourFinderColorThreshold);
-		
-		jsonParams["ControllerReconition"][ofToString(idController, 2)]["postBlur"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.postBlur);
-		jsonParams["ControllerReconition"][ofToString(idController, 2)]["blur"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.blur);
-		jsonParams["ControllerReconition"][ofToString(idController, 2)]["dilate"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.dilate);
-		jsonParams["ControllerReconition"][ofToString(idController, 2)]["erode"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.erode);
-		jsonParams["ControllerReconition"][ofToString(idController, 2)]["selectedThersholdMethodId"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.selectedThersholdMethodId);
-		jsonParams["ControllerReconition"][ofToString(idController, 2)]["minSizeBlob"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.minSizeBlob);
-		jsonParams["ControllerReconition"][ofToString(idController, 2)]["maxSizeBlob"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.maxSizeBlob);
-		jsonParams["ControllerReconition"][ofToString(idController, 2)]["maxPersistenceTracking"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.maxPersistenceTracking);
-		jsonParams["ControllerReconition"][ofToString(idController, 2)]["maxDistanceTracking"] = ofToString(SensorManager::getInstance()->computerVisionSensor1.maxDistanceTracking);
-		
-		//jsonParams["ControllerReconition"][ofToString(idController, 2)]["controllerMethod"] = ofToString(myControllerMethod);
-		//jsonParams["ControllerReconition"][ofToString(idController, 2)]["detectMethod"] = ofToString(myDetectMethod);
-
-		
+		jsonParams["ControllerReconition"][ofToString(idController, 2)]["postBlur"] = ofToString(SensorManager::getInstance()->computerVisionSensorVector[i].postBlur);
+		jsonParams["ControllerReconition"][ofToString(idController, 2)]["blur"] = ofToString(SensorManager::getInstance()->computerVisionSensorVector[i].blur);
+		jsonParams["ControllerReconition"][ofToString(idController, 2)]["dilate"] = ofToString(SensorManager::getInstance()->computerVisionSensorVector[i].dilate);
+		jsonParams["ControllerReconition"][ofToString(idController, 2)]["erode"] = ofToString(SensorManager::getInstance()->computerVisionSensorVector[i].erode);
+		jsonParams["ControllerReconition"][ofToString(idController, 2)]["selectedThersholdMethodId"] = ofToString(SensorManager::getInstance()->computerVisionSensorVector[i].selectedThersholdMethodId);
+		jsonParams["ControllerReconition"][ofToString(idController, 2)]["minSizeBlob"] = ofToString(SensorManager::getInstance()->computerVisionSensorVector[i].minSizeBlob);
+		jsonParams["ControllerReconition"][ofToString(idController, 2)]["maxSizeBlob"] = ofToString(SensorManager::getInstance()->computerVisionSensorVector[i].maxSizeBlob);
+		jsonParams["ControllerReconition"][ofToString(idController, 2)]["maxPersistenceTracking"] = ofToString(SensorManager::getInstance()->computerVisionSensorVector[i].maxPersistenceTracking);
+		jsonParams["ControllerReconition"][ofToString(idController, 2)]["maxDistanceTracking"] = ofToString(SensorManager::getInstance()->computerVisionSensorVector[i].maxDistanceTracking);
 	}
-	else if(idController == 2) {
-		jsonParams["ControllerReconition"][ofToString(idController, 2)]["learningTime"] = ofToString(SensorManager::getInstance()->computerVisionSensor2.learningTime);
-		jsonParams["ControllerReconition"][ofToString(idController, 2)]["thresholdValue"] = ofToString(SensorManager::getInstance()->computerVisionSensor2.thresholdValue);
-		jsonParams["ControllerReconition"][ofToString(idController, 2)]["bSimpleBackgroundSubstraction"] = ofToString(SensorManager::getInstance()->computerVisionSensor2.bSimpleBackgroundSubstraction);
-		jsonParams["ControllerReconition"][ofToString(idController, 2)]["bLearnBackground"] = ofToString(SensorManager::getInstance()->computerVisionSensor2.bLearnBackground);
-		jsonParams["ControllerReconition"][ofToString(idController, 2)]["bAutoThreshold"] = ofToString(SensorManager::getInstance()->computerVisionSensor2.bAutoThreshold);
-		jsonParams["ControllerReconition"][ofToString(idController, 2)]["thresholdValue"] = ofToString(SensorManager::getInstance()->computerVisionSensor2.thresholdValue);
-		jsonParams["ControllerReconition"][ofToString(idController, 2)]["bContourFinderThreshold"] = ofToString(SensorManager::getInstance()->computerVisionSensor2.bContourFinderThreshold);
-		jsonParams["ControllerReconition"][ofToString(idController, 2)]["bContourFinderColorThreshold"] = ofToString(SensorManager::getInstance()->computerVisionSensor2.bContourFinderColorThreshold);
-		
-		jsonParams["ControllerReconition"][ofToString(idController, 2)]["postBlur"] = ofToString(SensorManager::getInstance()->computerVisionSensor2.postBlur);
-		jsonParams["ControllerReconition"][ofToString(idController, 2)]["blur"] = ofToString(SensorManager::getInstance()->computerVisionSensor2.blur);
-		jsonParams["ControllerReconition"][ofToString(idController, 2)]["dilate"] = ofToString(SensorManager::getInstance()->computerVisionSensor2.dilate);
-		jsonParams["ControllerReconition"][ofToString(idController, 2)]["erode"] = ofToString(SensorManager::getInstance()->computerVisionSensor2.erode);
-		jsonParams["ControllerReconition"][ofToString(idController, 2)]["selectedThersholdMethodId"] = ofToString(SensorManager::getInstance()->computerVisionSensor2.selectedThersholdMethodId);
-		jsonParams["ControllerReconition"][ofToString(idController, 2)]["minSizeBlob"] = ofToString(SensorManager::getInstance()->computerVisionSensor2.minSizeBlob);
-		jsonParams["ControllerReconition"][ofToString(idController, 2)]["maxSizeBlob"] = ofToString(SensorManager::getInstance()->computerVisionSensor2.maxSizeBlob);
-		jsonParams["ControllerReconition"][ofToString(idController, 2)]["maxPersistenceTracking"] = ofToString(SensorManager::getInstance()->computerVisionSensor2.maxPersistenceTracking);
-		jsonParams["ControllerReconition"][ofToString(idController, 2)]["maxDistanceTracking"] = ofToString(SensorManager::getInstance()->computerVisionSensor2.maxDistanceTracking);
-
-
-	/*	jsonParams["ControllerReconition"][ofToString(idController, 2)]["controllerMethod"] = ofToString(myControllerMethod);
-		jsonParams["ControllerReconition"][ofToString(idController, 2)]["detectMethod"] = ofToString(myDetectMethod);*/
-
-	}
-	else cout << "Error Saving idController not recognized" << endl;
+	if(SensorManager::getInstance()->computerVisionSensorVector.size() == 0) cout << "Error Saving idController not recognized" << endl;
 
 	return jsonParams;
 }
@@ -141,8 +116,8 @@ bool ControllerReconition::setParams(ofxJSONElement jsonFile, int _idController)
 			//cout << "jsonFile detectmethod size = " << jsonFile[i]["ControllerReconition"]["detectMethod"].size() << endl;
 			//if (jsonFile[i]["ControllerReconition"]["detectMethod"].size() > 0) {
 				string auxdetectMethodReadedText = jsonFile[idController]["ControllerReconition"]["detectMethod"].asString();
-				if (auxdetectMethodReadedText == "FindContourns")SensorManager::getInstance()->computerVisionSensor1.trackingMode = FindContourns;
-				else if (auxdetectMethodReadedText == "FindContournsTracking")SensorManager::getInstance()->computerVisionSensor1.trackingMode = FindContournsTracking;
+				if (auxdetectMethodReadedText == "FindContourns")SensorManager::getInstance()->computerVisionSensorVector[_idController-1].trackingMode = FindContourns;
+				else if (auxdetectMethodReadedText == "FindContournsTracking")SensorManager::getInstance()->computerVisionSensorVector[_idController-1].trackingMode = FindContournsTracking;
 			//}
 		}
 	}
@@ -153,48 +128,27 @@ bool ControllerReconition::setParams(ofxJSONElement jsonFile, int _idController)
 			if (jsonFile[i]["ControllerReconition"][ofToString(idController, 0)].size() > 0) {
 				//cout << "jsonFile[i][ControllerReconition][x] =" << jsonFile[i]["ControllerReconition"]["1"] << endl;
 				
-				if (idController == 1 ) {
-					SensorManager::getInstance()->computerVisionSensor1.learningTime = ofToFloat(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["learningTime"].asString());
-					SensorManager::getInstance()->computerVisionSensor1.thresholdValue = ofToFloat(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["thresholdValue"].asString());
-					SensorManager::getInstance()->computerVisionSensor1.bSimpleBackgroundSubstraction = ofToFloat(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["bSimpleBackgroundSubstraction"].asString());
-					SensorManager::getInstance()->computerVisionSensor1.bLearnBackground = ofToFloat(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["bLearnBackground"].asString());
-					SensorManager::getInstance()->computerVisionSensor1.bAutoThreshold = ofToFloat(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["bAutoThreshold"].asString());
-					SensorManager::getInstance()->computerVisionSensor1.thresholdValue = ofToFloat(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["thresholdValue"].asString());
-					SensorManager::getInstance()->computerVisionSensor1.bContourFinderThreshold = ofToFloat(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["bContourFinderThreshold"].asString());
-					SensorManager::getInstance()->computerVisionSensor1.bContourFinderColorThreshold = ofToFloat(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["bContourFinderColorThreshold"].asString());
+				for (int i = 0; i < SensorManager::getInstance()->computerVisionSensorVector.size(); i++) {
+					SensorManager::getInstance()->computerVisionSensorVector[i].learningTime = ofToFloat(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["learningTime"].asString());
+					SensorManager::getInstance()->computerVisionSensorVector[i].thresholdValue = ofToFloat(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["thresholdValue"].asString());
+					SensorManager::getInstance()->computerVisionSensorVector[i].bSimpleBackgroundSubstraction = ofToFloat(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["bSimpleBackgroundSubstraction"].asString());
+					SensorManager::getInstance()->computerVisionSensorVector[i].bLearnBackground = ofToFloat(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["bLearnBackground"].asString());
+					SensorManager::getInstance()->computerVisionSensorVector[i].bAutoThreshold = ofToFloat(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["bAutoThreshold"].asString());
+					SensorManager::getInstance()->computerVisionSensorVector[i].thresholdValue = ofToFloat(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["thresholdValue"].asString());
+					SensorManager::getInstance()->computerVisionSensorVector[i].bContourFinderThreshold = ofToFloat(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["bContourFinderThreshold"].asString());
+					SensorManager::getInstance()->computerVisionSensorVector[i].bContourFinderColorThreshold = ofToFloat(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["bContourFinderColorThreshold"].asString());
 
-					SensorManager::getInstance()->computerVisionSensor1.postBlur = ofToInt(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["postBlur"].asString());
-					SensorManager::getInstance()->computerVisionSensor1.blur = ofToInt(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["blur"].asString());
-					SensorManager::getInstance()->computerVisionSensor1.dilate = ofToInt(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["dilate"].asString());
-					SensorManager::getInstance()->computerVisionSensor1.erode = ofToInt(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["dierodelate"].asString());
-					SensorManager::getInstance()->computerVisionSensor1.selectedThersholdMethodId = ofToInt(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["selectedThersholdMethodId"].asString());
-					SensorManager::getInstance()->computerVisionSensor1.minSizeBlob = ofToInt(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["minSizeBlob"].asString());
-					SensorManager::getInstance()->computerVisionSensor1.maxSizeBlob = ofToInt(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["maxSizeBlob"].asString());
-					SensorManager::getInstance()->computerVisionSensor1.maxPersistenceTracking = ofToInt(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["maxPersistenceTracking"].asString());
-					SensorManager::getInstance()->computerVisionSensor1.maxDistanceTracking = ofToInt(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["maxDistanceTracking"].asString());
+					SensorManager::getInstance()->computerVisionSensorVector[i].postBlur = ofToInt(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["postBlur"].asString());
+					SensorManager::getInstance()->computerVisionSensorVector[i].blur = ofToInt(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["blur"].asString());
+					SensorManager::getInstance()->computerVisionSensorVector[i].dilate = ofToInt(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["dilate"].asString());
+					SensorManager::getInstance()->computerVisionSensorVector[i].erode = ofToInt(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["dierodelate"].asString());
+					SensorManager::getInstance()->computerVisionSensorVector[i].selectedThersholdMethodId = ofToInt(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["selectedThersholdMethodId"].asString());
+					SensorManager::getInstance()->computerVisionSensorVector[i].minSizeBlob = ofToInt(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["minSizeBlob"].asString());
+					SensorManager::getInstance()->computerVisionSensorVector[i].maxSizeBlob = ofToInt(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["maxSizeBlob"].asString());
+					SensorManager::getInstance()->computerVisionSensorVector[i].maxPersistenceTracking = ofToInt(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["maxPersistenceTracking"].asString());
+					SensorManager::getInstance()->computerVisionSensorVector[i].maxDistanceTracking = ofToInt(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["maxDistanceTracking"].asString());
 				}
-				else if (idController == 2) {
-					SensorManager::getInstance()->computerVisionSensor2.learningTime = ofToFloat(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["learningTime"].asString());
-					SensorManager::getInstance()->computerVisionSensor2.thresholdValue = ofToFloat(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["thresholdValue"].asString());
-					SensorManager::getInstance()->computerVisionSensor2.bSimpleBackgroundSubstraction = ofToFloat(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["bSimpleBackgroundSubstraction"].asString());
-					SensorManager::getInstance()->computerVisionSensor2.bLearnBackground = ofToFloat(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["bLearnBackground"].asString());
-					SensorManager::getInstance()->computerVisionSensor2.bAutoThreshold = ofToFloat(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["bAutoThreshold"].asString());
-					SensorManager::getInstance()->computerVisionSensor2.thresholdValue = ofToFloat(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["thresholdValue"].asString());
-					SensorManager::getInstance()->computerVisionSensor2.bContourFinderThreshold = ofToFloat(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["bContourFinderThreshold"].asString());
-					SensorManager::getInstance()->computerVisionSensor2.bContourFinderColorThreshold = ofToFloat(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["bContourFinderColorThreshold"].asString());
 
-					SensorManager::getInstance()->computerVisionSensor2.postBlur = ofToInt(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["postBlur"].asString());
-					SensorManager::getInstance()->computerVisionSensor2.blur = ofToInt(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["blur"].asString());
-					SensorManager::getInstance()->computerVisionSensor2.dilate = ofToInt(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["dilate"].asString());
-					SensorManager::getInstance()->computerVisionSensor2.erode = ofToInt(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["dierodelate"].asString());
-					SensorManager::getInstance()->computerVisionSensor2.selectedThersholdMethodId = ofToInt(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["selectedThersholdMethodId"].asString());
-					SensorManager::getInstance()->computerVisionSensor2.minSizeBlob = ofToInt(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["minSizeBlob"].asString());
-					SensorManager::getInstance()->computerVisionSensor2.maxSizeBlob = ofToInt(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["maxSizeBlob"].asString());
-					SensorManager::getInstance()->computerVisionSensor2.maxPersistenceTracking = ofToInt(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["maxPersistenceTracking"].asString());
-					SensorManager::getInstance()->computerVisionSensor2.maxDistanceTracking = ofToInt(jsonFile[i]["ControllerReconition"][ofToString(idController, 2)]["maxDistanceTracking"].asString());
-
-				}
-				//TODO more? Check how to do it dynamic
 			}
 		}
 	}
@@ -417,17 +371,21 @@ void ControllerReconition::send_OSC_UPD_Data_MaxMinBlob(string nameTag) {
 }
 
 //-----------------------------------------
-void ControllerReconition::send_OSC_Data_AllInBlobs() {
+void ControllerReconition::send_OSC_Data_AllInBlobs(int _idCvVector) {
 
 	ofxCv::RectTracker& tracker = myContourFinder->getTracker();
 
 	//TODO Decide desired data and parameters to send
 	ofxOscMessage m;
 	m.clear();
-	m.setAddress("/GameBlobAllIn");//TODO tracking Label
-	m.addIntArg(myContourFinder->getContours().size()); //Add the number of Blobs detected in order to read them properly and easy
+	string labelOSC = "/GameBlobAllIn";
+	if (_idCvVector > 0)labelOSC = labelOSC + ofToString(_idCvVector + 1, 0);
+	m.setAddress(labelOSC.c_str());//TODO tracking Label
+
+	m.addIntArg(myContourFinder->getContours().size()); //Number of Blobs detected in order to read them properly and easy
 
 	for (int i = 0; i < myContourFinder->getContours().size()/* > 0*/; i++) {
+		
 		cv::Point2f centerBlobi = myContourFinder->getCenter(i); //TODO getCentroid
 																
 		float resumedPosX = (myContourFinder->getCenter(i).x - rectAreaPlayer.x) / rectAreaPlayer.width; //Forced to 0..1 inside the RectArea 
@@ -435,13 +393,14 @@ void ControllerReconition::send_OSC_Data_AllInBlobs() {
 		m.addFloatArg(resumedPosX);
 		m.addFloatArg(resumedPosY);
 
-		if(SensorManager::getInstance()->computerVisionSensor1.trackingMode == FindContournsTracking){
+		if(SensorManager::getInstance()->computerVisionSensorVector[_idCvVector].trackingMode == FindContournsTracking){
 			//for Tracking add int ID & int TIME
 			int idAux = myContourFinder->getLabel(i);
 			m.addIntArg(idAux); //Sending ID Label
 			int timeAux = tracker.getAge(idAux);
 			m.addIntArg(timeAux); //Sending Time Tracked
-		}
+		}	
+		
 		sender.sendMessage(m, false);
 	}
 
@@ -454,25 +413,21 @@ void ControllerReconition::sendOSCBlobData(){
 		if (myControllerMethod == MaxMinBlob) {
 			//working at selected Areas. Finding the proper XY related and Sending to a Client the results
 			//TODO Convert this into dynamic controlers
+			string labelOSC = "GameBlob";
 			if (idController == 1) {
-				send_OSC_UPD_Data_MaxMinBlob("GameBlob");
+				send_OSC_UPD_Data_MaxMinBlob(labelOSC.c_str());
 			}
-			else if (idController == 2) {
-				send_OSC_UPD_Data_MaxMinBlob("GameBlob2");
+			else if (idController > 1) {
+				string textLabelOSC = labelOSC + ofToString(idController, 0);
+				send_OSC_UPD_Data_MaxMinBlob(textLabelOSC.c_str());
 			}
 		}
 		else if (myControllerMethod == AllBlobsIn) {
 
-			if (SensorManager::getInstance()->computerVisionSensor1.trackingMode == FindContournsTracking || SensorManager::getInstance()->computerVisionSensor1.trackingMode == FindContourns) {
-				//TODO that should work for all Areas. Now only for the area 1.
-				if (idController == 1) {
-					//TODO Find how to do this for more subn areas. Right now just 1.
-					send_OSC_Data_AllInBlobs(); //IF TRACKINGMODE active this is senind 2 LABELS.ID and TIME 
-				}
-				//else if (idController == 2) {
-				//	send_OSC_Data_AllInBlobs(); //IF TRACKINGMODE active this is senind 2 LABELS.ID and TIME 
-				//}
+			for (int i = 0; i < SensorManager::getInstance()->computerVisionSensorVector.size(); i++) {
+					send_OSC_Data_AllInBlobs(i); // "/GameBlobAllIn";
 			}
+
 		}
 
 
@@ -560,7 +515,6 @@ void ControllerReconition::drawGui_OSCUPD_sendingData() {
 }
 //-------------------------------------------------
 void ControllerReconition::drawGui_Controller(){
-	//ImGui::SetNextWindowSize(ImVec2(310, 350));
 	
 	//cout << "Check this Out PreVious window" << endl;
 	//bool wopen = true;

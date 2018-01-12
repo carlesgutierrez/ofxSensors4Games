@@ -36,23 +36,25 @@ void ofxSensors4Games::setup(sensorType _myType) {
 //--------------------------------------
 void ofxSensors4Games::controllersRecognitionSetup() {
 
-	//if (SensorManager::getInstance()->numPlayersAreas > 0) {
-		myControllerRecognition1.setup(
+	for (int i = 0; i < SensorManager::getInstance()->numPlayersAreas; i++) {
+		//myControllerRecognition1.setup(
+		ControllerReconition auxMyControllerRecognition;
+		myControllerRecognitionVector.push_back(auxMyControllerRecognition);
+		myControllerRecognitionVector[i].setup(
 			SensorManager::getInstance()->getWidth(),
 			SensorManager::getInstance()->getHeight(),
-			SensorManager::getInstance()->computerVisionSensor1.contourFinder,
-			1
-		);
-	//}
+			SensorManager::getInstance()->computerVisionSensorVector[i].contourFinder,
+			i+1);//1
+	}
 
-	//if (SensorManager::getInstance()->numPlayersAreas > 1) {
-		myControllerRecognition2.setup(
-			SensorManager::getInstance()->getWidth(),
-			SensorManager::getInstance()->getHeight(),
-			SensorManager::getInstance()->computerVisionSensor2.contourFinder,
-			2
-		);
-	//}
+	////if (SensorManager::getInstance()->numPlayersAreas > 1) {
+	//	myControllerRecognition2.setup(
+	//		SensorManager::getInstance()->getWidth(),
+	//		SensorManager::getInstance()->getHeight(),
+	//		SensorManager::getInstance()->computerVisionSensor2.contourFinder,
+	//		2
+	//	);
+	////}
 }
 
 //--------------------------------------------------------------
@@ -63,8 +65,9 @@ void ofxSensors4Games::update() {
 	for (int i = 0; i < SensorManager::getInstance()->playerAreas.size(); i++) {
 		ofRectangle auxArea = SensorManager::getInstance()->playerAreas[i].rectArea;
 		if (SensorManager::getInstance()->playerAreas[i].bAreaActive) {
-			if (i == 0)myControllerRecognition1.update(auxArea);
-			else if (i == 1)myControllerRecognition2.update(auxArea);
+			//if (i == 0)myControllerRecognition1.update(auxArea);
+			myControllerRecognitionVector[i].update(auxArea);
+			//else if (i == 1)myControllerRecognition2.update(auxArea);
 		}
 	}
 }
@@ -102,8 +105,11 @@ void ofxSensors4Games::draw() {
 	SensorManager::getInstance()->draw();
 	
 	for (int i = 0; i < SensorManager::getInstance()->playerAreas.size(); i++) {
-		if (i == 0 && SensorManager::getInstance()->playerAreas[i].bAreaActive)myControllerRecognition1.draw();
-		if (i == 1 && SensorManager::getInstance()->playerAreas[i].bAreaActive)myControllerRecognition2.draw();
+		if (SensorManager::getInstance()->playerAreas[i].bAreaActive) {
+			myControllerRecognitionVector[i].draw();
+		}
+		//if (i == 0 && SensorManager::getInstance()->playerAreas[i].bAreaActive)myControllerRecognition1.draw();
+		//if (i == 1 && SensorManager::getInstance()->playerAreas[i].bAreaActive)myControllerRecognition2.draw();
 	}
 	
 	//required to call this at end
@@ -115,8 +121,10 @@ void ofxSensors4Games::draw() {
 
 //--------------------------------------------------------------
 void ofxSensors4Games::exit() {
-	myControllerRecognition1.exit();
-	myControllerRecognition2.exit();
+	for (int i = 0; i < myControllerRecognitionVector.size(); i++) 
+		myControllerRecognitionVector[i].exit();
+	//myControllerRecognition1.exit();
+	//myControllerRecognition2.exit();
 	SensorManager::getInstance()->exit();
 }
 
@@ -136,13 +144,17 @@ bool ofxSensors4Games::loadAllParamters() {
 	}
 	else SensorManager::getInstance()->numPlayersAreas = 1;
 	
-	if (SensorManager::getInstance()->numPlayersAreas > 0) {
-		myControllerRecognition1.setParams(jPreset, 1);
+	for (int i = 0; i < myControllerRecognitionVector.size(); i++) {
+		myControllerRecognitionVector[i].setParams(jPreset, i+1);
 	}
-	
-	if (SensorManager::getInstance()->numPlayersAreas > 1) {
-		myControllerRecognition2.setParams(jPreset, 2); 
-	}
+
+	//if (SensorManager::getInstance()->numPlayersAreas > 0) {
+	//	myControllerRecognition1.setParams(jPreset, 1);
+	//}
+	//
+	//if (SensorManager::getInstance()->numPlayersAreas > 1) {
+	//	myControllerRecognition2.setParams(jPreset, 2); 
+	//}
 	
 	if (SensorManager::getInstance()->numPlayersAreas > 2) {
 		cout << "Error:: TODO more controllers classes" << endl;
@@ -171,16 +183,22 @@ bool ofxSensors4Games::saveAllParams() {
 
 	allParametersGui.clear();
 
-	ofxJSONElement paramsRecognition1 = myControllerRecognition1.getParams();
-	ofxJSONElement paramsRecognition2 = myControllerRecognition2.getParams();
+
 	ofxJSONElement paramsSensor = SensorManager::getInstance()->getParams();
 
 	ofxJSONElement localJsonParams;
 	localJsonParams["numPlayersAreas"] = ofToString(SensorManager::getInstance()->numPlayersAreas, 0); // this wil lbe saved at 0 pos in the JSON... TODO  How do this better.
 	allParametersGui.append(localJsonParams);
 
-	allParametersGui.append(paramsRecognition1);
-	allParametersGui.append(paramsRecognition2);
+	for (int i = 0; i < myControllerRecognitionVector.size(); i++) {
+		ofxJSONElement paramsRecognitionAux = myControllerRecognitionVector[i].getParams();
+		allParametersGui.append(paramsRecognitionAux);
+	}
+	//ofxJSONElement paramsRecognition1 = myControllerRecognition1.getParams();
+	//ofxJSONElement paramsRecognition2 = myControllerRecognition2.getParams();
+	//allParametersGui.append(paramsRecognition1);
+	//allParametersGui.append(paramsRecognition2);
+
 	allParametersGui.append(paramsSensor);
 
 	allParametersGui.save("allMyParams.json", true);

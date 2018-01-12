@@ -138,8 +138,15 @@ void SensorManager::setup(sensorType _sensorType){
 	}else if (typeSensor == cameraSensor){
 		bSensorReady = setupCameraSensor();
 		//Setup CV
-		computerVisionSensor1.setup(1, sensorWidth, sensorHeight, cameraSensor); //TODO Change this to JSon params loaded at a config file
-		computerVisionSensor2.setup(2, sensorWidth, sensorHeight, cameraSensor); //TODO Change this to JSon params loaded at a config file
+		
+		int numInitialAreas = 2;//Hack Initial Vector Areas
+		for (int i = 0; i < numInitialAreas; i++) {
+			SensorComputerVision computerVisionSensorAux;
+			computerVisionSensorVector.push_back(computerVisionSensorAux);
+			computerVisionSensorVector[i].setup(i+1, sensorWidth, sensorHeight, cameraSensor);
+		}
+		//computerVisionSensor1.setup(1, sensorWidth, sensorHeight, cameraSensor); //TODO Change this to JSon params loaded at a config file
+		//computerVisionSensor2.setup(2, sensorWidth, sensorHeight, cameraSensor); //TODO Change this to JSon params loaded at a config file
 		
 	}else if(typeSensor == externalSickSensor){
 		bSensorReady = setupExternalSickSensor();
@@ -151,10 +158,16 @@ void SensorManager::setup(sensorType _sensorType){
 	}
 
 	//For Computer Vision Setup some general vars
-	sensorImage1.allocate(getWidth(), getHeight(), OF_IMAGE_COLOR);
 	mySourcedSensorFbo.allocate(getWidth(), getHeight(), GL_RGB);
-	sensorImage2.allocate(getWidth(), getHeight(), OF_IMAGE_COLOR);//This should be allocated, like now
 	sourceImageRaw.allocate(getWidth(), getHeight(), OF_IMAGE_COLOR);
+	for (int i = 0; i < computerVisionSensorVector.size(); i++) {
+		ofImage auxImage;
+		auxImage.allocate(getWidth(), getHeight(), OF_IMAGE_COLOR); // Check if this areas are set correctly at the end
+		sensorImageVector.push_back(auxImage);
+	}
+	//sensorImage1.allocate(getWidth(), getHeight(), OF_IMAGE_COLOR);
+	//sensorImage2.allocate(getWidth(), getHeight(), OF_IMAGE_COLOR);//This should be allocated, like now
+	
 
 	//Mouse and Keyboard Events
 	ofRegisterKeyEvents(this);
@@ -288,16 +301,21 @@ void SensorManager::update(){
 			for (int i = 0; i < playerAreas.size(); i++) {
 			
 				if (playerAreas[i].bAreaActive) {
-					if (i == 0) {
-						if(typeSensor == cameraSensor)computerVisionSensor1.udpateBackground();
-						updateSubImagesFromImageRaw(playerAreas[i].rectArea, sensorImage1);
-						computerVisionSensor1.mainComputerVision(sensorImage1);
-					}
-					else if (i == 1) {
-						if (typeSensor == cameraSensor)computerVisionSensor2.udpateBackground();
-						updateSubImagesFromImageRaw(playerAreas[i].rectArea, sensorImage2);
-						computerVisionSensor2.mainComputerVision(sensorImage2);
-					}
+
+					if (typeSensor == cameraSensor)computerVisionSensorVector[i].udpateBackground();
+					updateSubImagesFromImageRaw(playerAreas[i].rectArea, sensorImageVector[i]);
+					computerVisionSensorVector[i].mainComputerVision(sensorImageVector[i]);
+
+					//if (i == 0) {
+					//	if(typeSensor == cameraSensor)computerVisionSensor1.udpateBackground();
+					//	updateSubImagesFromImageRaw(playerAreas[i].rectArea, sensorImage1);
+					//	computerVisionSensor1.mainComputerVision(sensorImage1);
+					//}
+					//else if (i == 1) {
+					//	if (typeSensor == cameraSensor)computerVisionSensor2.udpateBackground();
+					//	updateSubImagesFromImageRaw(playerAreas[i].rectArea, sensorImage2);
+					//	computerVisionSensor2.mainComputerVision(sensorImage2);
+					//}
 				}
 
 			}
@@ -439,26 +457,35 @@ void SensorManager::draw(){
 		for (int i = 0; i < playerAreas.size(); i++) {
 
 			if (playerAreas[i].bAreaActive) {
-				if (i == 0) {
-					computerVisionSensor1.computerVisionImage.draw(marginDraw, marginDraw + i*sensorHeight*sensorDrawScale, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
-					computerVisionSensor1.draw(sensorDrawScale, marginDraw + i*sensorHeight*sensorDrawScale);//TODO FIX THIS WAY TO DRAW ! Complex way
 
-					ofEnableAlphaBlending();
-					ofSetColor(255, 255, 255, 100);
-					sourceImageRaw.draw(marginDraw, marginDraw + i*sensorHeight*sensorDrawScale, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
-					ofDisableAlphaBlending();
-					ofSetColor(255, 255, 255);
-				}
-				else if (i == 1) {
-					computerVisionSensor2.computerVisionImage.draw(marginDraw, marginDraw + i*sensorHeight*sensorDrawScale, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
-					computerVisionSensor2.draw(sensorDrawScale, marginDraw + i*sensorHeight*sensorDrawScale);
+				computerVisionSensorVector[i].computerVisionImage.draw(marginDraw, marginDraw + i*sensorHeight*sensorDrawScale, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
+				computerVisionSensorVector[i].draw(sensorDrawScale, marginDraw + i*sensorHeight*sensorDrawScale);//TODO FIX THIS WAY TO DRAW ! Complex way
 
-					ofEnableAlphaBlending();
-					ofSetColor(255, 255, 255, 100);
-					sourceImageRaw.draw(marginDraw, marginDraw + i*sensorHeight*sensorDrawScale, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
-					ofDisableAlphaBlending();
-					ofSetColor(255, 255, 255);
-				}
+				ofEnableAlphaBlending();
+				ofSetColor(255, 255, 255, 100);
+				sourceImageRaw.draw(marginDraw, marginDraw + i*sensorHeight*sensorDrawScale, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
+				ofDisableAlphaBlending();
+				ofSetColor(255, 255, 255);
+				//if (i == 0) {
+				//	computerVisionSensor1.computerVisionImage.draw(marginDraw, marginDraw + i*sensorHeight*sensorDrawScale, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
+				//	computerVisionSensor1.draw(sensorDrawScale, marginDraw + i*sensorHeight*sensorDrawScale);//TODO FIX THIS WAY TO DRAW ! Complex way
+
+				//	ofEnableAlphaBlending();
+				//	ofSetColor(255, 255, 255, 100);
+				//	sourceImageRaw.draw(marginDraw, marginDraw + i*sensorHeight*sensorDrawScale, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
+				//	ofDisableAlphaBlending();
+				//	ofSetColor(255, 255, 255);
+				//}
+				//else if (i == 1) {
+				//	computerVisionSensor2.computerVisionImage.draw(marginDraw, marginDraw + i*sensorHeight*sensorDrawScale, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
+				//	computerVisionSensor2.draw(sensorDrawScale, marginDraw + i*sensorHeight*sensorDrawScale);
+
+				//	ofEnableAlphaBlending();
+				//	ofSetColor(255, 255, 255, 100);
+				//	sourceImageRaw.draw(marginDraw, marginDraw + i*sensorHeight*sensorDrawScale, sensorWidth*sensorDrawScale, sensorHeight*sensorDrawScale);
+				//	ofDisableAlphaBlending();
+				//	ofSetColor(255, 255, 255);
+				//}
 				//TODO more ? or make this functions dynamic .
 			}
 
@@ -696,8 +723,9 @@ void SensorManager::drawGuiSensorOptions(bool* opened){
 			}
 
 			//TODO improve this manual mode
-			if (i == 0 && playerAreas[i].bAreaActive)computerVisionSensor1.drawGui();
-			if (i == 1 && playerAreas[i].bAreaActive)computerVisionSensor2.drawGui();
+			if (playerAreas[i].bAreaActive)computerVisionSensorVector[i].drawGui();
+			//if (i == 0 && playerAreas[i].bAreaActive)computerVisionSensor1.drawGui();
+			//if (i == 1 && playerAreas[i].bAreaActive)computerVisionSensor2.drawGui();
 		}
 	}
 

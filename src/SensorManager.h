@@ -129,8 +129,10 @@ public:
 	float videoPlayerCam_pos = 0;
 	
 	//Computer Vision Vars
-	SensorComputerVision computerVisionSensor1;
-	SensorComputerVision computerVisionSensor2;
+	//SensorComputerVision computerVisionSensor1;
+	//SensorComputerVision computerVisionSensor2;
+	vector<SensorComputerVision> computerVisionSensorVector;
+
 	void updateSubImagesFromImageRaw(ofRectangle _rectArea, ofImage &image2Update);
 	void applyMaskToImgVideoCam(ofRectangle _rectArea, ofImage & imageToMask);
 	//------------------------
@@ -157,8 +159,9 @@ private:
 	//-----------------------
 	ofImage sourceImageRaw;
 	ofFbo mySourcedSensorFbo;
-	ofImage sensorImage1;
-	ofImage sensorImage2;
+	vector<ofImage> sensorImageVector;
+	//ofImage sensorImage1;
+	//ofImage sensorImage2;
 
 
 	//-----------------------
