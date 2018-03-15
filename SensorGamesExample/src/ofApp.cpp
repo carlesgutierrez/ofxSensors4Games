@@ -3,10 +3,9 @@
 //--------------------------------------------------------------
 void ofApp::setup(){
 	ofSetFrameRate(60);
-	mySensorController.setup(cameraSensor, realTimeMode);
-	//cameraSensor , kinectSensor// realTimeMode, simulationMode
+	mySensorController.setup(cameraSensor); //cameraSensor , kinectSensor ( deactivated for now )
 	
-	//by default load All Saved Parameters
+	//by default we reload All Saved Parameters
 	mySensorController.loadAllParamters();
 }
 
