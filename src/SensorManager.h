@@ -22,10 +22,11 @@
 //Uncomment this to Use it
 #define USE_SHARECAM_SPOUT
 
-
-
 #if defined(USE_SHARECAM_SPOUT)//and (TARGET_WIN32)
+#ifdef TARGET_WIN32
 #include "ofxSpout2Sender.h"
+#elseif TARGET_OSX
+//TODO add Shyphon for OSX
 #endif
 
 struct PlayerArea {
